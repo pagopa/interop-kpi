@@ -22,7 +22,6 @@
     "@aws-sdk/client-sqs": "3.744.0",
     "@aws-sdk/client-s3": "3.744.0",
     "pagopa-interop-kpi-models": "workspace:*",
-    "pg-promise": "11.10.2",
     "ts-pattern": "5.2.0",
     "winston": "3.17.0",
     "zod": "3.23.8"
