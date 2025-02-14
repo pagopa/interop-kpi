@@ -1,0 +1,36 @@
+{
+  "name": "pagopa-interop-kpi-commons",
+  "private": true,
+  "version": "1.0.0",
+  "description": "PagoPA Interoperability KPI common utilities",
+  "main": "dist",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:autofix": "eslint . --ext .ts,.tsx --fix",
+    "format:check": "prettier --check src",
+    "format:write": "prettier --write src",
+    "start": "tsx --watch ./src/index.ts",
+    "build": "tsc",
+    "check": "tsc --project tsconfig.check.json"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@aws-sdk/client-sqs": "3.744.0",
+    "@aws-sdk/client-s3": "3.744.0",
+    "pagopa-interop-kpi-models": "workspace:*",
+    "pg-promise": "11.10.2",
+    "ts-pattern": "5.2.0",
+    "winston": "3.17.0",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.6",
+    "eslint": "^8.12.0",
+    "prettier": "^2.6.2",
+    "typescript": "5.4.5"
+  }
+}
