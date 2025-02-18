@@ -24,7 +24,9 @@
     "pagopa-interop-kpi-models": "workspace:*",
     "ts-pattern": "5.2.0",
     "winston": "3.17.0",
-    "zod": "3.23.8"
+    "zod": "3.23.8",
+    "date-fns": "4.1.0",
+    "date-fns-tz": "3.2.0"
   },
   "devDependencies": {
     "@types/node": "20.14.6",
