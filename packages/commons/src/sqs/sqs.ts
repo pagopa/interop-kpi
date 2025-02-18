@@ -1,6 +1,5 @@
 /* eslint-disable no-constant-condition */
 /* eslint-disable sonarjs/cognitive-complexity */
-/* eslint-disable sonarjs/cognitive-complexity */
 import {
   SQSClient,
   ReceiveMessageCommand,
