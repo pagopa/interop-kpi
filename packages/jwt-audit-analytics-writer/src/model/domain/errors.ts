@@ -8,10 +8,11 @@ export const errorCodes = {
 export type ErrorCodes = keyof typeof errorCodes;
 
 export function decodeSQSEventMessageError(
-  detail: string
+  messageId: string | undefined,
+  detail: unknown
 ): InternalError<ErrorCodes> {
   return new InternalError({
-    detail: `${detail}`,
+    detail: `Failed to decode SQS S3 event message with MessageId: ${messageId}. Details: ${detail}`,
     code: "decodeSQSEventMessageError",
   });
 }

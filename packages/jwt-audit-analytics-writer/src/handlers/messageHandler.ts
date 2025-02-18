@@ -21,7 +21,7 @@ export function processMessage(
     };
 
     try {
-      await jwtAuditService.insertJwtAudit(decodeSQSEventMessage(message), ctx);
+      await jwtAuditService.handleMessage(decodeSQSEventMessage(message), ctx);
     } catch (error) {
       throw errorMapper(error, logger(ctx));
     }

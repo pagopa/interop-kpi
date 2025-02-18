@@ -12,7 +12,7 @@ import { insertJwtAuditError } from "../model/domain/errors.js";
 import { config } from "../config/config.js";
 
 export const jwtAuditServiceBuilder = (fileManager: FileManager) => ({
-  async insertJwtAudit(
+  async handleMessage(
     s3KeyPath: string,
     ctx: WithSQSMessageId<AppContext>
   ): Promise<void> {

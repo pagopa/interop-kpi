@@ -9,7 +9,7 @@ export function decodeSQSEventMessage(message: SQS.Message): string {
     }
 
     const s3Body: S3BodySchema = JSON.parse(message.Body);
-    if (!s3Body.Records.length) {
+    if (!s3Body.Records?.length) {
       throw new Error("S3Body doesn't contain records");
     }
 
@@ -20,8 +20,6 @@ export function decodeSQSEventMessage(message: SQS.Message): string {
 
     return key;
   } catch (error: unknown) {
-    throw decodeSQSEventMessageError(
-      `Failed to decode SQS S3 event message with MessageId: ${message.MessageId}. Details: ${error}`
-    );
+    throw decodeSQSEventMessageError(message.MessageId, error);
   }
 }

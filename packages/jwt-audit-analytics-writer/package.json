@@ -6,6 +6,7 @@
   "main": "dist",
   "type": "module",
   "scripts": {
+    "test": "vitest",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:autofix": "eslint . --ext .ts,.tsx --fix",
     "format:check": "prettier --check src",
@@ -29,6 +30,7 @@
   "dependencies": {
     "pagopa-interop-kpi-commons": "workspace:*",
     "pagopa-interop-kpi-models": "workspace:*",
+    "pagopa-interop-kpi-commons-test": "workspace:*",
     "dotenv-flow": "4.1.0",
     "ndjson": "2.0.0",
     "ts-pattern": "5.2.0",
