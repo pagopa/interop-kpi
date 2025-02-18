@@ -1,0 +1,33 @@
+{
+  "name": "pagopa-interop-kpi-commons-test",
+  "private": true,
+  "version": "1.0.0",
+  "description": "PagoPA Interoperability KPI common test utilities",
+  "main": "dist",
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:it": "vitest integration",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:autofix": "eslint . --ext .ts,.tsx --fix",
+    "format:check": "prettier --check src",
+    "format:write": "prettier --write src",
+    "build": "tsc",
+    "check": "tsc --project tsconfig.check.json"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@pagopa/eslint-config": "3.0.0",
+    "@types/dotenv-flow": "3.3.3",
+    "@testcontainers/postgresql": "10.9.0",
+    "pagopa-interop-kpi-commons": "workspace:*",
+    "pagopa-interop-kpi-models": "workspace:*",
+    "dotenv-flow": "4.1.0",
+    "testcontainers": "10.9.0",
+    "ts-pattern": "5.2.0",
+    "typescript": "5.4.5",
+    "vitest": "1.6.0",
+    "zod": "3.23.8"
+  }
+}
