@@ -5,8 +5,18 @@
       "persistent": true,
       "cache": false,
       "dependsOn": [
-        "^build"
+        "^build",
+        "//#infra:start"
       ]
+    },
+    "//#infra:start": {
+      "cache": false
+    },
+    "//#infra:stop": {
+      "cache": false
+    },
+    "//#infra:destroy": {
+      "cache": false
     },
     "build": {
       "dependsOn": [
@@ -26,8 +36,7 @@
     },
     "test": {
       "dependsOn": [
-        "build",
-        "^test"
+        "build"
       ]
     },
     "lint": {
@@ -39,7 +48,14 @@
         "dist"
       ]
     },
-    "lint:autofix": {},
+    "lint:autofix": {
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": [
+        "dist"
+      ]
+    },
     "format:check": {},
     "format:write": {}
   },
