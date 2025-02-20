@@ -1,4 +1,11 @@
-export const streamToString = (data: Uint8Array): string => {
-  const decoder = new TextDecoder("utf-8");
-  return decoder.decode(data);
-};
+/* eslint-disable functional/immutable-data */
+
+export async function streamToString(
+  stream: NodeJS.ReadableStream
+): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks).toString("utf8");
+}

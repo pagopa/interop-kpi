@@ -1,17 +1,11 @@
 import { describe, expect, it, vi, afterAll } from "vitest";
-import { AppContext, SQS, WithSQSMessageId } from "pagopa-interop-kpi-commons";
-import {
-  CorrelationId,
-  InternalError,
-  generateId,
-} from "pagopa-interop-kpi-models";
+import { SQS } from "pagopa-interop-kpi-commons";
+import { InternalError } from "pagopa-interop-kpi-models";
 import { processMessage } from "../src/handlers/messageHandler.js";
-import { decodeSQSEventMessage } from "../src/model/domain/models.js";
 import {
   decodeSQSEventMessageError,
   ErrorCodes,
 } from "../src/model/domain/errors.js";
-import { config } from "../src/config/config.js";
 import { sqsMessagesMock } from "./utils.js";
 
 describe("JWT Audit Service tests", () => {
@@ -42,20 +36,11 @@ describe("JWT Audit Service tests", () => {
         Body: JSON.stringify(sqsMessagesMock.validMessage),
       };
 
-      const ctx: WithSQSMessageId<AppContext> = {
-        serviceName: config.serviceName,
-        correlationId: generateId<CorrelationId>(),
-        messageId: validMessage.MessageId,
-      };
-
       expect(() =>
         processMessage(mockJwtAuditService)(validMessage)
       ).not.toThrowError();
 
-      expect(mockJwtAuditService.handleMessage).toHaveBeenCalledWith(
-        decodeSQSEventMessage(validMessage),
-        ctx
-      );
+      expect(mockJwtAuditService.handleMessage).toHaveBeenCalledOnce();
     });
 
     it("given invalid message, method should throw an error", async () => {

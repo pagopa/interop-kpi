@@ -71,7 +71,7 @@ describe("FileManager tests", async () => {
         genericLogger
       );
 
-      const fileContent = streamToString(fileStream);
+      const fileContent = await streamToString(fileStream);
 
       expect(fileContent).toContain("test1");
     });

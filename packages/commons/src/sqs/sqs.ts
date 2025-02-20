@@ -8,7 +8,7 @@ import {
   SQSClientConfig,
 } from "@aws-sdk/client-sqs";
 import { InternalError } from "pagopa-interop-kpi-models";
-import { genericLogger, logger } from "../logging/index.js";
+import { genericLogger } from "../logging/index.js";
 import { ConsumerConfig } from "../config/consumerConfig.js";
 
 const serializeError = (error: unknown): string => {
@@ -87,14 +87,12 @@ export const runConsumer = async (
   } & ConsumerConfig,
   consumerHandler: (messagePayload: Message) => Promise<void>
 ): Promise<void> => {
-  logger({ serviceName: config.serviceName }).info(
-    `Consumer processing on Queue: ${config.queueUrl}`
-  );
+  genericLogger.info(`Consumer processing on Queue: ${config.queueUrl}`);
 
   try {
     await processQueue(sqsClient, config, consumerHandler);
   } catch (e) {
-    logger({ serviceName: config.serviceName }).error(
+    genericLogger.error(
       `Generic error occurs processing Queue: ${
         config.queueUrl
       }. Details: ${serializeError(e)}`
@@ -102,7 +100,7 @@ export const runConsumer = async (
     await processExit();
   }
 
-  logger({ serviceName: config.serviceName }).info(
+  genericLogger.info(
     `Queue processing Completed for Queue: ${config.queueUrl}`
   );
 };

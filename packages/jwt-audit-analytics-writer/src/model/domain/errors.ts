@@ -16,10 +16,3 @@ export function decodeSQSEventMessageError(
     code: "decodeSQSEventMessageError",
   });
 }
-
-export function insertJwtAuditError(detail: string): InternalError<ErrorCodes> {
-  return new InternalError({
-    detail: `${detail}`,
-    code: "insertJwtAuditError",
-  });
-}
