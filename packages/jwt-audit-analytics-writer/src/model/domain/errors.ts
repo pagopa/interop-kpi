@@ -2,7 +2,6 @@ import { InternalError } from "pagopa-interop-kpi-models";
 
 export const errorCodes = {
   decodeSQSEventMessageError: "DECODE_SQS_EVENT_MESSAGE_ERROR",
-  insertJwtAuditError: "INSERT_JWT_AUDIT_ERROR",
 } as const;
 
 export type ErrorCodes = keyof typeof errorCodes;

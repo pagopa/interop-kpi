@@ -1,6 +1,6 @@
-CREATE SCHEMA IF NOT EXISTS jwt_audit;
+CREATE SCHEMA IF NOT EXISTS dev_interop;
 
-CREATE TABLE IF NOT EXISTS jwt_audit.client_assertion_audit_details (
+CREATE TABLE IF NOT EXISTS dev_interop.client_assertion_audit_details (
     jwt_id UUID PRIMARY KEY,
     issued_at TIMESTAMP NOT NULL,
     algorithm VARCHAR(50) NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS jwt_audit.client_assertion_audit_details (
     expiration_time TIMESTAMP NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS jwt_audit.generated_token_audit_details (
+CREATE TABLE IF NOT EXISTS dev_interop.generated_token_audit_details (
     jwt_id UUID PRIMARY KEY,
     correlation_id UUID NOT NULL,
     issued_at TIMESTAMP NOT NULL,
@@ -30,13 +30,13 @@ CREATE TABLE IF NOT EXISTS jwt_audit.generated_token_audit_details (
     expiration_time TIMESTAMP NOT NULL,
     issuer VARCHAR(255) NOT NULL,
     client_assertion_jwt_id UUID NOT NULL,
-    CONSTRAINT fk_client_assertion FOREIGN KEY (client_assertion_jwt_id) REFERENCES jwt_audit.client_assertion_audit_details(jwt_id) ON DELETE CASCADE
+    CONSTRAINT fk_client_assertion FOREIGN KEY (client_assertion_jwt_id) REFERENCES dev_interop.client_assertion_audit_details(jwt_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS jwt_audit.staging_client_assertion_audit_details (
+CREATE TABLE IF NOT EXISTS dev_interop.staging_client_assertion_audit_details (
     LIKE my_schema.client_assertion_audit_details
 );
 
-CREATE TABLE IF NOT EXISTS jwt_audit.staging_generated_token_audit_details (
+CREATE TABLE IF NOT EXISTS dev_interop.staging_generated_token_audit_details (
     LIKE my_schema.generated_token_audit_details
 );
