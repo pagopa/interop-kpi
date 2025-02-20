@@ -4,6 +4,7 @@ import {
   S3Config,
   AWSConfig,
   ConsumerConfig,
+  DbConfig,
 } from "pagopa-interop-kpi-commons";
 import { z } from "zod";
 
@@ -11,6 +12,7 @@ export const JwtAuditAnalyticsWriterConfig = AWSConfig.and(ConsumerConfig)
   .and(LoggerConfig)
   .and(FileManagerConfig)
   .and(S3Config)
+  .and(DbConfig)
   .and(
     z
       .object({
