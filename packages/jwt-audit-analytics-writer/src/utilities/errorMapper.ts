@@ -3,9 +3,9 @@ import {
   InternalError,
   genericInternalError,
 } from "pagopa-interop-kpi-models";
+import { ErrorCodes } from "pagopa-interop-kpi-commons";
 import { P, match } from "ts-pattern";
 import { Logger } from "pagopa-interop-kpi-commons";
-import { ErrorCodes } from "../model/domain/errors.js";
 
 type LocalErrorCodes = ErrorCodes | CommonErrorCodes;
 

@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, afterAll } from "vitest";
-import { SQS } from "pagopa-interop-kpi-commons";
-import { InternalError } from "pagopa-interop-kpi-models";
-import { processMessage } from "../src/handlers/messageHandler.js";
 import {
+  SQS,
   decodeSQSEventMessageError,
   ErrorCodes,
-} from "../src/model/domain/errors.js";
+} from "pagopa-interop-kpi-commons";
+import { InternalError } from "pagopa-interop-kpi-models";
+import { processMessage } from "../src/handlers/messageHandler.js";
 import { sqsMessagesMock } from "./utils.js";
 
 describe("JWT Audit Service tests", () => {
