@@ -26,7 +26,5 @@ module.exports = {
     "**/src/model/generated/**/*.ts",
     "**/src/generated/**/*.ts",
     "**/dist",
-    "**/patchZodios.ts",
-    "**/paged.polyfill.js",
   ],
 };

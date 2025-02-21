@@ -1,23 +1,65 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
+    "start": {
+      "persistent": true,
+      "cache": false,
+      "dependsOn": [
+        "^build",
+        "//#infra:start"
+      ]
+    },
+    "//#infra:start": {
+      "cache": false
+    },
+    "//#infra:stop": {
+      "cache": false
+    },
+    "//#infra:destroy": {
+      "cache": false
+    },
     "build": {
-      "outputs": ["dist"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist"
+      ]
     },
     "check": {
-      "dependsOn": ["build"],
-      "outputs": ["dist"]
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": [
+        "dist"
+      ]
     },
     "test": {
-      "dependsOn": ["build", "^test"]
+      "dependsOn": [
+        "build"
+      ]
     },
     "lint": {
-      "dependsOn": ["build", "^lint"],
-      "outputs": ["dist"]
+      "dependsOn": [
+        "build",
+        "^lint"
+      ],
+      "outputs": [
+        "dist"
+      ]
     },
-    "lint:autofix": {},
+    "lint:autofix": {
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": [
+        "dist"
+      ]
+    },
     "format:check": {},
     "format:write": {}
   },
-  "globalDependencies": ["tsconfig.json"]
+  "globalDependencies": [
+    "tsconfig.json"
+  ]
 }
