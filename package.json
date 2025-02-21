@@ -7,6 +7,7 @@
   },
   "scripts": {
     "start:jwt-audit-analytics-writer": "turbo start --filter pagopa-interop-jwt-audit-analytics-writer",
+    "start:alb-logs-analytics-writer": "turbo start --filter pagopa-interop-alb-logs-analytics-writer",
     "test": "turbo test",
     "build": "turbo build",
     "check": "turbo check",
