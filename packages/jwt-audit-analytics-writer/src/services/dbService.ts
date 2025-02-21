@@ -3,6 +3,10 @@ import { GeneratedTokenAuditDetails } from "pagopa-interop-kpi-models";
 import { DB } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 import { TokenAuditColumn } from "../model/domain/token-audit.js";
+import {
+  insertStagingRecordsError,
+  mergeDataError,
+} from "../model/domain/errors.js";
 
 export function dbServiceBuilder(db: DB) {
   return {
@@ -71,7 +75,7 @@ export function dbServiceBuilder(db: DB) {
           );
         });
       } catch (error: unknown) {
-        throw new Error(`Database error inserting data: ${error}`);
+        throw insertStagingRecordsError(error);
       }
     },
 
@@ -116,7 +120,7 @@ export function dbServiceBuilder(db: DB) {
           );
         });
       } catch (error: unknown) {
-        throw new Error(`Database error merging data: ${error}`);
+        throw mergeDataError(error);
       }
     },
   };
