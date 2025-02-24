@@ -35,7 +35,7 @@ await SQS.runConsumer(
   sqsClient,
   {
     queueUrl: config.sqsNotificationEndpoint,
-    consumerPollingTimeout: config.consumerPollingTimeout,
+    maxNumberOfMessages: config.maxNumberOfMessages,
     serviceName: config.serviceName,
   },
   processMessage(jwtAuditService)

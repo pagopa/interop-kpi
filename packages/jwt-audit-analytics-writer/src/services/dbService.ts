@@ -223,8 +223,6 @@ export function dbServiceBuilder(db: DB) {
           );
         });
       } catch (error: unknown) {
-        console.log(error);
-
         throw mergeDataError(error);
       }
     },
