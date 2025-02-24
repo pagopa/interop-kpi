@@ -1,11 +1,17 @@
 import { ConnectionString } from "connection-string";
-import pgPromise, { IDatabase } from "pg-promise";
+import pgPromise, {
+  ColumnSet,
+  IColumnDescriptor,
+  IDatabase,
+  IMain,
+} from "pg-promise";
 import {
   IClient,
   IConnectionParameters,
 } from "pg-promise/typescript/pg-subset.js";
 
 export type DB = IDatabase<unknown>;
+export type { IMain, IClient, ColumnSet, IColumnDescriptor };
 
 export function initDB({
   username,

@@ -5,7 +5,7 @@ import {
   JwtAuditService,
   jwtAuditServiceBuilder,
 } from "./services/jwtAuditService.js";
-import { dbServiceBuilder } from "./services/dbService.js";
+import { DBService, dbServiceBuilder } from "./services/dbService.js";
 
 const dbInstance = initDB({
   username: config.dbUsername,
@@ -18,13 +18,16 @@ const dbInstance = initDB({
   maxConnectionPool: config.maxConnectionPool,
 });
 
+const dbService: DBService = dbServiceBuilder(dbInstance);
+await dbService.initializeStagingTables();
+
 const sqsClient: SQS.SQSClient = SQS.instantiateClient({
   region: config.awsRegion,
   endpoint: config.sqsNotificationEndpoint,
 });
 
 const jwtAuditService: JwtAuditService = jwtAuditServiceBuilder(
-  dbServiceBuilder(dbInstance),
+  dbService,
   initFileManager(config)
 );
 
@@ -34,7 +37,6 @@ await SQS.runConsumer(
     queueUrl: config.sqsNotificationEndpoint,
     consumerPollingTimeout: config.consumerPollingTimeout,
     serviceName: config.serviceName,
-    runUntilQueueIsEmpty: config.runUntilQueueIsEmpty,
   },
   processMessage(jwtAuditService)
 );
