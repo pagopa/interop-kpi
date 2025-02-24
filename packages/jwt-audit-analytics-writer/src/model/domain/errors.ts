@@ -11,16 +11,14 @@ export function insertStagingRecordsError(
   detail: unknown
 ): InternalError<ErrorCodes> {
   return new InternalError({
-    detail: `Database error inserting staging records: ${JSON.stringify(
-      detail
-    )}`,
+    detail: `Database error inserting staging records: ${detail}`,
     code: "insertStagingRecordsError",
   });
 }
 
 export function mergeDataError(detail: unknown): InternalError<ErrorCodes> {
   return new InternalError({
-    detail: `Database error merging data: ${JSON.stringify(detail)}`,
+    detail: `Database error merging data: ${detail}`,
     code: "mergeDataError",
   });
 }

@@ -13,7 +13,7 @@ export const jwtAuditServiceBuilder = (
     const fileStream = await fileManager.get(config.s3Bucket, s3key, logger);
     const parsedFileStream = fileStream.pipe(ndjson.parse());
 
-    logger.info(`Reading and processing jwt audit file: ${s3key}`);
+    logger.info(`Processing jwt audit file: ${s3key}`);
 
     for await (const batch of batchGenerator(
       parsedFileStream,
@@ -21,10 +21,17 @@ export const jwtAuditServiceBuilder = (
       logger,
       s3key
     )) {
+      logger.debug(
+        `Inserting batch of ${batch.length} records for file: ${s3key}`
+      );
       await dbService.insertStagingRecords(batch);
     }
 
+    logger.info(`Staging records inserted successfully for file: ${s3key}`);
+
     await dbService.mergeData();
+
+    logger.info(`Merge operation completed successfully for file: ${s3key}`);
   },
 });
 
