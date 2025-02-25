@@ -25,15 +25,14 @@ export function dbServiceBuilder(db: DB) {
             (record: GeneratedTokenAuditDetails) => ColumnValue
           > = {
             jwt_id: (record) => record.clientAssertion.jwtId,
+            issued_at: (record) => new Date(record.clientAssertion.issuedAt),
             algorithm: (record) => record.clientAssertion.algorithm,
             key_id: (record) => record.clientAssertion.keyId,
             issuer: (record) => record.clientAssertion.issuer,
             subject: (record) => record.clientAssertion.subject,
             audience: (record) => record.clientAssertion.audience,
-            issued_at: (record) =>
-              new Date(record.clientAssertion.issuedAt * 1000),
             expiration_time: (record) =>
-              new Date(record.clientAssertion.expirationTime * 1000),
+              new Date(record.clientAssertion.expirationTime),
           };
 
           const tokenAuditMapping: Record<
