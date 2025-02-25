@@ -29,6 +29,10 @@
     "vitest": "1.6.0"
   },
   "dependencies": {
+    "pagopa-interop-kpi-commons": "workspace:*",
+    "pagopa-interop-kpi-models": "workspace:*",
+    "kafka-connector": "workspace:*",
+    "kafkajs": "2.2.4",
     "dotenv-flow": "4.1.0",
     "ts-pattern": "5.2.0",
     "zod": "3.23.8"

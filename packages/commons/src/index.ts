@@ -5,3 +5,4 @@ export * from "./sqs/index.js";
 export * from "./utils/date.js";
 export * from "./sqs/index.js";
 export * from "./repositories/db.js";
+export * from "./kafka/kafka.js";
