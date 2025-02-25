@@ -30,24 +30,19 @@ export const instantiateClient = (config: SQSClientConfig): SQSClient =>
 
 const processQueue = async (
   sqsClient: SQSClient,
-  config: { queueUrl: string; runUntilQueueIsEmpty?: boolean } & ConsumerConfig,
+  config: {
+    queueUrl: string;
+  } & ConsumerConfig,
   consumerHandler: (messagePayload: Message) => Promise<void>
 ): Promise<void> => {
   const command = new ReceiveMessageCommand({
     QueueUrl: config.queueUrl,
-    WaitTimeSeconds: config.consumerPollingTimeout,
-    MaxNumberOfMessages: 10,
+    MaxNumberOfMessages: config.maxNumberOfMessages,
     MessageAttributeNames: ["All"],
   });
-  // eslint-disable-next-line functional/no-let
-  let keepProcessingQueue: boolean = true;
 
   do {
     const { Messages } = await sqsClient.send(command);
-    if (config.runUntilQueueIsEmpty && (!Messages || Messages?.length === 0)) {
-      keepProcessingQueue = false;
-    }
-
     if (Messages?.length) {
       for (const message of Messages) {
         if (!message.ReceiptHandle) {
@@ -75,7 +70,7 @@ const processQueue = async (
         }
       }
     }
-  } while (keepProcessingQueue);
+  } while (true);
 };
 
 export const runConsumer = async (
@@ -83,7 +78,6 @@ export const runConsumer = async (
   config: {
     serviceName: string;
     queueUrl: string;
-    runUntilQueueIsEmpty?: boolean;
   } & ConsumerConfig,
   consumerHandler: (messagePayload: Message) => Promise<void>
 ): Promise<void> => {
