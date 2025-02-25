@@ -19,11 +19,13 @@ export const JwtAuditAnalyticsWriterConfig = AWSConfig.and(ConsumerConfig)
         SERVICE_NAME: z.string(),
         SQS_NOTIFICATION_ENDPOINT: z.string(),
         MERGE_TABLE_SUFFIX: z.string(),
+        BATCH_SIZE: z.coerce.number().min(100).default(500),
       })
       .transform((c) => ({
         serviceName: c.SERVICE_NAME,
         sqsNotificationEndpoint: c.SQS_NOTIFICATION_ENDPOINT,
         mergeTableSuffix: c.MERGE_TABLE_SUFFIX,
+        batchSize: c.BATCH_SIZE,
       }))
   );
 

@@ -17,7 +17,7 @@ export const jwtAuditServiceBuilder = (
 
     for await (const batch of batchGenerator(
       parsedFileStream,
-      500,
+      config.batchSize,
       logger,
       s3key
     )) {
@@ -41,7 +41,7 @@ async function* batchGenerator(
   source: AsyncIterable<unknown>,
   batchSize: number,
   logger: Logger,
-  s3KeyPath: string
+  s3key: string
 ): AsyncGenerator<GeneratedTokenAuditDetails[]> {
   // eslint-disable-next-line functional/no-let
   let batch: GeneratedTokenAuditDetails[] = [];
@@ -52,7 +52,7 @@ async function* batchGenerator(
       batch.push(result.data);
     } else {
       logger.error(
-        `Invalid record for file: ${s3KeyPath}. Data: ${JSON.stringify(
+        `Invalid record for file: ${s3key}. Data: ${JSON.stringify(
           rawRecord
         )}. Details: ${JSON.stringify(result.error)}`
       );
