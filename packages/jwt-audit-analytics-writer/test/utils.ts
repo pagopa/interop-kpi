@@ -4,7 +4,6 @@ import {
   ClientId,
   DescriptorId,
   EServiceId,
-  GeneratedTokenAuditDetails,
   generateId,
   PurposeId,
   PurposeVersionId,
@@ -12,6 +11,7 @@ import {
 } from "pagopa-interop-kpi-models";
 import { afterEach, inject } from "vitest";
 import { dateToSeconds } from "pagopa-interop-kpi-commons";
+import { GeneratedTokenAuditDetails } from "../src/model/domain/models.js";
 
 export const { cleanup, fileManager } = await setupTestContainersVitest(
   inject("fileManagerConfig")

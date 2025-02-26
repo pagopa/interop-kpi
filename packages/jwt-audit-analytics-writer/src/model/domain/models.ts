@@ -1,25 +1,53 @@
-import { SQS } from "pagopa-interop-kpi-commons";
-import { S3BodySchema } from "pagopa-interop-kpi-models";
-import { decodeSQSEventMessageError } from "./errors.js";
+import {
+  ClientId,
+  TenantId,
+  AgreementId,
+  EServiceId,
+  DescriptorId,
+  PurposeId,
+  PurposeVersionId,
+} from "pagopa-interop-kpi-models";
+import { z, ZodSchema } from "zod";
 
-export function decodeSQSEventMessage(message: SQS.Message): string {
-  try {
-    if (!message.Body) {
-      throw new Error("Message body is undefined");
-    }
+export const ClientAssertionAuditDetails = z.object({
+  jwtId: z.string(),
+  issuedAt: z.number(),
+  algorithm: z.string(),
+  keyId: z.string(),
+  issuer: z.string(),
+  subject: ClientId,
+  audience: z.string(),
+  expirationTime: z.number(),
+});
+export type ClientAssertionAuditDetails = z.infer<
+  typeof ClientAssertionAuditDetails
+>;
 
-    const s3Body: S3BodySchema = JSON.parse(message.Body);
-    if (!s3Body.Records?.length) {
-      throw new Error("S3Body doesn't contain records");
-    }
+export const GeneratedTokenAuditDetails = z.object({
+  jwtId: z.string(),
+  correlationId: z.string(),
+  issuedAt: z.number(),
+  clientId: ClientId,
+  organizationId: TenantId,
+  agreementId: AgreementId,
+  eserviceId: EServiceId,
+  descriptorId: DescriptorId,
+  purposeId: PurposeId,
+  purposeVersionId: PurposeVersionId,
+  algorithm: z.string(),
+  keyId: z.string(),
+  audience: z.string(),
+  subject: z.string(),
+  notBefore: z.number(),
+  expirationTime: z.number(),
+  issuer: z.string(),
+  clientAssertion: ClientAssertionAuditDetails,
+});
+export type GeneratedTokenAuditDetails = z.infer<
+  typeof GeneratedTokenAuditDetails
+>;
 
-    const key = s3Body.Records[0].s3.object.key;
-    if (!key) {
-      throw new Error(`S3 key must not be empty`);
-    }
-
-    return key;
-  } catch (error: unknown) {
-    throw decodeSQSEventMessageError(message.MessageId, error);
-  }
-}
+export const tokenAuditSchema =
+  GeneratedTokenAuditDetails as unknown as ZodSchema<
+    z.infer<typeof GeneratedTokenAuditDetails>
+  >;

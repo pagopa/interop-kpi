@@ -1,18 +1,34 @@
 import { InternalError } from "pagopa-interop-kpi-models";
 
 export const errorCodes = {
-  decodeSQSEventMessageError: "DECODE_SQS_EVENT_MESSAGE_ERROR",
-  insertJwtAuditError: "INSERT_JWT_AUDIT_ERROR",
+  insertStagingRecordsError: "INSERT_STAGING_RECORDS_ERROR",
+  mergeDataError: "MERGE_DATA_ERROR",
+  deduplicateStagingRecordsError: "DEDUPLICATE_STAGING_RECORDS_ERROR",
 } as const;
 
 export type ErrorCodes = keyof typeof errorCodes;
 
-export function decodeSQSEventMessageError(
-  messageId: string | undefined,
+export function insertStagingRecordsError(
   detail: unknown
 ): InternalError<ErrorCodes> {
   return new InternalError({
-    detail: `Failed to decode SQS S3 event message with MessageId: ${messageId}. Details: ${detail}`,
-    code: "decodeSQSEventMessageError",
+    detail: `Database error inserting staging records: ${detail}`,
+    code: "insertStagingRecordsError",
+  });
+}
+
+export function mergeDataError(detail: unknown): InternalError<ErrorCodes> {
+  return new InternalError({
+    detail: `Database error merging data: ${detail}`,
+    code: "mergeDataError",
+  });
+}
+
+export function deduplicateStagingRecordsError(
+  detail: unknown
+): InternalError<ErrorCodes> {
+  return new InternalError({
+    detail: `Database error deduplicating staging records data: ${detail}`,
+    code: "deduplicateStagingRecordsError",
   });
 }
