@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { FileManager, Logger } from "pagopa-interop-kpi-commons";
-import { config } from "../config/config.js";
-import { DBService } from "./dbService.js";
-import { batches } from "../utilities/batchHelper.js";
 import * as ndjson from "ndjson";
+import { config } from "../config/config.js";
+import { batches } from "../utilities/batchHelper.js";
+import { DBService } from "./dbService.js";
 
 export const jwtAuditServiceBuilder = (
   dbService: DBService,

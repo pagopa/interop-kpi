@@ -20,10 +20,12 @@ export async function* batches(
   logger: Logger,
   s3key: string
 ): AsyncGenerator<GeneratedTokenAuditDetails[]> {
+  // eslint-disable-next-line functional/no-let
   let batch: GeneratedTokenAuditDetails[] = [];
   for await (const rawRecord of source) {
     const result = GeneratedTokenAuditDetails.safeParse(rawRecord);
     if (result.success) {
+      // eslint-disable-next-line functional/immutable-data
       batch.push(result.data);
     } else {
       logger.error(
