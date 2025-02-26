@@ -17,7 +17,7 @@ export const jwtAuditServiceBuilder = (
     const fileStream = await fileManager.get(config.s3Bucket, s3key, logger);
     const parsedFileStream = fileStream.pipe(ndjson.parse());
 
-    logger.info(`Processing jwt audit file: ${s3key}`);
+    logger.info(`Processing records for file: ${s3key}`);
 
     for await (const batch of batches<GeneratedTokenAuditDetails>(
       tokenAuditSchema,
@@ -26,18 +26,18 @@ export const jwtAuditServiceBuilder = (
       s3key,
       logger
     )) {
-      logger.debug(
-        `Inserting batch of ${batch.length} records for file: ${s3key}`
-      );
-      await dbService.insertStagingRecords(batch);
+      await dbService.insertRecordsToStaging(batch);
     }
 
-    logger.info(`Staging records inserted successfully for file: ${s3key}`);
+    logger.info(`Staging records insertion completed for file: ${s3key}`);
 
-    await dbService.deduplicateStagingRecords();
-    await dbService.mergeData();
+    await dbService.mergeStagingToTarget();
 
-    logger.info(`Merge operation completed successfully for file: ${s3key}`);
+    logger.info(`Staging data merged into target tables for file: ${s3key}`);
+
+    await dbService.cleanStaging();
+
+    logger.info(`Staging cleanup completed for file: ${s3key}`);
   },
 });
 

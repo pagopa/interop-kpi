@@ -1,4 +1,12 @@
-import { GeneratedTokenAuditDetails } from "../domain/models.js";
+import { GeneratedTokenAuditDetails } from "./domain/models.js";
+
+export const JwtGeneratedDatabaseTable = {
+  client_assertion: "client_assertion_audit_details",
+  generated_token: "generated_token_audit_details",
+} as const;
+
+export type JwtGeneratedDatabaseTable =
+  (typeof JwtGeneratedDatabaseTable)[keyof typeof JwtGeneratedDatabaseTable];
 
 export interface ClientAssertionSchema {
   jwt_id: string;
@@ -11,7 +19,7 @@ export interface ClientAssertionSchema {
   expiration_time: Date;
 }
 
-export interface GeneratedTokenAuditDetailsSchema {
+export interface GeneratedTokenSchema {
   jwt_id: string;
   correlation_id: string;
   issued_at: Date;
@@ -45,13 +53,13 @@ export type ClientAssertionMapping = {
 };
 
 /**
- * TokenAuditMapping is a type alias that defines a mapping interface to convert
- * a GeneratedTokenAuditDetails record into a shape that conforms to GeneratedTokenAuditDetailsSchema.
+ * GeneratedTokenMapping is a type alias that defines a mapping interface to convert
+ * a GeneratedTokenAuditDetails record into a shape that conforms to GeneratedTokenSchema.
  * It ensures that the output of each mapping function exactly matches the expected type
- * for the corresponding column defined in GeneratedTokenAuditDetailsSchema.
+ * for the corresponding column defined in GeneratedTokenSchema.
  */
-export type TokenAuditMapping = {
-  [K in keyof GeneratedTokenAuditDetailsSchema]: (
+export type GeneratedTokenMapping = {
+  [K in keyof GeneratedTokenSchema]: (
     record: GeneratedTokenAuditDetails
-  ) => GeneratedTokenAuditDetailsSchema[K];
+  ) => GeneratedTokenSchema[K];
 };

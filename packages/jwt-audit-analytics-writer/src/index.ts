@@ -6,6 +6,7 @@ import {
   jwtAuditServiceBuilder,
 } from "./services/jwtAuditService.js";
 import { DBService, dbServiceBuilder } from "./services/dbService.js";
+import { setupDbServiceBuilder } from "./services/setupDbService.js";
 
 const dbInstance = initDB({
   username: config.dbUsername,
@@ -18,8 +19,9 @@ const dbInstance = initDB({
   maxConnectionPool: config.maxConnectionPool,
 });
 
+await setupDbServiceBuilder(dbInstance).setupStagingTables();
+
 const dbService: DBService = dbServiceBuilder(dbInstance);
-await dbService.initializeStagingTables();
 
 const sqsClient: SQS.SQSClient = SQS.instantiateClient({
   region: config.awsRegion,
