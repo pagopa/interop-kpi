@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { GeneratedTokenAuditDetails } from "pagopa-interop-kpi-models";
 import { DB, IMain } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 import {
@@ -7,7 +6,12 @@ import {
   insertStagingRecordsError,
   mergeDataError,
 } from "../model/domain/errors.js";
-import { buildColumnSet, ColumnValue } from "../utilities/pgHelper.js";
+import { buildColumnSet } from "../utilities/pgHelper.js";
+import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
+import {
+  ClientAssertionMapping,
+  TokenAuditMapping,
+} from "../model/db/token-audit.js";
 
 export function dbServiceBuilder(db: DB) {
   const clientAssertionTable = `client_assertion_audit_details`;
@@ -21,10 +25,7 @@ export function dbServiceBuilder(db: DB) {
         await db.tx(async (t) => {
           const pgp: IMain = db.$config.pgp;
 
-          const clientAssertionMapping: Record<
-            string,
-            (record: GeneratedTokenAuditDetails) => ColumnValue
-          > = {
+          const clientAssertionMapping: ClientAssertionMapping = {
             jwt_id: (record) => record.clientAssertion.jwtId,
             issued_at: (record) => new Date(record.clientAssertion.issuedAt),
             algorithm: (record) => record.clientAssertion.algorithm,
@@ -36,10 +37,7 @@ export function dbServiceBuilder(db: DB) {
               new Date(record.clientAssertion.expirationTime),
           };
 
-          const tokenAuditMapping: Record<
-            string,
-            (record: GeneratedTokenAuditDetails) => ColumnValue
-          > = {
+          const tokenAuditMapping: TokenAuditMapping = {
             jwt_id: (record) => record.jwtId,
             correlation_id: (record) => record.correlationId,
             issued_at: (record) => new Date(record.issuedAt),

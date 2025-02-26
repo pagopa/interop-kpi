@@ -5,7 +5,7 @@ import {
 } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 
-export type ColumnValue = string | number | Date;
+export type ColumnValue = string | number | Date | undefined | null;
 
 /**
  * This is a helper function that generates a ColumnSet for bulk operations using pg-promise.

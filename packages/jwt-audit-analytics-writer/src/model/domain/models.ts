@@ -1,13 +1,13 @@
-import { z } from "zod";
 import {
-  AgreementId,
   ClientId,
-  DescriptorId,
+  TenantId,
+  AgreementId,
   EServiceId,
+  DescriptorId,
   PurposeId,
   PurposeVersionId,
-  TenantId,
-} from "../brandedIds.js";
+} from "pagopa-interop-kpi-models";
+import { z, ZodSchema } from "zod";
 
 export const ClientAssertionAuditDetails = z.object({
   jwtId: z.string(),
@@ -46,3 +46,8 @@ export const GeneratedTokenAuditDetails = z.object({
 export type GeneratedTokenAuditDetails = z.infer<
   typeof GeneratedTokenAuditDetails
 >;
+
+export const tokenAuditSchema =
+  GeneratedTokenAuditDetails as unknown as ZodSchema<
+    z.infer<typeof GeneratedTokenAuditDetails>
+  >;

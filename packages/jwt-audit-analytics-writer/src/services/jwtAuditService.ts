@@ -3,6 +3,10 @@ import { FileManager, Logger } from "pagopa-interop-kpi-commons";
 import * as ndjson from "ndjson";
 import { config } from "../config/config.js";
 import { batches } from "../utilities/batchHelper.js";
+import {
+  GeneratedTokenAuditDetails,
+  tokenAuditSchema,
+} from "../model/domain/models.js";
 import { DBService } from "./dbService.js";
 
 export const jwtAuditServiceBuilder = (
@@ -15,11 +19,12 @@ export const jwtAuditServiceBuilder = (
 
     logger.info(`Processing jwt audit file: ${s3key}`);
 
-    for await (const batch of batches(
+    for await (const batch of batches<GeneratedTokenAuditDetails>(
+      tokenAuditSchema,
       parsedFileStream,
       config.batchSize,
-      logger,
-      s3key
+      s3key,
+      logger
     )) {
       logger.debug(
         `Inserting batch of ${batch.length} records for file: ${s3key}`
