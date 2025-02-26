@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { FileManager, Logger } from "pagopa-interop-kpi-commons";
-import { GeneratedTokenAuditDetails } from "pagopa-interop-kpi-models";
-import * as ndjson from "ndjson";
 import { config } from "../config/config.js";
 import { DBService } from "./dbService.js";
+import { batches } from "../utilities/batchHelper.js";
+import * as ndjson from "ndjson";
 
 export const jwtAuditServiceBuilder = (
   dbService: DBService,
@@ -15,7 +15,7 @@ export const jwtAuditServiceBuilder = (
 
     logger.info(`Processing jwt audit file: ${s3key}`);
 
-    for await (const batch of batchGenerator(
+    for await (const batch of batches(
       parsedFileStream,
       config.batchSize,
       logger,
@@ -29,6 +29,7 @@ export const jwtAuditServiceBuilder = (
 
     logger.info(`Staging records inserted successfully for file: ${s3key}`);
 
+    await dbService.deduplicateStagingRecords();
     await dbService.mergeData();
 
     logger.info(`Merge operation completed successfully for file: ${s3key}`);
@@ -36,33 +37,3 @@ export const jwtAuditServiceBuilder = (
 });
 
 export type JwtAuditService = ReturnType<typeof jwtAuditServiceBuilder>;
-
-async function* batchGenerator(
-  source: AsyncIterable<unknown>,
-  batchSize: number,
-  logger: Logger,
-  s3key: string
-): AsyncGenerator<GeneratedTokenAuditDetails[]> {
-  // eslint-disable-next-line functional/no-let
-  let batch: GeneratedTokenAuditDetails[] = [];
-  for await (const rawRecord of source) {
-    const result = GeneratedTokenAuditDetails.safeParse(rawRecord);
-    if (result.success) {
-      // eslint-disable-next-line functional/immutable-data
-      batch.push(result.data);
-    } else {
-      logger.error(
-        `Invalid record for file: ${s3key}. Data: ${JSON.stringify(
-          rawRecord
-        )}. Details: ${JSON.stringify(result.error)}`
-      );
-    }
-    if (batch.length >= batchSize) {
-      yield batch;
-      batch = [];
-    }
-  }
-  if (batch.length > 0) {
-    yield batch;
-  }
-}

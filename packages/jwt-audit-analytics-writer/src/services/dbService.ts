@@ -3,6 +3,7 @@ import { GeneratedTokenAuditDetails } from "pagopa-interop-kpi-models";
 import { DB, IMain } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 import {
+  deduplicateStagingRecordsError,
   insertStagingRecordsError,
   mergeDataError,
 } from "../model/domain/errors.js";
@@ -87,30 +88,6 @@ export function dbServiceBuilder(db: DB) {
     async mergeData(): Promise<void> {
       try {
         await db.tx(async (t) => {
-          await t.none(`
-            WITH duplicates AS (
-              SELECT jwt_id,
-                    ROW_NUMBER() OVER (PARTITION BY jwt_id ORDER BY issued_at) AS rn
-              FROM ${config.dbSchemaName}.${clientAssertionTable}${config.mergeTableSuffix}
-            )
-            DELETE FROM ${config.dbSchemaName}.${clientAssertionTable}${config.mergeTableSuffix}
-            USING duplicates
-            WHERE ${config.dbSchemaName}.${clientAssertionTable}${config.mergeTableSuffix}.jwt_id = duplicates.jwt_id
-              AND duplicates.rn > 1;
-          `);
-
-          await t.none(`
-            WITH duplicates AS (
-              SELECT jwt_id,
-                    ROW_NUMBER() OVER (PARTITION BY jwt_id ORDER BY issued_at) AS rn
-              FROM ${config.dbSchemaName}.${generatedTokenAuditTable}${config.mergeTableSuffix}
-            )
-            DELETE FROM ${config.dbSchemaName}.${generatedTokenAuditTable}${config.mergeTableSuffix}
-            USING duplicates
-            WHERE ${config.dbSchemaName}.${generatedTokenAuditTable}${config.mergeTableSuffix}.jwt_id = duplicates.jwt_id
-              AND duplicates.rn > 1;
-          `);
-
           await t.none(`
             MERGE INTO ${config.dbSchemaName}.${clientAssertionTable} AS target 
             USING ${config.dbSchemaName}.${clientAssertionTable}${config.mergeTableSuffix} AS source
@@ -223,6 +200,38 @@ export function dbServiceBuilder(db: DB) {
         });
       } catch (error: unknown) {
         throw mergeDataError(error);
+      }
+    },
+
+    async deduplicateStagingRecords(): Promise<void> {
+      try {
+        await db.tx(async (t) => {
+          await t.none(`
+            WITH duplicates AS (
+              SELECT jwt_id,
+                    ROW_NUMBER() OVER (PARTITION BY jwt_id ORDER BY issued_at) AS rn
+              FROM ${config.dbSchemaName}.${clientAssertionTable}${config.mergeTableSuffix}
+            )
+            DELETE FROM ${config.dbSchemaName}.${clientAssertionTable}${config.mergeTableSuffix}
+            USING duplicates
+            WHERE ${config.dbSchemaName}.${clientAssertionTable}${config.mergeTableSuffix}.jwt_id = duplicates.jwt_id
+              AND duplicates.rn > 1;
+          `);
+
+          await t.none(`
+            WITH duplicates AS (
+              SELECT jwt_id,
+                    ROW_NUMBER() OVER (PARTITION BY jwt_id ORDER BY issued_at) AS rn
+              FROM ${config.dbSchemaName}.${generatedTokenAuditTable}${config.mergeTableSuffix}
+            )
+            DELETE FROM ${config.dbSchemaName}.${generatedTokenAuditTable}${config.mergeTableSuffix}
+            USING duplicates
+            WHERE ${config.dbSchemaName}.${generatedTokenAuditTable}${config.mergeTableSuffix}.jwt_id = duplicates.jwt_id
+              AND duplicates.rn > 1;
+          `);
+        });
+      } catch (error: unknown) {
+        throw deduplicateStagingRecordsError(error);
       }
     },
 
