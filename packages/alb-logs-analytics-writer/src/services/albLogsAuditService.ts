@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { FileManager, Logger } from "pagopa-interop-kpi-commons";
-import { AlbLogsAuditDetails } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { DBService } from "./dbService.js";
+import { LoadBalancerLog, LoadBalancerLogSchema } from "../model/models.js";
 
 export const albLogsAuditServiceBuilder = (
   dbService: DBService,
@@ -28,11 +28,11 @@ async function* batchGenerator(
   batchSize: number,
   logger: Logger,
   s3KeyPath: string
-): AsyncGenerator<AlbLogsAuditDetails[]> {
+): AsyncGenerator<LoadBalancerLog[]> {
   // eslint-disable-next-line functional/no-let
-  let batch: AlbLogsAuditDetails[] = [];
+  let batch: LoadBalancerLog[] = [];
   for await (const rawRecord of source) {
-    const result = AlbLogsAuditDetails.safeParse(rawRecord);
+    const result = LoadBalancerLogSchema.safeParse(rawRecord);
     if (result.success) {
       // eslint-disable-next-line functional/immutable-data
       batch.push(result.data);
