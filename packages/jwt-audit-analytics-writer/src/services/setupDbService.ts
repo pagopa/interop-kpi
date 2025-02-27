@@ -12,16 +12,16 @@ export function setupDbServiceBuilder(db: DB) {
     async setupStagingTables(): Promise<void> {
       try {
         const createClientAssertionTableQuery = `
-        CREATE TABLE IF NOT EXISTS ${config.dbSchemaName}.${clientAssertionTable}${config.mergeTableSuffix} (
-          LIKE ${config.dbSchemaName}.${clientAssertionTable}
-        );
-      `;
+          CREATE TABLE IF NOT EXISTS ${config.dbSchemaName}.${clientAssertionTable}${config.mergeTableSuffix} (
+            LIKE ${config.dbSchemaName}.${clientAssertionTable}
+          );
+        `;
 
         const createGeneratedTokenTableQuery = `
-        CREATE TABLE IF NOT EXISTS ${config.dbSchemaName}.${generatedTokenTable}${config.mergeTableSuffix} (
-          LIKE ${config.dbSchemaName}.${generatedTokenTable}
-        );
-      `;
+          CREATE TABLE IF NOT EXISTS ${config.dbSchemaName}.${generatedTokenTable}${config.mergeTableSuffix} (
+            LIKE ${config.dbSchemaName}.${generatedTokenTable}
+          );
+        `;
 
         await db.query(createClientAssertionTableQuery);
         await db.query(createGeneratedTokenTableQuery);
