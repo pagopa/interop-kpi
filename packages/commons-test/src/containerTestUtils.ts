@@ -23,7 +23,7 @@ export const postgreSQLContainer = (config: DbConfig): GenericContainer =>
     })
     .withCopyFilesToContainer([
       {
-        source: "../../docker/event-store-init.sql",
+        source: "../../docker/postgres/init-db.sql",
         target: "/docker-entrypoint-initdb.d/01-init.sql",
       },
     ])

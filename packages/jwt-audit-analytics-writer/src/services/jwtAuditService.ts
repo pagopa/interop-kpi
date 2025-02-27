@@ -1,8 +1,12 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { FileManager, Logger } from "pagopa-interop-kpi-commons";
-import { GeneratedTokenAuditDetails } from "pagopa-interop-kpi-models";
 import * as ndjson from "ndjson";
 import { config } from "../config/config.js";
+import { batches } from "../utilities/batchHelper.js";
+import {
+  GeneratedTokenAuditDetails,
+  tokenAuditSchema,
+} from "../model/domain/models.js";
 import { DBService } from "./dbService.js";
 
 export const jwtAuditServiceBuilder = (
@@ -13,18 +17,27 @@ export const jwtAuditServiceBuilder = (
     const fileStream = await fileManager.get(config.s3Bucket, s3key, logger);
     const parsedFileStream = fileStream.pipe(ndjson.parse());
 
-    logger.info(`Reading and processing jwt audit file: ${s3key}`);
+    logger.info(`Processing records for file: ${s3key}`);
 
-    for await (const batch of batchGenerator(
+    for await (const batch of batches<GeneratedTokenAuditDetails>(
+      tokenAuditSchema,
       parsedFileStream,
-      500,
-      logger,
-      s3key
+      config.batchSize,
+      s3key,
+      logger
     )) {
-      await dbService.insertStagingRecords(batch);
+      await dbService.insertRecordsToStaging(batch);
     }
 
-    await dbService.mergeData();
+    logger.info(`Staging records insertion completed for file: ${s3key}`);
+
+    await dbService.mergeStagingToTarget();
+
+    logger.info(`Staging data merged into target tables for file: ${s3key}`);
+
+    await dbService.cleanStaging();
+
+    logger.info(`Staging cleanup completed for file: ${s3key}`);
   },
 });
 
