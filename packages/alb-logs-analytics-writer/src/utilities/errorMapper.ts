@@ -3,11 +3,10 @@ import {
   InternalError,
   genericInternalError,
 } from "pagopa-interop-kpi-models";
-import { ErrorCodes } from "pagopa-interop-kpi-commons";
 import { P, match } from "ts-pattern";
 import { Logger } from "pagopa-interop-kpi-commons";
 
-type LocalErrorCodes = ErrorCodes | CommonErrorCodes;
+type LocalErrorCodes = CommonErrorCodes;
 
 export const errorMapper = (
   error: unknown,

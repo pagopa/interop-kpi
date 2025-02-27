@@ -2,7 +2,10 @@
 import { FileManager, Logger } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 import { DBService } from "./dbService.js";
-import { LoadBalancerLog, LoadBalancerLogSchema } from "../model/models.js";
+import {
+  LoadBalancerLog,
+  LoadBalancerLogSchema,
+} from "../model/load-balancer-log.js";
 
 export const albLogsAuditServiceBuilder = (
   dbService: DBService,
