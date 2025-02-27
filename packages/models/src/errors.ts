@@ -14,6 +14,7 @@ export class InternalError<T> extends Error {
 
 const errorCodes = {
   genericError: "GENERIC_ERROR",
+  decodeSQSEventMessageError: "DECODE_SQS_EVENT_MESSAGE_ERROR",
 } as const;
 
 export type CommonErrorCodes = keyof typeof errorCodes;
@@ -42,5 +43,15 @@ export function genericInternalError(
   return new InternalError({
     code: "genericError",
     detail: details,
+  });
+}
+
+export function decodeSQSEventMessageError(
+  messageId: string | undefined,
+  detail: unknown
+): InternalError<CommonErrorCodes> {
+  return new InternalError({
+    detail: `Failed to decode SQS S3 event message with MessageId: ${messageId}. Details: ${detail}`,
+    code: "decodeSQSEventMessageError",
   });
 }

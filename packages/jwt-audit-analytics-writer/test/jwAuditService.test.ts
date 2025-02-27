@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, afterAll } from "vitest";
 import { SQS } from "pagopa-interop-kpi-commons";
-import { InternalError } from "pagopa-interop-kpi-models";
-import { processMessage } from "../src/handlers/messageHandler.js";
 import {
+  CommonErrorCodes,
   decodeSQSEventMessageError,
-  ErrorCodes,
-} from "../src/model/domain/errors.js";
+  InternalError,
+} from "pagopa-interop-kpi-models";
+import { processMessage } from "../src/handlers/messageHandler.js";
 import { sqsMessagesMock } from "./utils.js";
 
 describe("JWT Audit Service tests", () => {
@@ -50,7 +50,7 @@ describe("JWT Audit Service tests", () => {
         await processMessage(mockJwtAuditService)(invalidMessage);
       } catch (error) {
         expect(error).toBeInstanceOf(InternalError);
-        expect((error as InternalError<ErrorCodes>).code).toBe(
+        expect((error as InternalError<CommonErrorCodes>).code).toBe(
           "decodeSQSEventMessageError"
         );
       }
