@@ -2,19 +2,22 @@ import {
   LoggerConfig,
   KafkaConsumerConfig,
   KafkaTopicConfig,
+  FileManagerConfig,
 } from "pagopa-interop-kpi-commons";
 import { z } from "zod";
 
 const applicationAuditArchiverConfig = LoggerConfig.and(KafkaConsumerConfig)
   .and(KafkaTopicConfig)
+  .and(FileManagerConfig)
   .and(
     z
       .object({
-        APPLICATION_NAME: z.string(),
-        API_OPERATIONS_BASEURL: z.string(),
+        SERVICE_NAME: z.string(),
+        S3_BUCKET_NAME: z.string(),
       })
       .transform((c) => ({
-        applicationName: c.APPLICATION_NAME,
+        applicationName: c.SERVICE_NAME,
+        s3BucketName: c.S3_BUCKET_NAME,
       }))
   );
 

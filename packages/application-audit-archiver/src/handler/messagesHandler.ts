@@ -1,5 +1,6 @@
 import { EachMessagePayload } from "kafkajs";
 import {
+  FileManager,
   decodeKafkaMessage,
   genericLogger,
   logger,
@@ -9,26 +10,31 @@ import { errorMapper } from "../utilities/errorMapper.js";
 import { config } from "../config/config.js";
 import { ApplicationAuditEvent } from "../model/model.js";
 
-export function processMessage(): ({
-  message,
-  partition,
-}: EachMessagePayload) => Promise<void> {
+export function processMessage(fileManager: FileManager) {
   return async ({ message, partition }: EachMessagePayload): Promise<void> => {
-    try {
-      if (!message) {
-        throw kafkaMissingMessageValue(config.kafkaTopic);
-      }
+    if (!message) {
+      throw kafkaMissingMessageValue(config.kafkaTopic);
+    }
 
+    try {
       const applicationAuditMessage = decodeKafkaMessage(
         message,
         ApplicationAuditEvent
       );
-      console.log(applicationAuditMessage);
+
+      const s3File = {
+        bucket: config.s3BucketName,
+        path: "TODO",
+        name: `${applicationAuditMessage.correlationId}.json`,
+        content: Buffer.from(JSON.stringify(applicationAuditMessage)),
+      };
+
+      await fileManager.storeBytes(s3File, genericLogger);
 
       genericLogger.info(
-        `Message was processed. Partition number: ${partition}. Offset: ${message.offset}`
+        `Message processed. Partition: ${partition}, Offset: ${message.offset}`
       );
-    } catch (error: unknown) {
+    } catch (error) {
       throw errorMapper(error, logger({}), message.value?.toString());
     }
   };
