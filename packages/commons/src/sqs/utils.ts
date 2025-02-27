@@ -1,5 +1,7 @@
-import { S3BodySchema } from "pagopa-interop-kpi-models";
-import { decodeSQSEventMessageError } from "./sqsErrors.js";
+import {
+  decodeSQSEventMessageError,
+  S3BodySchema,
+} from "pagopa-interop-kpi-models";
 import { SQS } from "./index.js";
 
 export function decodeSQSEventMessage(message: SQS.Message): string {
