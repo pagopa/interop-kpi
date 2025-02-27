@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { IMain, ITask } from "pagopa-interop-kpi-commons";
+import { IMain, ITask, buildColumnSet } from "pagopa-interop-kpi-commons";
 import { genericInternalError } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
-import { buildColumnSet } from "../utilities/pgHelper.js";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
 import {
   ClientAssertionMapping,
@@ -36,7 +35,8 @@ export function clientAssertionRepository(t: ITask<unknown>) {
           buildColumnSet<GeneratedTokenAuditDetails>(
             pgp,
             clientAssertionMapping,
-            clientAssertionTableName
+            clientAssertionTableName,
+            config.dbSchemaName
           );
 
         await t.none(pgp.helpers.insert(records, clientAssertionColumnSet));

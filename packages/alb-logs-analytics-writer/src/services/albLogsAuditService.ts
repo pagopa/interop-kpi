@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { FileManager, Logger } from "pagopa-interop-kpi-commons";
+import { FileManager, Logger, batches } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 import { DBService } from "./dbService.js";
 import {
@@ -13,45 +13,28 @@ export const albLogsAuditServiceBuilder = (
 ) => ({
   async handleMessage(s3key: string, logger: Logger): Promise<void> {
     const fileStream = await fileManager.get(config.s3Bucket, s3key, logger);
+    logger.info(`Processing records for file: ${s3key}`);
 
-    logger.info(`Reading and processing alb logs audit file: ${s3key}`);
-
-    for await (const batch of batchGenerator(fileStream, 500, logger, s3key)) {
-      await dbService.insertStagingRecords(batch);
+    for await (const batch of batches<LoadBalancerLog>(
+      LoadBalancerLogSchema,
+      fileStream,
+      500,
+      s3key,
+      logger
+    )) {
+      await dbService.insertRecordsToStaging(batch);
     }
 
-    await dbService.mergeData();
+    logger.info(`Staging records insertion completed for file: ${s3key}`);
+
+    await dbService.mergeStagingToTarget();
+
+    logger.info(`Staging data merged into target tables for file: ${s3key}`);
+
+    await dbService.cleanStaging();
+
+    logger.info(`Staging cleanup completed for file: ${s3key}`);
   },
 });
 
 export type AlbLogsAuditService = ReturnType<typeof albLogsAuditServiceBuilder>;
-
-async function* batchGenerator(
-  source: AsyncIterable<unknown>,
-  batchSize: number,
-  logger: Logger,
-  s3KeyPath: string
-): AsyncGenerator<LoadBalancerLog[]> {
-  // eslint-disable-next-line functional/no-let
-  let batch: LoadBalancerLog[] = [];
-  for await (const rawRecord of source) {
-    const result = LoadBalancerLogSchema.safeParse(rawRecord);
-    if (result.success) {
-      // eslint-disable-next-line functional/immutable-data
-      batch.push(result.data);
-    } else {
-      logger.error(
-        `Invalid record for file: ${s3KeyPath}. Data: ${JSON.stringify(
-          rawRecord
-        )}. Details: ${JSON.stringify(result.error)}`
-      );
-    }
-    if (batch.length >= batchSize) {
-      yield batch;
-      batch = [];
-    }
-  }
-  if (batch.length > 0) {
-    yield batch;
-  }
-}

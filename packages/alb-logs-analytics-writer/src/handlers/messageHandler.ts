@@ -1,4 +1,4 @@
-import { SQS, logger } from "pagopa-interop-kpi-commons";
+import { SQS, decodeSQSEventMessage, logger } from "pagopa-interop-kpi-commons";
 import { CorrelationId, generateId } from "pagopa-interop-kpi-models";
 import { errorMapper } from "../utilities/errorMapper.js";
 import { config } from "../config/config.js";
