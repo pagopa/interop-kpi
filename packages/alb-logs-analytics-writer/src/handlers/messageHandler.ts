@@ -17,7 +17,7 @@ export function processMessage(
     });
 
     try {
-      albLogsAuditService.handleMessage(decodedMessage, loggerInstance);
+      await albLogsAuditService.handleMessage(decodedMessage, loggerInstance);
     } catch (error) {
       throw errorMapper(error, loggerInstance);
     }

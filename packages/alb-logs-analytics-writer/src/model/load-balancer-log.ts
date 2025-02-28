@@ -20,7 +20,7 @@ const LoadBalancerLogSchema = z.object({
   sslCipher: z.string().optional(),
   sslProtocol: z.string().optional(),
   targetGroupArn: z.string().optional(),
-  traceId: z.string().optional(),
+  traceId: z.string(),
   domainName: z.string().optional(),
   chosenCertArn: z.string().optional(),
   matchedRulePriority: z.string().optional(),
