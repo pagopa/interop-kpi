@@ -1,5 +1,5 @@
-import { Logger } from "pagopa-interop-kpi-commons";
 import { ZodSchema } from "zod";
+import { Logger } from "../index.js";
 
 /**
  * Async generator that batches records from an asynchronous iterable.

@@ -40,3 +40,42 @@ CREATE TABLE IF NOT EXISTS jwt_generated.client_assertion_audit_details_staging 
 CREATE TABLE IF NOT EXISTS jwt_generated.generated_token_audit_details_staging (
     LIKE jwt_generated.generated_token_audit_details
 );
+
+CREATE SCHEMA IF NOT EXISTS loadbalancerlog;
+CREATE TABLE IF NOT EXISTS loadbalancerlog.load_balancer_logs (
+    type VARCHAR(50) NOT NULL,
+    time VARCHAR(50) NOT NULL,
+    elb VARCHAR(255) NOT NULL,
+    client VARCHAR(50) NOT NULL,
+    target VARCHAR(50) NOT NULL,
+    request_processing_time VARCHAR(50) NOT NULL,
+    target_processing_time VARCHAR(50) NOT NULL,
+    response_processing_time VARCHAR(50) NOT NULL,
+    elb_status_code INTEGER NOT NULL,
+    target_status_code INTEGER,
+    received_bytes BIGINT NOT NULL,
+    sent_bytes BIGINT NOT NULL,
+    request TEXT NOT NULL,
+    user_agent TEXT,
+    ssl_cipher VARCHAR(255),
+    ssl_protocol VARCHAR(50),
+    target_group_arn VARCHAR(255),
+    trace_id VARCHAR(255) NOT NULL,
+    domain_name VARCHAR(255),
+    chosen_cert_arn VARCHAR(255),
+    matched_rule_priority INTEGER,
+    request_creation_time VARCHAR(50),
+    actions_executed TEXT,
+    redirect_url TEXT,
+    error_reason TEXT,
+    target_port_list TEXT,
+    target_status_code_list TEXT,
+    classification VARCHAR(50),
+    classification_reason VARCHAR(255),
+    conn_trace_id VARCHAR(255)
+);
+
+
+CREATE TABLE IF NOT EXISTS loadbalancerlog.load_balancer_logs_staging (
+    LIKE loadbalancerlog.load_balancer_logs INCLUDING ALL
+);

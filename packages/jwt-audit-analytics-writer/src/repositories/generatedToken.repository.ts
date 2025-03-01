@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { IMain, ITask } from "pagopa-interop-kpi-commons";
+import { IMain, ITask, buildColumnSet } from "pagopa-interop-kpi-commons";
 import { genericInternalError } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
-import { buildColumnSet } from "../utilities/pgHelper.js";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
 import {
   GeneratedTokenMapping,
@@ -44,7 +43,8 @@ export function generatedTokenRepository(t: ITask<unknown>) {
         const tokenAuditColumnSet = buildColumnSet<GeneratedTokenAuditDetails>(
           pgp,
           generatedTokenMapping,
-          tokenAuditTableName
+          tokenAuditTableName,
+          config.dbSchemaName
         );
 
         await t.none(pgp.helpers.insert(records, tokenAuditColumnSet));
