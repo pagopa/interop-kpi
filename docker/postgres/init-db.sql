@@ -44,15 +44,13 @@ CREATE TABLE IF NOT EXISTS jwt_generated.generated_token_audit_details_staging (
 CREATE SCHEMA IF NOT EXISTS loadbalancerlog;
 CREATE TABLE IF NOT EXISTS loadbalancerlog.load_balancer_logs (
     type VARCHAR(50) NOT NULL,
-    time TIMESTAMPTZ NOT NULL,
+    time VARCHAR(50) NOT NULL,
     elb VARCHAR(255) NOT NULL,
-    client_ip INET NOT NULL,
-    client_port INTEGER NOT NULL,
-    target_ip INET,
-    target_port INTEGER,
-    request_processing_time FLOAT NOT NULL,
-    target_processing_time FLOAT NOT NULL,
-    response_processing_time FLOAT NOT NULL,
+    client VARCHAR(50) NOT NULL,
+    target VARCHAR(50) NOT NULL,
+    request_processing_time VARCHAR(50) NOT NULL,
+    target_processing_time VARCHAR(50) NOT NULL,
+    response_processing_time VARCHAR(50) NOT NULL,
     elb_status_code INTEGER NOT NULL,
     target_status_code INTEGER,
     received_bytes BIGINT NOT NULL,
@@ -66,7 +64,7 @@ CREATE TABLE IF NOT EXISTS loadbalancerlog.load_balancer_logs (
     domain_name VARCHAR(255),
     chosen_cert_arn VARCHAR(255),
     matched_rule_priority INTEGER,
-    request_creation_time TIMESTAMPTZ,
+    request_creation_time VARCHAR(50),
     actions_executed TEXT,
     redirect_url TEXT,
     error_reason TEXT,
@@ -74,8 +72,9 @@ CREATE TABLE IF NOT EXISTS loadbalancerlog.load_balancer_logs (
     target_status_code_list TEXT,
     classification VARCHAR(50),
     classification_reason VARCHAR(255),
-    PRIMARY KEY (trace_id)
+    conn_trace_id VARCHAR(255)
 );
+
 
 CREATE TABLE IF NOT EXISTS loadbalancerlog.load_balancer_logs_staging (
     LIKE loadbalancerlog.load_balancer_logs INCLUDING ALL

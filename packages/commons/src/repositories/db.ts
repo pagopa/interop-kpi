@@ -20,7 +20,6 @@ export function initDB({
   host,
   port,
   database,
-  schema,
   useSSL,
   maxConnectionPool,
 }: {
@@ -29,13 +28,10 @@ export function initDB({
   host: string;
   port: number;
   database: string;
-  schema: string;
   useSSL: boolean;
   maxConnectionPool: number;
 }): DB {
-  const pgp = pgPromise({
-    schema,
-  });
+  const pgp = pgPromise();
 
   const encodedUsername = encodeURIComponent(username);
   const encodedPassword = encodeURIComponent(password);

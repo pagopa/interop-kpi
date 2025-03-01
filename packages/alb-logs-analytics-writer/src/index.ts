@@ -13,7 +13,6 @@ const dbInstance = initDB({
   host: config.dbHost,
   port: config.dbPort,
   database: config.dbName,
-  schema: config.dbSchemaName,
   useSSL: config.dbUseSSL,
   maxConnectionPool: config.maxConnectionPool,
 });

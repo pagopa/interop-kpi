@@ -48,7 +48,7 @@ export const sqsMessagesMock = {
       {
         s3: {
           object: {
-            key: "alb-logs.json",
+            key: "alb-logs.gz",
           },
         },
       },

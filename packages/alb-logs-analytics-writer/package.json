@@ -21,16 +21,18 @@
   "devDependencies": {
     "@pagopa/eslint-config": "3.0.0",
     "@types/node": "20.14.6",
+    "@types/split2": "4.2.3",
     "prettier": "2.8.8",
     "tsx": "4.19.1",
     "typescript": "5.4.5",
     "vitest": "1.6.0"
   },
   "dependencies": {
-    "pagopa-interop-kpi-commons": "workspace:*",
-    "pagopa-interop-kpi-models": "workspace:*",
-    "pagopa-interop-kpi-commons-test": "workspace:*",
     "dotenv-flow": "4.1.0",
+    "pagopa-interop-kpi-commons": "workspace:*",
+    "pagopa-interop-kpi-commons-test": "workspace:*",
+    "pagopa-interop-kpi-models": "workspace:*",
+    "split2": "4.2.0",
     "ts-pattern": "5.2.0",
     "zod": "3.23.8"
   }
