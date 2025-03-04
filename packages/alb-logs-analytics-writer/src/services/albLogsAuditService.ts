@@ -35,6 +35,9 @@ export const albLogsAuditServiceBuilder = (
 
       logger.info(`Processing records for file: ${s3key}`);
 
+      // eslint-disable-next-line functional/no-let
+      let totalRecordsProcessed: number = 0;
+
       for await (const batch of batches<LoadBalancerLog>(
         LoadBalancerLogSchema,
         parsedFileStream,
@@ -54,6 +57,14 @@ export const albLogsAuditServiceBuilder = (
         }
 
         await dbService.insertRecordsToStaging(data);
+        totalRecordsProcessed += batch.length;
+      }
+
+      if (totalRecordsProcessed === 0) {
+        logger.info(
+          `No records processed for file: ${s3key}. Skipping merge and cleanup.`
+        );
+        return;
       }
 
       logger.info(`Staging records insertion completed for file: ${s3key}`);
