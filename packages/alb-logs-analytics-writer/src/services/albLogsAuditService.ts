@@ -16,6 +16,8 @@ export const albLogsAuditServiceBuilder = (
   fileManager: FileManager
 ) => ({
   async handleMessage(s3key: string, logger: Logger): Promise<void> {
+    // eslint-disable-next-line functional/no-let
+    let totalRecordsProcessed: number = 0;
     try {
       if (!s3key.endsWith(".gz")) {
         throw new Error(
@@ -33,9 +35,6 @@ export const albLogsAuditServiceBuilder = (
       const parsedFileStream = transformFileStream(fileStream);
 
       logger.info(`Processing records for file: ${s3key}`);
-
-      // eslint-disable-next-line functional/no-let
-      let totalRecordsProcessed: number = 0;
 
       for await (const batch of batches<LoadBalancerLog>(
         LoadBalancerLogSchema,
@@ -74,10 +73,12 @@ export const albLogsAuditServiceBuilder = (
       await dbService.cleanStaging();
       logger.info(`Staging cleanup completed for file: ${s3key}`);
     } catch (error) {
-      await dbService.cleanStaging();
-      logger.error(
-        `Error encountered while processing file: ${s3key}. Staging cleanup completed.`
-      );
+      if (totalRecordsProcessed !== 0) {
+        await dbService.cleanStaging();
+        logger.error(
+          `Error encountered while processing file: ${s3key}. Staging cleanup completed.`
+        );
+      }
       throw error;
     }
   },
