@@ -1,13 +1,5 @@
 import { GeneratedTokenAuditDetails } from "./domain/models.js";
 
-export const JwtGeneratedDatabaseTable = {
-  client_assertion: "client_assertion_audit_details",
-  generated_token: "generated_token_audit_details",
-} as const;
-
-export type JwtGeneratedDatabaseTable =
-  (typeof JwtGeneratedDatabaseTable)[keyof typeof JwtGeneratedDatabaseTable];
-
 export interface ClientAssertionSchema {
   jwt_id: string;
   issued_at: Date;

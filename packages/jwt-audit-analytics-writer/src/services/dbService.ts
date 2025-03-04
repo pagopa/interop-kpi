@@ -4,7 +4,11 @@ import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
 import { clientAssertionRepository } from "../repositories/clientAssertion.repository.js";
 import { generatedTokenRepository } from "../repositories/generatedToken.repository.js";
 
-export function dbServiceBuilder(db: DB) {
+export function dbServiceBuilder(
+  db: DB,
+  clientAssertionRepo = clientAssertionRepository,
+  generatedTokenRepo = generatedTokenRepository
+) {
   const pgp: IMain = db.$config.pgp;
 
   return {
@@ -12,22 +16,22 @@ export function dbServiceBuilder(db: DB) {
       records: GeneratedTokenAuditDetails[]
     ): Promise<void> {
       await db.tx(async (t) => {
-        await clientAssertionRepository(t).insert(pgp, records);
-        await generatedTokenRepository(t).insert(pgp, records);
+        await clientAssertionRepo(t).insert(pgp, records);
+        await generatedTokenRepo(t).insert(pgp, records);
       });
     },
 
     async mergeStagingToTarget(): Promise<void> {
       await db.tx(async (t) => {
-        await clientAssertionRepository(t).merge();
-        await generatedTokenRepository(t).merge();
+        await clientAssertionRepo(t).merge();
+        await generatedTokenRepo(t).merge();
       });
     },
 
     async cleanStaging(): Promise<void> {
       await db.tx(async (t) => {
-        await clientAssertionRepository(t).clean();
-        await generatedTokenRepository(t).clean();
+        await clientAssertionRepo(t).clean();
+        await generatedTokenRepo(t).clean();
       });
     },
   };
