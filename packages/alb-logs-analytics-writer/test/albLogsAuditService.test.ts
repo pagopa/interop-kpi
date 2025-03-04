@@ -90,7 +90,7 @@ describe("ALB Logs Audit Service", () => {
     ).resolves.not.toThrow();
 
     expect(mockDbService.insertRecordsToStaging).not.toHaveBeenCalled();
-    expect(mockDbService.mergeStagingToTarget).toHaveBeenCalled();
-    expect(mockDbService.cleanStaging).toHaveBeenCalled();
+    expect(mockDbService.mergeStagingToTarget).not.toHaveBeenCalled();
+    expect(mockDbService.cleanStaging).not.toHaveBeenCalled();
   });
 });
