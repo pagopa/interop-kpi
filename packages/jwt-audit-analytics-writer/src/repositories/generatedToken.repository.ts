@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { IMain, ITask } from "pagopa-interop-kpi-commons";
-import { genericInternalError } from "pagopa-interop-kpi-models";
+import {
+  genericInternalError,
+  JwtGeneratedDbTable,
+} from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { buildColumnSet } from "../utilities/pgHelper.js";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
-import {
-  GeneratedTokenMapping,
-  JwtGeneratedDatabaseTable,
-} from "../model/db.js";
+import { GeneratedTokenMapping } from "../model/db.js";
 
 export function generatedTokenRepository(t: ITask<unknown>) {
-  const generatedTokenTable = JwtGeneratedDatabaseTable.generated_token;
+  const generatedTokenTable = JwtGeneratedDbTable.generated_token;
 
   return {
     async insert(
@@ -44,7 +44,8 @@ export function generatedTokenRepository(t: ITask<unknown>) {
         const tokenAuditColumnSet = buildColumnSet<GeneratedTokenAuditDetails>(
           pgp,
           generatedTokenMapping,
-          tokenAuditTableName
+          tokenAuditTableName,
+          config.dbSchemaName
         );
 
         await t.none(pgp.helpers.insert(records, tokenAuditColumnSet));
@@ -143,6 +144,6 @@ export function generatedTokenRepository(t: ITask<unknown>) {
   };
 }
 
-export type GenerateClientRepository = ReturnType<
+export type GeneratedTokenRepository = ReturnType<
   typeof generatedTokenRepository
 >;

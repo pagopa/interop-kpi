@@ -8,7 +8,7 @@ import {
 import { processMessage } from "../src/handlers/messageHandler.js";
 import { sqsMessagesMock } from "./utils.js";
 
-describe("JWT Audit Service tests", () => {
+describe("Message Handler tests", () => {
   const mockJwtAuditService = {
     handleMessage: vi.fn().mockResolvedValue(undefined),
   };

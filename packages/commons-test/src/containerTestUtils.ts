@@ -2,7 +2,7 @@ import { DbConfig, S3Config } from "pagopa-interop-kpi-commons";
 import { GenericContainer } from "testcontainers";
 
 export const TEST_POSTGRES_DB_PORT = 5432;
-export const TEST_POSTGRES_DB_IMAGE = "postgres:14";
+export const TEST_POSTGRES_DB_IMAGE = "postgres:15";
 
 export const TEST_MINIO_PORT = 9000;
 export const TEST_MINIO_IMAGE =
@@ -17,7 +17,7 @@ export const TEST_MINIO_IMAGE =
 export const postgreSQLContainer = (config: DbConfig): GenericContainer =>
   new GenericContainer(TEST_POSTGRES_DB_IMAGE)
     .withEnvironment({
-      POSTGRES_DB: config.dbHost,
+      POSTGRES_DB: config.dbName,
       POSTGRES_USER: config.dbUsername,
       POSTGRES_PASSWORD: config.dbPassword,
     })

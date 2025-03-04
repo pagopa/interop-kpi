@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { DB } from "pagopa-interop-kpi-commons";
+import { JwtGeneratedDbTable } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
-import { JwtGeneratedDatabaseTable } from "../model/db.js";
 import { setupStagingTablesError } from "../model/domain/errors.js";
 
 export function setupDbServiceBuilder(db: DB) {
-  const generatedTokenTable = JwtGeneratedDatabaseTable.generated_token;
-  const clientAssertionTable = JwtGeneratedDatabaseTable.client_assertion;
+  const generatedTokenTable = JwtGeneratedDbTable.generated_token;
+  const clientAssertionTable = JwtGeneratedDbTable.client_assertion;
 
   return {
     async setupStagingTables(): Promise<void> {
