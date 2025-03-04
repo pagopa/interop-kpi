@@ -14,41 +14,49 @@ export const jwtAuditServiceBuilder = (
   fileManager: FileManager
 ) => ({
   async handleMessage(s3key: string, logger: Logger): Promise<void> {
-    const fileStream = await fileManager.get(config.s3Bucket, s3key, logger);
-    const parsedFileStream = fileStream.pipe(ndjson.parse());
+    try {
+      const fileStream = await fileManager.get(config.s3Bucket, s3key, logger);
+      const parsedFileStream = fileStream.pipe(ndjson.parse());
 
-    logger.info(`Processing records for file: ${s3key}`);
+      logger.info(`Processing records for file: ${s3key}`);
 
-    // eslint-disable-next-line functional/no-let
-    let totalRecordsProcessed: number = 0;
+      // eslint-disable-next-line functional/no-let
+      let totalRecordsProcessed: number = 0;
 
-    for await (const batch of batches<GeneratedTokenAuditDetails>(
-      tokenAuditSchema,
-      parsedFileStream,
-      config.batchSize,
-      s3key,
-      logger
-    )) {
-      await dbService.insertRecordsToStaging(batch);
-      totalRecordsProcessed += batch.length;
-    }
+      for await (const batch of batches<GeneratedTokenAuditDetails>(
+        tokenAuditSchema,
+        parsedFileStream,
+        config.batchSize,
+        s3key,
+        logger
+      )) {
+        await dbService.insertRecordsToStaging(batch);
+        totalRecordsProcessed += batch.length;
+      }
 
-    if (totalRecordsProcessed === 0) {
-      logger.info(
-        `No records processed for file: ${s3key}. Skipping merge and cleanup.`
+      if (totalRecordsProcessed === 0) {
+        logger.info(
+          `No records processed for file: ${s3key}. Skipping merge and cleanup.`
+        );
+        return;
+      }
+
+      logger.info(`Staging records insertion completed for file: ${s3key}`);
+
+      await dbService.mergeStagingToTarget();
+
+      logger.info(`Staging data merged into target tables for file: ${s3key}`);
+
+      await dbService.cleanStaging();
+
+      logger.info(`Staging cleanup completed for file: ${s3key}`);
+    } catch (error: unknown) {
+      await dbService.cleanStaging();
+      logger.error(
+        `Error encountered while processing file: ${s3key}. Staging cleanup completed.`
       );
-      return;
+      throw error;
     }
-
-    logger.info(`Staging records insertion completed for file: ${s3key}`);
-
-    await dbService.mergeStagingToTarget();
-
-    logger.info(`Staging data merged into target tables for file: ${s3key}`);
-
-    await dbService.cleanStaging();
-
-    logger.info(`Staging cleanup completed for file: ${s3key}`);
   },
 });
 
