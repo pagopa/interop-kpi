@@ -30,7 +30,7 @@ export async function* batches<TSchema>(
       // eslint-disable-next-line functional/immutable-data
       batch.push(result.data);
     } else {
-      logger.error(
+      logger.warn(
         `Invalid record for file: ${fileName}. Data: ${JSON.stringify(
           rawRecord
         )}. Details: ${JSON.stringify(result.error)}`

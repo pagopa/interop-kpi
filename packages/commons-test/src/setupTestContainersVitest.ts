@@ -5,11 +5,14 @@
 /* eslint-disable functional/immutable-data */
 
 import {
+  DB,
+  DbConfig,
   FileManager,
   FileManagerConfig,
   LoggerConfig,
   S3Config,
   genericLogger,
+  initDB,
   initFileManager,
 } from "pagopa-interop-kpi-commons";
 
@@ -32,26 +35,44 @@ import {
  * ```
  */
 export function setupTestContainersVitest(
+  dbConfig?: DbConfig,
   fileManagerConfig?: FileManagerConfig & S3Config & LoggerConfig
 ): Promise<{
+  postgresDB: DB;
   fileManager: FileManager;
   cleanup: () => Promise<void>;
 }>;
 
 export async function setupTestContainersVitest(
+  dbConfig?: DbConfig,
   fileManagerConfig?: FileManagerConfig & S3Config & LoggerConfig
 ): Promise<{
+  postgresDB?: DB;
   fileManager?: FileManager;
   cleanup: () => Promise<void>;
 }> {
-  const s3OriginalBucket = fileManagerConfig?.s3Bucket;
+  let postgresDB: DB | undefined;
   let fileManager: FileManager | undefined;
+  const s3OriginalBucket = fileManagerConfig?.s3Bucket;
 
   if (fileManagerConfig) {
     fileManager = initFileManager(fileManagerConfig);
   }
 
+  if (dbConfig) {
+    postgresDB = initDB({
+      username: dbConfig.dbUsername,
+      password: dbConfig.dbPassword,
+      host: dbConfig.dbHost,
+      port: dbConfig.dbPort,
+      database: dbConfig.dbName,
+      useSSL: dbConfig.dbUseSSL,
+      maxConnectionPool: dbConfig.maxConnectionPool,
+    });
+  }
+
   return {
+    postgresDB,
     fileManager,
     cleanup: async (): Promise<void> => {
       if (s3OriginalBucket && fileManagerConfig && fileManager) {

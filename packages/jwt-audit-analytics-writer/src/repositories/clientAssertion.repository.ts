@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { IMain, ITask, buildColumnSet } from "pagopa-interop-kpi-commons";
-import { genericInternalError } from "pagopa-interop-kpi-models";
+import {
+  genericInternalError,
+  JwtGeneratedDbTable,
+} from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
-import {
-  ClientAssertionMapping,
-  JwtGeneratedDatabaseTable,
-} from "../model/db.js";
+import { ClientAssertionMapping } from "../model/db.js";
 
 export function clientAssertionRepository(t: ITask<unknown>) {
-  const clientAssertionTable = JwtGeneratedDatabaseTable.client_assertion;
+  const clientAssertionTable = JwtGeneratedDbTable.client_assertion;
 
   return {
     async insert(

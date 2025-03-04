@@ -33,14 +33,6 @@ CREATE TABLE IF NOT EXISTS jwt_generated.generated_token_audit_details (
     CONSTRAINT fk_client_assertion FOREIGN KEY (client_assertion_jwt_id) REFERENCES jwt_generated.client_assertion_audit_details(jwt_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS jwt_generated.client_assertion_audit_details_staging (
-    LIKE jwt_generated.client_assertion_audit_details
-);
-
-CREATE TABLE IF NOT EXISTS jwt_generated.generated_token_audit_details_staging (
-    LIKE jwt_generated.generated_token_audit_details
-);
-
 CREATE SCHEMA IF NOT EXISTS loadbalancerlog;
 CREATE TABLE IF NOT EXISTS loadbalancerlog.load_balancer_logs (
     trace_id VARCHAR(255) NOT NULL,
