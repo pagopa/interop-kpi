@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { IMain, ITask, buildColumnSet } from "pagopa-interop-kpi-commons";
+import { DB, IMain, buildColumnSet } from "pagopa-interop-kpi-commons";
 import { genericInternalError } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { LoadBalancerLog } from "../model/load-balancer-log.js";
 import { LoadBalancerLogMapping, LoadBalancerLogTable } from "../model/db.js";
 
-export function loadBalancerLogRepository(t: ITask<unknown>) {
+export function loadBalancerLogRepository(db: DB) {
   const loadBalancerTable = LoadBalancerLogTable.logs;
   return {
     async insert(pgp: IMain, records: LoadBalancerLog[]): Promise<void> {
@@ -50,7 +50,7 @@ export function loadBalancerLogRepository(t: ITask<unknown>) {
           logTableName,
           config.dbSchemaName
         );
-        await t.none(pgp.helpers.insert(records, logColumnSet));
+        await db.none(pgp.helpers.insert(records, logColumnSet));
       } catch (error: unknown) {
         throw genericInternalError(
           `Error inserting into load_balancer_logs staging table: ${error}`
@@ -60,7 +60,7 @@ export function loadBalancerLogRepository(t: ITask<unknown>) {
 
     async merge(): Promise<void> {
       try {
-        await t.none(`
+        await db.none(`
         MERGE INTO ${config.dbSchemaName}.${loadBalancerTable} AS target
         USING ${config.dbSchemaName}.${loadBalancerTable}${config.mergeTableSuffix} AS source
           ON target.trace_id = source.trace_id
@@ -170,7 +170,7 @@ export function loadBalancerLogRepository(t: ITask<unknown>) {
 
     async clean(): Promise<void> {
       try {
-        await t.none(
+        await db.none(
           `TRUNCATE TABLE ${config.dbSchemaName}.${loadBalancerTable}${config.mergeTableSuffix};`
         );
       } catch (error: unknown) {

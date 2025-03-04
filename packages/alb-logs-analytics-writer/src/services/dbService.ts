@@ -8,21 +8,15 @@ export function dbServiceBuilder(db: DB) {
 
   return {
     async insertRecordsToStaging(records: LoadBalancerLog[]): Promise<void> {
-      await db.tx(async (t) => {
-        await loadBalancerLogRepository(t).insert(pgp, records);
-      });
+      await loadBalancerLogRepository(db).insert(pgp, records);
     },
 
     async mergeStagingToTarget(): Promise<void> {
-      await db.tx(async (t) => {
-        await loadBalancerLogRepository(t).merge();
-      });
+      await loadBalancerLogRepository(db).merge();
     },
 
     async cleanStaging(): Promise<void> {
-      await db.tx(async (t) => {
-        await loadBalancerLogRepository(t).clean();
-      });
+      await loadBalancerLogRepository(db).clean();
     },
   };
 }
