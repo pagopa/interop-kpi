@@ -29,42 +29,79 @@ export function transformFileStream(fileStream: Gunzip): Transform {
 }
 
 function convertTokensToLog(tokens: string[]): LoadBalancerLog {
-  const unquote = (str: string): string =>
-    str ? str.replace(/^"|"$/g, "") : str;
+  const unquote = (str?: string): string | undefined =>
+    str?.replace(/^"|"$/g, "");
 
   const replaceDashWithUndefined = (value?: string): string | undefined =>
     value && value !== "-" ? value : undefined;
 
+  const [
+    type,
+    time,
+    elb,
+    client,
+    target,
+    request_processing_time,
+    target_processing_time,
+    response_processing_time,
+    elb_status_code,
+    target_status_code,
+    received_bytes,
+    sent_bytes,
+    rawRequest,
+    rawUserAgent,
+    rawSslCipher,
+    rawSslProtocol,
+    rawTargetGroupArn,
+    rawTraceId,
+    rawDomainName,
+    rawChosenCertArn,
+    matched_rule_priority,
+    request_creation_time,
+    rawActionsExecuted,
+    rawRedirectUrl,
+    rawErrorReason,
+    rawTargetPortList,
+    rawTargetStatusCodeList,
+    rawClassification,
+    rawClassificationReason,
+    conn_trace_id,
+  ] = tokens;
+
   return {
-    type: tokens[0],
-    time: tokens[1],
-    elb: tokens[2],
-    client: tokens[3],
-    target: replaceDashWithUndefined(tokens[4]),
-    request_processing_time: tokens[5],
-    target_processing_time: tokens[6],
-    response_processing_time: tokens[7],
-    elb_status_code: tokens[8],
-    target_status_code: replaceDashWithUndefined(tokens[9]),
-    received_bytes: tokens[10],
-    sent_bytes: tokens[11],
-    request: unquote(tokens[12]),
-    user_agent: unquote(tokens[13]),
-    ssl_cipher: replaceDashWithUndefined(tokens[14]),
-    ssl_protocol: replaceDashWithUndefined(tokens[15]),
-    target_group_arn: replaceDashWithUndefined(tokens[16]),
-    trace_id: unquote(tokens[17]),
-    domain_name: replaceDashWithUndefined(unquote(tokens[18])),
-    chosen_cert_arn: replaceDashWithUndefined(unquote(tokens[19])),
-    matched_rule_priority: tokens[20],
-    request_creation_time: tokens[21],
-    actions_executed: unquote(tokens[22]),
-    redirect_url: replaceDashWithUndefined(unquote(tokens[23])),
-    error_reason: replaceDashWithUndefined(unquote(tokens[24])),
-    target_port_list: replaceDashWithUndefined(unquote(tokens[25])),
-    target_status_code_list: replaceDashWithUndefined(unquote(tokens[26])),
-    classification: replaceDashWithUndefined(unquote(tokens[27])),
-    classification_reason: replaceDashWithUndefined(unquote(tokens[28])),
-    conn_trace_id: replaceDashWithUndefined(tokens[29]),
+    type,
+    time,
+    elb,
+    client,
+    target: replaceDashWithUndefined(target),
+    request_processing_time,
+    target_processing_time,
+    response_processing_time,
+    elb_status_code,
+    target_status_code: replaceDashWithUndefined(target_status_code),
+    received_bytes,
+    sent_bytes,
+    request: unquote(rawRequest) ?? "",
+    user_agent: unquote(rawUserAgent) ?? "",
+    ssl_cipher: replaceDashWithUndefined(rawSslCipher),
+    ssl_protocol: replaceDashWithUndefined(rawSslProtocol),
+    target_group_arn: replaceDashWithUndefined(rawTargetGroupArn),
+    trace_id: unquote(rawTraceId) ?? "",
+    domain_name: replaceDashWithUndefined(unquote(rawDomainName)),
+    chosen_cert_arn: replaceDashWithUndefined(unquote(rawChosenCertArn)),
+    matched_rule_priority,
+    request_creation_time,
+    actions_executed: unquote(rawActionsExecuted) ?? "",
+    redirect_url: replaceDashWithUndefined(unquote(rawRedirectUrl)),
+    error_reason: replaceDashWithUndefined(unquote(rawErrorReason)),
+    target_port_list: replaceDashWithUndefined(unquote(rawTargetPortList)),
+    target_status_code_list: replaceDashWithUndefined(
+      unquote(rawTargetStatusCodeList)
+    ),
+    classification: replaceDashWithUndefined(unquote(rawClassification)),
+    classification_reason: replaceDashWithUndefined(
+      unquote(rawClassificationReason)
+    ),
+    conn_trace_id: replaceDashWithUndefined(conn_trace_id),
   };
 }

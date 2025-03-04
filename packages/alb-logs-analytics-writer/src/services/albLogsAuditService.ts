@@ -75,6 +75,10 @@ export const albLogsAuditServiceBuilder = (
       await dbService.cleanStaging();
       logger.info(`Staging cleanup completed for file: ${s3key}`);
     } catch (error) {
+      await dbService.cleanStaging();
+      logger.error(
+        `Error encountered while processing file: ${s3key}. Staging cleanup completed.`
+      );
       throw errorMapper(error, logger);
     }
   },
