@@ -8,7 +8,6 @@ import {
   LoadBalancerLogArraySchema,
   LoadBalancerLogSchema,
 } from "../model/load-balancer-log.js";
-import { errorMapper } from "../utilities/errorMapper.js";
 import { transformFileStream } from "../utilities/transformFileStream.js";
 import { DBService } from "./dbService.js";
 
@@ -17,12 +16,12 @@ export const albLogsAuditServiceBuilder = (
   fileManager: FileManager
 ) => ({
   async handleMessage(s3key: string, logger: Logger): Promise<void> {
-    if (!s3key.endsWith(".gz")) {
-      throw new Error(
-        `Unsupported file format: ${s3key}. Only .gz files are allowed.`
-      );
-    }
     try {
+      if (!s3key.endsWith(".gz")) {
+        throw new Error(
+          `Unsupported file format: ${s3key}. Only .gz files are allowed.`
+        );
+      }
       const fileStream = (
         await fileManager.get(config.s3Bucket, s3key, logger)
       ).pipe(createGunzip());
@@ -79,7 +78,7 @@ export const albLogsAuditServiceBuilder = (
       logger.error(
         `Error encountered while processing file: ${s3key}. Staging cleanup completed.`
       );
-      throw errorMapper(error, logger);
+      throw error;
     }
   },
 });
