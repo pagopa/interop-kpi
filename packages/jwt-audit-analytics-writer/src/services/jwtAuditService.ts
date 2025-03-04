@@ -14,14 +14,14 @@ export const jwtAuditServiceBuilder = (
   fileManager: FileManager
 ) => ({
   async handleMessage(s3key: string, logger: Logger): Promise<void> {
+    // eslint-disable-next-line functional/no-let
+    let totalRecordsProcessed: number = 0;
+
     try {
       const fileStream = await fileManager.get(config.s3Bucket, s3key, logger);
       const parsedFileStream = fileStream.pipe(ndjson.parse());
 
       logger.info(`Processing records for file: ${s3key}`);
-
-      // eslint-disable-next-line functional/no-let
-      let totalRecordsProcessed: number = 0;
 
       for await (const batch of batches<GeneratedTokenAuditDetails>(
         tokenAuditSchema,
@@ -51,7 +51,9 @@ export const jwtAuditServiceBuilder = (
 
       logger.info(`Staging cleanup completed for file: ${s3key}`);
     } catch (error: unknown) {
-      await dbService.cleanStaging();
+      if (totalRecordsProcessed > 0) {
+        await dbService.cleanStaging();
+      }
       logger.error(
         `Error encountered while processing file: ${s3key}. Staging cleanup completed.`
       );
