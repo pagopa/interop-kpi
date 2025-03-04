@@ -5,6 +5,7 @@ import { FileManager, Logger, batches } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 import {
   LoadBalancerLog,
+  LoadBalancerLogArraySchema,
   LoadBalancerLogSchema,
 } from "../model/load-balancer-log.js";
 import { errorMapper } from "../utilities/errorMapper.js";
@@ -41,7 +42,18 @@ export const albLogsAuditServiceBuilder = (
         s3key,
         logger
       )) {
-        await dbService.insertRecordsToStaging(batch);
+        const { success, data, error } =
+          LoadBalancerLogArraySchema.safeParse(batch);
+
+        if (!success) {
+          throw new Error(
+            `LoadBalancerLogSchema validation failed: ${JSON.stringify(
+              error.format()
+            )}`
+          );
+        }
+
+        await dbService.insertRecordsToStaging(data);
       }
 
       logger.info(`Staging records insertion completed for file: ${s3key}`);
