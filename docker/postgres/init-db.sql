@@ -66,8 +66,3 @@ CREATE TABLE IF NOT EXISTS loadbalancerlog.load_balancer_logs (
     classification_reason VARCHAR(255),
     conn_trace_id VARCHAR(255)
 );
-
-
-CREATE TABLE IF NOT EXISTS loadbalancerlog.load_balancer_logs_staging (
-    LIKE loadbalancerlog.load_balancer_logs INCLUDING ALL
-);

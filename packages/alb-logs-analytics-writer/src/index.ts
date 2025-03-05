@@ -6,6 +6,7 @@ import {
   albLogsAuditServiceBuilder,
 } from "./services/albLogsAuditService.js";
 import { dbServiceBuilder } from "./services/dbService.js";
+import { setupDbServiceBuilder } from "./services/setupDbService.js";
 
 const dbInstance = initDB({
   username: config.dbUsername,
@@ -16,6 +17,8 @@ const dbInstance = initDB({
   useSSL: config.dbUseSSL,
   maxConnectionPool: config.maxConnectionPool,
 });
+
+await setupDbServiceBuilder(dbInstance).setupStagingTables();
 
 const sqsClient: SQS.SQSClient = SQS.instantiateClient({
   region: config.awsRegion,
