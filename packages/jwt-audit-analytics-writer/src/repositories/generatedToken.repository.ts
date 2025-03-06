@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { IMain, ITask } from "pagopa-interop-kpi-commons";
+import { DB, IMain, ITask } from "pagopa-interop-kpi-commons";
 import {
   genericInternalError,
   JwtGeneratedDbTable,
@@ -9,11 +9,12 @@ import { buildColumnSet } from "../utilities/pgHelper.js";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
 import { GeneratedTokenMapping } from "../model/db.js";
 
-export function generatedTokenRepository(t: ITask<unknown>) {
+export function generatedTokenRepository(db: DB) {
   const generatedTokenTable = JwtGeneratedDbTable.generated_token;
 
   return {
     async insert(
+      t: ITask<unknown>,
       pgp: IMain,
       records: GeneratedTokenAuditDetails[]
     ): Promise<void> {
@@ -56,7 +57,7 @@ export function generatedTokenRepository(t: ITask<unknown>) {
       }
     },
 
-    async merge(): Promise<void> {
+    async merge(t: ITask<unknown>): Promise<void> {
       try {
         await t.none(`
             MERGE INTO ${config.dbSchemaName}.${generatedTokenTable} AS target
@@ -132,7 +133,7 @@ export function generatedTokenRepository(t: ITask<unknown>) {
 
     async clean(): Promise<void> {
       try {
-        await t.none(
+        await db.none(
           `TRUNCATE TABLE ${config.dbSchemaName}.${generatedTokenTable}${config.mergeTableSuffix};`
         );
       } catch (error: unknown) {

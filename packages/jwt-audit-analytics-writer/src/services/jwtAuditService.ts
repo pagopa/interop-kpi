@@ -53,10 +53,10 @@ export const jwtAuditServiceBuilder = (
     } catch (error: unknown) {
       if (totalRecordsProcessed > 0) {
         await dbService.cleanStaging();
+        logger.warn(
+          `Error processing file ${s3key}. Performed staging cleanup.`
+        );
       }
-      logger.error(
-        `Error encountered while processing file: ${s3key}. Staging cleanup completed.`
-      );
       throw error;
     }
   },

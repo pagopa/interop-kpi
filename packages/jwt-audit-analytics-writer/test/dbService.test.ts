@@ -158,12 +158,14 @@ describe("DB Service tests", () => {
       );
 
       await postgresDB.tx(async (t: ITask<unknown>) => {
-        await clientAssertionRepository(t).insert(
+        await clientAssertionRepository(postgresDB).insert(
+          t,
           postgresDB.$config.pgp,
           records
         );
 
-        await generatedTokenRepository(t).insert(
+        await generatedTokenRepository(postgresDB).insert(
+          t,
           postgresDB.$config.pgp,
           records
         );
@@ -178,13 +180,13 @@ describe("DB Service tests", () => {
 
       await expect(
         postgresDB.tx(async (t: ITask<unknown>) => {
-          const generatedTokenRepoSpy = generatedTokenRepository(t);
+          const generatedTokenRepoSpy = generatedTokenRepository(postgresDB);
           vi.spyOn(generatedTokenRepoSpy, "merge").mockImplementation(() =>
             Promise.reject(mockError)
           );
 
-          await clientAssertionRepository(t).merge();
-          await generatedTokenRepoSpy.merge();
+          await clientAssertionRepository(postgresDB).merge(t);
+          await generatedTokenRepoSpy.merge(t);
         })
       ).rejects.toThrowError(mockError);
 
