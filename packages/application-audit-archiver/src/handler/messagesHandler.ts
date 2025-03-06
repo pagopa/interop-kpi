@@ -5,10 +5,12 @@ import {
   genericLogger,
   logger,
 } from "pagopa-interop-kpi-commons";
-import { kafkaMissingMessageValue } from "pagopa-interop-kpi-models";
+import {
+  ApplicationAuditEvent,
+  kafkaMissingMessageValue,
+} from "pagopa-interop-kpi-models";
 import { errorMapper } from "../utilities/errorMapper.js";
 import { config } from "../config/config.js";
-import { ApplicationAuditEvent } from "../model/model.js";
 
 export function processMessage(fileManager: FileManager) {
   return async ({ message, partition }: EachMessagePayload): Promise<void> => {
