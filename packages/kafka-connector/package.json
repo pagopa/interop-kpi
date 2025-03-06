@@ -9,8 +9,12 @@
     ".": "./dist/index.js"
   },
   "scripts": {
+    "build": "tsc",
     "lint": "eslint . --ext .ts,.tsx",
-    "build": "tsc"
+    "lint:autofix": "eslint . --ext .ts,.tsx --fix",
+    "format:check": "prettier --check src",
+    "format:write": "prettier --write src",
+    "check": "tsc --project tsconfig.check.json"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +27,7 @@
     "ts-pattern": "5.1.2"
   },
   "devDependencies": {
+    "@pagopa/eslint-config": "3.0.0",
     "typescript": "5.5.2"
   }
 }

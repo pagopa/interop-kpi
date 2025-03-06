@@ -69,7 +69,7 @@ const getKafkaConfig = (config: KafkaConsumerConfig): KafkaConfig => {
           mechanism: "oauthbearer",
           oauthBearerProvider: () =>
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            oauthBearerTokenProvider(config.awsRegion!, genericLogger),
+            oauthBearerTokenProvider(config.awsRegion, genericLogger),
         },
       };
 };
@@ -102,7 +102,7 @@ export const initConsumer = async (
           )
           .otherwise(() => level);
 
-        const msg = `${message}${error ? ` - ${error}` : ""}`;
+        const msg = error ? `${message} - ${error}` : message;
 
         match(filteredLevel)
           .with(logLevel.NOTHING, logLevel.ERROR, () =>
