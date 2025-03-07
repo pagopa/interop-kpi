@@ -43,7 +43,7 @@ export const dbContext: DBContext = {
 
 export const dbService = dbServiceBuilder(dbContext);
 
-export const setupDbService = setupDbServiceBuilder(dbContext);
+export const setupDbService = setupDbServiceBuilder(dbContext.conn);
 
 export const jwtAuditService = jwtAuditServiceBuilder(dbService, fileManager);
 

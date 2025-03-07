@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { DBContext } from "pagopa-interop-kpi-commons";
+import { DBConnection } from "pagopa-interop-kpi-commons";
 import { JwtGeneratedDbTable } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { setupStagingTablesError } from "../model/domain/errors.js";
 
-export function setupDbServiceBuilder({ conn }: DBContext) {
+export function setupDbServiceBuilder(conn: DBConnection) {
   const generatedTokenTable = JwtGeneratedDbTable.generated_token;
   const clientAssertionTable = JwtGeneratedDbTable.client_assertion;
 

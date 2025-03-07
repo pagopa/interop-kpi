@@ -35,8 +35,8 @@ const dbContext: DBContext = {
 await retryConnection(
   dbInstance,
   dbContext,
-  async (context) => {
-    await setupDbServiceBuilder(context).setupStagingTables();
+  async (db) => {
+    await setupDbServiceBuilder(db.conn).setupStagingTables();
   },
   logger({ serviceName: config.serviceName })
 );
