@@ -19,14 +19,13 @@ export type ColumnValue = string | number | Date | undefined | null;
 export const buildColumnSet = <T>(
   pgp: IMain,
   mapping: Record<string, (record: T) => ColumnValue>,
-  tableName: string,
-  schemaName: string
+  tableName: string
 ): ColumnSet<T> => {
   const columns = Object.entries(mapping).map(([name, initFn]) => ({
     name,
     init: ({ source }: IColumnDescriptor<T>) => initFn(source),
   }));
   return new pgp.helpers.ColumnSet(columns, {
-    table: { table: tableName, schema: schemaName },
+    table: { table: tableName },
   });
 };

@@ -1,4 +1,9 @@
-import { initDB, initFileManager, SQS } from "pagopa-interop-kpi-commons";
+import {
+  DBContext,
+  initDB,
+  initFileManager,
+  SQS,
+} from "pagopa-interop-kpi-commons";
 import { config } from "./config/config.js";
 import { processMessage } from "./handlers/messageHandler.js";
 import {
@@ -18,9 +23,16 @@ const dbInstance = initDB({
   maxConnectionPool: config.maxConnectionPool,
 });
 
-await setupDbServiceBuilder(dbInstance).setupStagingTables();
+const connection = await dbInstance.connect();
 
-const dbService: DBService = dbServiceBuilder(dbInstance);
+const dbContext: DBContext = {
+  conn: connection,
+  pgp: dbInstance.$config.pgp,
+};
+
+await setupDbServiceBuilder(dbContext).setupStagingTables();
+
+const dbService: DBService = dbServiceBuilder(dbContext);
 
 const sqsClient: SQS.SQSClient = SQS.instantiateClient({
   region: config.awsRegion,

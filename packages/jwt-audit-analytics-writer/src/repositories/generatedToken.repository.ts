@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { DB, IMain, ITask } from "pagopa-interop-kpi-commons";
+import { DBConnection, IMain, ITask } from "pagopa-interop-kpi-commons";
 import {
   genericInternalError,
   JwtGeneratedDbTable,
@@ -9,7 +9,7 @@ import { buildColumnSet } from "../utilities/pgHelper.js";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
 import { GeneratedTokenMapping } from "../model/db.js";
 
-export function generatedTokenRepository(db: DB) {
+export function generatedTokenRepository(conn: DBConnection) {
   const generatedTokenTable = JwtGeneratedDbTable.generated_token;
 
   return {
@@ -45,8 +45,7 @@ export function generatedTokenRepository(db: DB) {
         const tokenAuditColumnSet = buildColumnSet<GeneratedTokenAuditDetails>(
           pgp,
           generatedTokenMapping,
-          tokenAuditTableName,
-          config.dbSchemaName
+          tokenAuditTableName
         );
 
         await t.none(pgp.helpers.insert(records, tokenAuditColumnSet));
@@ -61,7 +60,7 @@ export function generatedTokenRepository(db: DB) {
       try {
         await t.none(`
             MERGE INTO ${config.dbSchemaName}.${generatedTokenTable} AS target
-            USING ${config.dbSchemaName}.${generatedTokenTable}${config.mergeTableSuffix} AS source
+            USING ${generatedTokenTable}${config.mergeTableSuffix} AS source
             ON target.jwt_id = source.jwt_id
             WHEN MATCHED THEN 
               UPDATE
@@ -133,8 +132,8 @@ export function generatedTokenRepository(db: DB) {
 
     async clean(): Promise<void> {
       try {
-        await db.none(
-          `TRUNCATE TABLE ${config.dbSchemaName}.${generatedTokenTable}${config.mergeTableSuffix};`
+        await conn.none(
+          `TRUNCATE TABLE ${generatedTokenTable}${config.mergeTableSuffix};`
         );
       } catch (error: unknown) {
         throw genericInternalError(
