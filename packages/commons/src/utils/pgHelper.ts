@@ -6,7 +6,7 @@ import {
   DB,
   DBContext,
   Logger,
-} from "pagopa-interop-kpi-commons";
+} from "../index.js";
 
 export type ColumnValue = string | number | Date | undefined | null;
 

@@ -1,11 +1,15 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { DBConnection, IMain, ITask } from "pagopa-interop-kpi-commons";
+import {
+  DBConnection,
+  IMain,
+  ITask,
+  buildColumnSet,
+} from "pagopa-interop-kpi-commons";
 import {
   genericInternalError,
   JwtGeneratedDbTable,
 } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
-import { buildColumnSet } from "../utilities/pgHelper.js";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
 import { ClientAssertionMapping } from "../model/db.js";
 

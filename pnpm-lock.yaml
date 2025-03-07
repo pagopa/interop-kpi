@@ -128,6 +128,9 @@ importers:
       date-fns-tz:
         specifier: 3.2.0
         version: 3.2.0(date-fns@4.1.0)
+      p-retry:
+        specifier: 6.2.1
+        version: 6.2.1
       pagopa-interop-kpi-models:
         specifier: workspace:*
         version: link:../models
@@ -201,9 +204,6 @@ importers:
       ndjson:
         specifier: 2.0.0
         version: 2.0.0
-      p-retry:
-        specifier: 6.2.1
-        version: 6.2.1
       pagopa-interop-kpi-commons:
         specifier: workspace:*
         version: link:../commons

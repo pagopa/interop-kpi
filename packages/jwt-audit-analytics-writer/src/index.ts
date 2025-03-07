@@ -4,6 +4,7 @@ import {
   initFileManager,
   logger,
   SQS,
+  retryConnection,
 } from "pagopa-interop-kpi-commons";
 import { config } from "./config/config.js";
 import { processMessage } from "./handlers/messageHandler.js";
@@ -13,7 +14,6 @@ import {
 } from "./services/jwtAuditService.js";
 import { DBService, dbServiceBuilder } from "./services/dbService.js";
 import { setupDbServiceBuilder } from "./services/setupDbService.js";
-import { retryConnection } from "./utilities/pgHelper.js";
 
 const dbInstance = initDB({
   username: config.dbUsername,

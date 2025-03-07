@@ -30,7 +30,6 @@
   "dependencies": {
     "dotenv-flow": "4.1.0",
     "ndjson": "2.0.0",
-    "p-retry": "6.2.1",
     "pagopa-interop-kpi-commons": "workspace:*",
     "pagopa-interop-kpi-commons-test": "workspace:*",
     "pagopa-interop-kpi-models": "workspace:*",
