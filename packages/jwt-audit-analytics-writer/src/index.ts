@@ -2,6 +2,7 @@ import {
   DBContext,
   initDB,
   initFileManager,
+  logger,
   SQS,
 } from "pagopa-interop-kpi-commons";
 import { config } from "./config/config.js";
@@ -12,6 +13,7 @@ import {
 } from "./services/jwtAuditService.js";
 import { DBService, dbServiceBuilder } from "./services/dbService.js";
 import { setupDbServiceBuilder } from "./services/setupDbService.js";
+import { retryConnection } from "./utilities/pgHelper.js";
 
 const dbInstance = initDB({
   username: config.dbUsername,
@@ -30,7 +32,14 @@ const dbContext: DBContext = {
   pgp: dbInstance.$config.pgp,
 };
 
-await setupDbServiceBuilder(dbContext).setupStagingTables();
+await retryConnection(
+  dbInstance,
+  dbContext,
+  async (context) => {
+    await setupDbServiceBuilder(context).setupStagingTables();
+  },
+  logger({ serviceName: config.serviceName })
+);
 
 const dbService: DBService = dbServiceBuilder(dbContext);
 

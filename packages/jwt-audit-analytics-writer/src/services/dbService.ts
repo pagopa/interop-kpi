@@ -5,7 +5,7 @@ import { clientAssertionRepository } from "../repositories/clientAssertion.repos
 import { generatedTokenRepository } from "../repositories/generatedToken.repository.js";
 
 export function dbServiceBuilder(
-  { conn, pgp }: DBContext,
+  db: DBContext,
   clientAssertionRepo = clientAssertionRepository,
   generatedTokenRepo = generatedTokenRepository
 ) {
@@ -13,26 +13,22 @@ export function dbServiceBuilder(
     async insertRecordsToStaging(
       records: GeneratedTokenAuditDetails[]
     ): Promise<void> {
-      await conn.tx(async (t) => {
-        await clientAssertionRepo(conn).insert(t, pgp, records);
-        await generatedTokenRepo(conn).insert(t, pgp, records);
+      await db.conn.tx(async (t) => {
+        await clientAssertionRepo(db.conn).insert(t, db.pgp, records);
+        await generatedTokenRepo(db.conn).insert(t, db.pgp, records);
       });
     },
 
     async mergeStagingToTarget(): Promise<void> {
-      await conn.tx(async (t) => {
-        await clientAssertionRepo(conn).merge(t);
-        await generatedTokenRepo(conn).merge(t);
+      await db.conn.tx(async (t) => {
+        await clientAssertionRepo(db.conn).merge(t);
+        await generatedTokenRepo(db.conn).merge(t);
       });
     },
 
     async cleanStaging(): Promise<void> {
-      await clientAssertionRepo(conn).clean();
-      await generatedTokenRepo(conn).clean();
-    },
-
-    async connectionDone(): Promise<void> {
-      await conn.done();
+      await clientAssertionRepo(db.conn).clean();
+      await generatedTokenRepo(db.conn).clean();
     },
   };
 }
