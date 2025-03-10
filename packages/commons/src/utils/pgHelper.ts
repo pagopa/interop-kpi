@@ -73,7 +73,7 @@ const attachErrorHandler = (
         maxTimeout: dbConfig.dbConnectionMaxTimeout,
         onFailedAttempt: (error) => {
           logger.warn(
-            `Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left. Error: ${error.message}. Connection PID: ${dbContext.conn?.client?.processID}`
+            `Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left. Error: ${error}. Connection PID: ${dbContext.conn?.client?.processID}`
           );
         },
       }
