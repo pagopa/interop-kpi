@@ -18,7 +18,9 @@ import {
   FileManager,
   formatDateyyyyMMdd,
   formatTimehhmmss,
+  genericLogger,
   Logger,
+  retryConnection,
 } from "pagopa-interop-kpi-commons";
 import { GeneratedTokenAuditDetails } from "../src/model/domain/models.js";
 import { jwtAuditServiceBuilder } from "../src/services/jwtAuditService.js";
@@ -40,6 +42,16 @@ export const dbContext: DBContext = {
   conn: connection,
   pgp: postgresDB.$config.pgp,
 };
+
+await retryConnection(
+  postgresDB,
+  dbContext,
+  config,
+  async (db) => {
+    await setupDbServiceBuilder(db.conn).setupStagingTables();
+  },
+  genericLogger
+);
 
 export const dbService = dbServiceBuilder(dbContext);
 

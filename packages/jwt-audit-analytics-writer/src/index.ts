@@ -22,7 +22,7 @@ const dbInstance = initDB({
   port: config.dbPort,
   database: config.dbName,
   useSSL: config.dbUseSSL,
-  maxConnectionPool: config.maxConnectionPool,
+  maxConnectionPool: config.dbMaxConnectionPool,
 });
 
 const connection = await dbInstance.connect();
@@ -35,6 +35,7 @@ const dbContext: DBContext = {
 await retryConnection(
   dbInstance,
   dbContext,
+  config,
   async (db) => {
     await setupDbServiceBuilder(db.conn).setupStagingTables();
   },
