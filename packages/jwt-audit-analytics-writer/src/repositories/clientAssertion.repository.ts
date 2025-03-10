@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { IMain, ITask } from "pagopa-interop-kpi-commons";
+import { DB, IMain, ITask } from "pagopa-interop-kpi-commons";
 import {
   genericInternalError,
   JwtGeneratedDbTable,
@@ -9,11 +9,12 @@ import { buildColumnSet } from "../utilities/pgHelper.js";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
 import { ClientAssertionMapping } from "../model/db.js";
 
-export function clientAssertionRepository(t: ITask<unknown>) {
+export function clientAssertionRepository(db: DB) {
   const clientAssertionTable = JwtGeneratedDbTable.client_assertion;
 
   return {
     async insert(
+      t: ITask<unknown>,
       pgp: IMain,
       records: GeneratedTokenAuditDetails[]
     ): Promise<void> {
@@ -48,7 +49,7 @@ export function clientAssertionRepository(t: ITask<unknown>) {
       }
     },
 
-    async merge(): Promise<void> {
+    async merge(t: ITask<unknown>): Promise<void> {
       try {
         await t.none(`
             MERGE INTO ${config.dbSchemaName}.${clientAssertionTable} AS target 
@@ -94,7 +95,7 @@ export function clientAssertionRepository(t: ITask<unknown>) {
 
     async clean(): Promise<void> {
       try {
-        await t.none(
+        await db.none(
           `TRUNCATE TABLE ${config.dbSchemaName}.${clientAssertionTable}${config.mergeTableSuffix};`
         );
       } catch (error: unknown) {

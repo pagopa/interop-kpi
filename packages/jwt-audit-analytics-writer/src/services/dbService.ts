@@ -16,23 +16,21 @@ export function dbServiceBuilder(
       records: GeneratedTokenAuditDetails[]
     ): Promise<void> {
       await db.tx(async (t) => {
-        await clientAssertionRepo(t).insert(pgp, records);
-        await generatedTokenRepo(t).insert(pgp, records);
+        await clientAssertionRepo(db).insert(t, pgp, records);
+        await generatedTokenRepo(db).insert(t, pgp, records);
       });
     },
 
     async mergeStagingToTarget(): Promise<void> {
       await db.tx(async (t) => {
-        await clientAssertionRepo(t).merge();
-        await generatedTokenRepo(t).merge();
+        await clientAssertionRepo(db).merge(t);
+        await generatedTokenRepo(db).merge(t);
       });
     },
 
     async cleanStaging(): Promise<void> {
-      await db.tx(async (t) => {
-        await clientAssertionRepo(t).clean();
-        await generatedTokenRepo(t).clean();
-      });
+      await clientAssertionRepo(db).clean();
+      await generatedTokenRepo(db).clean();
     },
   };
 }
