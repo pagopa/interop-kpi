@@ -51,32 +51,34 @@ describe("DB Connection", () => {
     }
   });
 
-  it("should trigger retry logic when connection fail", async () => {
-    const dbContext: DBContext = {
-      conn: await postgresDB.connect(),
-      pgp: postgresDB.$config.pgp,
-    };
+  describe("retryConnection", () => {
+    it("should trigger retry logic when connection fail", async () => {
+      const dbContext: DBContext = {
+        conn: await postgresDB.connect(),
+        pgp: postgresDB.$config.pgp,
+      };
 
-    const warnSpy = vi.spyOn(genericLogger, "warn");
+      const warnSpy = vi.spyOn(genericLogger, "warn");
 
-    const runFn = vi.fn(async (ctx: DBContext) => {
-      const checkConnection = await ctx.conn.query("SELECT 1 as result");
-      expect(checkConnection[0].result).toBe(1);
+      const runFn = vi.fn(async (ctx: DBContext) => {
+        const checkConnection = await ctx.conn.query("SELECT 1 as result");
+        expect(checkConnection[0].result).toBe(1);
+      });
+
+      await retryConnection(
+        postgresDB,
+        dbContext,
+        dbConfig,
+        runFn,
+        genericLogger
+      );
+
+      await startedPostgreSqlContainer.stop();
+
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+
+      expect(runFn).toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Attempt"));
     });
-
-    await retryConnection(
-      postgresDB,
-      dbContext,
-      dbConfig,
-      runFn,
-      genericLogger
-    );
-
-    await startedPostgreSqlContainer.stop();
-
-    await new Promise((resolve) => setTimeout(resolve, 4000));
-
-    await expect(runFn).toHaveBeenCalled();
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Attempt"));
   });
 });
