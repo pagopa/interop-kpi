@@ -7,3 +7,4 @@ export * from "./utils/pgHelper.js";
 export * from "./utils/batchHelper.js";
 export * from "./sqs/index.js";
 export * from "./repositories/db.js";
+export * from "./kafka/kafka.js";
