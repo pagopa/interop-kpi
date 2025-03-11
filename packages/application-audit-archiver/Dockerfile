@@ -6,11 +6,17 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc /app/
 
 COPY ./packages/application-audit-archiver/package.json /app/packages/application-audit-archiver/package.json
+COPY ./packages/commons/package.json /app/packages/commons/package.json
+COPY ./packages/models/package.json /app/packages/models/package.json
+COPY ./packages/kafka-connector/package.json /app/packages/kafka-connector/package.json
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY tsconfig.json turbo.json /app/
 COPY ./packages/application-audit-archiver /app/packages/application-audit-archiver
+COPY ./packages/commons /app/packages/commons
+COPY ./packages/kafka-connector /app/packages/kafka-connector
+COPY ./packages/models /app/packages/models
 
 RUN pnpm build && mkdir /out && cp -a --parents -t /out node_modules packages/application-audit-archiver/dist
 
