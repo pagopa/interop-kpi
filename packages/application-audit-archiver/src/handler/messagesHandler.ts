@@ -27,7 +27,7 @@ export function processMessage(fileManager: FileManager) {
       const s3File = {
         bucket: config.s3BucketName,
         path: "TODO",
-        name: `${applicationAuditMessage.correlationId}.json`,
+        name: `${applicationAuditMessage.correlation_id}.json`,
         content: Buffer.from(JSON.stringify(applicationAuditMessage)),
       };
 
