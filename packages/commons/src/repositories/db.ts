@@ -5,6 +5,7 @@ import pgPromise, {
   IDatabase,
   IMain,
   ITask,
+  IConnected,
 } from "pg-promise";
 import {
   IClient,
@@ -12,6 +13,11 @@ import {
 } from "pg-promise/typescript/pg-subset.js";
 
 export type DB = IDatabase<unknown>;
+export type DBConnection = IConnected<unknown, IClient>;
+export type DBContext = {
+  conn: DBConnection;
+  pgp: IMain;
+};
 export type { IMain, IClient, ColumnSet, IColumnDescriptor, ITask };
 
 export function initDB({
