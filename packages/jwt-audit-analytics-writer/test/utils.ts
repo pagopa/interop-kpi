@@ -13,11 +13,14 @@ import {
 import { afterEach, inject } from "vitest";
 import {
   dateToSeconds,
-  DB,
+  DBConnection,
+  DBContext,
   FileManager,
   formatDateyyyyMMdd,
   formatTimehhmmss,
+  genericLogger,
   Logger,
+  retryConnection,
 } from "pagopa-interop-kpi-commons";
 import { GeneratedTokenAuditDetails } from "../src/model/domain/models.js";
 import { jwtAuditServiceBuilder } from "../src/services/jwtAuditService.js";
@@ -33,9 +36,26 @@ export const { cleanup, fileManager, postgresDB } =
 
 afterEach(cleanup);
 
-export const dbService = dbServiceBuilder(postgresDB);
+const connection = await postgresDB.connect();
 
-export const setupDbService = setupDbServiceBuilder(postgresDB);
+export const dbContext: DBContext = {
+  conn: connection,
+  pgp: postgresDB.$config.pgp,
+};
+
+await retryConnection(
+  postgresDB,
+  dbContext,
+  config,
+  async (db) => {
+    await setupDbServiceBuilder(db.conn).setupStagingTables();
+  },
+  genericLogger
+);
+
+export const dbService = dbServiceBuilder(dbContext);
+
+export const setupDbService = setupDbServiceBuilder(dbContext.conn);
 
 export const jwtAuditService = jwtAuditServiceBuilder(dbService, fileManager);
 
@@ -144,33 +164,42 @@ export const sqsMessagesMock = {
 } as const;
 
 export async function getTablesByName(
-  db: DB,
-  schema: string,
+  db: DBConnection,
   tables: string[]
-): Promise<Array<{ table_name: string }>> {
-  const tableList = tables.map((table) => `'${table}'`).join(", ");
+): Promise<Array<{ tablename: string }>> {
   const query = `
-    SELECT table_name 
-    FROM information_schema.tables 
-    WHERE table_schema = $1 
-      AND table_name IN (${tableList});
+    SELECT tablename
+    FROM pg_catalog.pg_tables
+    WHERE schemaname LIKE 'pg_temp%' 
+    AND tablename IN ($1:csv);
   `;
 
-  return await db.query<Array<{ table_name: string }>>(query, [schema]);
+  return await db.query<Array<{ tablename: string }>>(query, [tables]);
 }
 
-export async function getTableCount(
-  db: DB,
-  schema: string,
+export async function getStagingTableCount(
+  db: DBConnection,
   table: string
 ): Promise<number> {
-  const query = `SELECT COUNT(*) as count FROM ${schema}.${table};`;
-  const result = await db.one<{ count: string }>(query);
+  const query = `SELECT COUNT(*) as count FROM $1:name;`;
+  const result = await db.one<{ count: string }>(query, [table]);
+  return Number(result.count);
+}
+
+export async function getTargetTableCount(
+  db: DBConnection,
+  table: string
+): Promise<number> {
+  const query = `SELECT COUNT(*) as count FROM $1:name.$2:name;`;
+  const result = await db.one<{ count: string }>(query, [
+    config.dbSchemaName,
+    [table],
+  ]);
   return Number(result.count);
 }
 
 export async function truncateTables(
-  db: DB,
+  db: DBConnection,
   schema: string,
   stagingTableSuffix?: string
 ): Promise<void> {

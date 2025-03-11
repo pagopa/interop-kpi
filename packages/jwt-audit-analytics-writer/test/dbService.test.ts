@@ -19,17 +19,20 @@ import { generatedTokenRepository } from "../src/repositories/generatedToken.rep
 import { GeneratedTokenAuditDetails } from "../src/model/domain/models.js";
 import {
   getMockJwtAudits,
-  getTableCount,
-  postgresDB,
+  getStagingTableCount,
+  getTargetTableCount,
+  dbContext,
   setupDbService,
   truncateTables,
 } from "./utils.js";
 
 describe("DB Service tests", () => {
+  const { conn, pgp } = dbContext;
   const clientAssertionStagingTableName = `${JwtGeneratedDbTable.client_assertion}${config.mergeTableSuffix}`;
   const generatedTokenStagingTableName = `${JwtGeneratedDbTable.generated_token}${config.mergeTableSuffix}`;
   const clientAssertionTargetTableName = `${JwtGeneratedDbTable.client_assertion}`;
   const generatedTokenTargetTableName = `${JwtGeneratedDbTable.generated_token}`;
+  const temporaryDbSchemaName = "pg_temp";
 
   beforeAll(async () => {
     await setupDbService.setupStagingTables();
@@ -40,12 +43,8 @@ describe("DB Service tests", () => {
   });
 
   afterEach(async () => {
-    await truncateTables(
-      postgresDB,
-      config.dbSchemaName,
-      config.mergeTableSuffix
-    );
-    await truncateTables(postgresDB, config.dbSchemaName);
+    await truncateTables(conn, temporaryDbSchemaName, config.mergeTableSuffix);
+    await truncateTables(conn, config.dbSchemaName);
   });
 
   describe("insertRecordsToStaging", () => {
@@ -53,16 +52,15 @@ describe("DB Service tests", () => {
       const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(10);
 
       const dbService = dbServiceBuilder(
-        postgresDB,
+        dbContext,
         clientAssertionRepository,
         generatedTokenRepository
       );
 
       await dbService.insertRecordsToStaging(records);
 
-      const clientAssertionStagingCount = await getTableCount(
-        postgresDB,
-        config.dbSchemaName,
+      const clientAssertionStagingCount = await getStagingTableCount(
+        conn,
         clientAssertionStagingTableName
       );
 
@@ -74,7 +72,7 @@ describe("DB Service tests", () => {
         "TypeError: Cannot generate an INSERT from an empty array.";
 
       const dbService = dbServiceBuilder(
-        postgresDB,
+        dbContext,
         clientAssertionRepository,
         generatedTokenRepository
       );
@@ -102,7 +100,7 @@ describe("DB Service tests", () => {
       const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(10);
 
       const dbService = dbServiceBuilder(
-        postgresDB,
+        dbContext,
         clientAssertionRepository,
         mockGeneratedTokenRepository
       );
@@ -111,11 +109,8 @@ describe("DB Service tests", () => {
         dbService.insertRecordsToStaging(records)
       ).rejects.toThrowError(mockError);
 
-      const clientAssertionStagingCountAfterRollback = await getTableCount(
-        postgresDB,
-        config.dbSchemaName,
-        clientAssertionStagingTableName
-      );
+      const clientAssertionStagingCountAfterRollback =
+        await getStagingTableCount(conn, clientAssertionStagingTableName);
 
       expect(clientAssertionStagingCountAfterRollback).toBe(0);
     });
@@ -126,7 +121,7 @@ describe("DB Service tests", () => {
       const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(10);
 
       const dbService = dbServiceBuilder(
-        postgresDB,
+        dbContext,
         clientAssertionRepository,
         generatedTokenRepository
       );
@@ -134,15 +129,13 @@ describe("DB Service tests", () => {
       await dbService.insertRecordsToStaging(records);
       await dbService.mergeStagingToTarget();
 
-      const clientAssertionTargetCountAfterMerge = await getTableCount(
-        postgresDB,
-        config.dbSchemaName,
+      const clientAssertionTargetCountAfterMerge = await getTargetTableCount(
+        conn,
         clientAssertionTargetTableName
       );
 
-      const generatedTokenTargetCountAfterMerge = await getTableCount(
-        postgresDB,
-        config.dbSchemaName,
+      const generatedTokenTargetCountAfterMerge = await getTargetTableCount(
+        conn,
         generatedTokenTargetTableName
       );
 
@@ -157,40 +150,32 @@ describe("DB Service tests", () => {
         `Error merging staging to target generated_client table: ${mockQueryError}`
       );
 
-      await postgresDB.tx(async (t: ITask<unknown>) => {
-        await clientAssertionRepository(t).insert(
-          postgresDB.$config.pgp,
-          records
-        );
+      await conn.tx(async (t: ITask<unknown>) => {
+        await clientAssertionRepository(conn).insert(t, pgp, records);
 
-        await generatedTokenRepository(t).insert(
-          postgresDB.$config.pgp,
-          records
-        );
+        await generatedTokenRepository(conn).insert(t, pgp, records);
       });
 
-      const clientAssertionStagingCountAfterInsert = await getTableCount(
-        postgresDB,
-        config.dbSchemaName,
+      const clientAssertionStagingCountAfterInsert = await getStagingTableCount(
+        conn,
         clientAssertionStagingTableName
       );
       expect(clientAssertionStagingCountAfterInsert).toBe(10);
 
       await expect(
-        postgresDB.tx(async (t: ITask<unknown>) => {
-          const generatedTokenRepoSpy = generatedTokenRepository(t);
+        conn.tx(async (t: ITask<unknown>) => {
+          const generatedTokenRepoSpy = generatedTokenRepository(conn);
           vi.spyOn(generatedTokenRepoSpy, "merge").mockImplementation(() =>
             Promise.reject(mockError)
           );
 
-          await clientAssertionRepository(t).merge();
-          await generatedTokenRepoSpy.merge();
+          await clientAssertionRepository(conn).merge(t);
+          await generatedTokenRepoSpy.merge(t);
         })
       ).rejects.toThrowError(mockError);
 
-      const clientAssertionCountAfterRollback = await getTableCount(
-        postgresDB,
-        config.dbSchemaName,
+      const clientAssertionCountAfterRollback = await getTargetTableCount(
+        conn,
         clientAssertionTargetTableName
       );
       expect(clientAssertionCountAfterRollback).toBe(0);
@@ -202,7 +187,7 @@ describe("DB Service tests", () => {
       const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(10);
 
       const dbService = dbServiceBuilder(
-        postgresDB,
+        dbContext,
         clientAssertionRepository,
         generatedTokenRepository
       );
@@ -211,18 +196,12 @@ describe("DB Service tests", () => {
       await dbService.mergeStagingToTarget();
       await dbService.cleanStaging();
 
-      const clientAssertionCountStagingAfterTruncate = await getTableCount(
-        postgresDB,
-        config.dbSchemaName,
-        clientAssertionStagingTableName
-      );
+      const clientAssertionCountStagingAfterTruncate =
+        await getStagingTableCount(conn, clientAssertionStagingTableName);
       expect(clientAssertionCountStagingAfterTruncate).toBe(0);
 
-      const generatedTokenCountStagingAfterTruncate = await getTableCount(
-        postgresDB,
-        config.dbSchemaName,
-        generatedTokenStagingTableName
-      );
+      const generatedTokenCountStagingAfterTruncate =
+        await getStagingTableCount(conn, generatedTokenStagingTableName);
       expect(generatedTokenCountStagingAfterTruncate).toBe(0);
     });
   });

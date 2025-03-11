@@ -1,19 +1,24 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { IMain, ITask } from "pagopa-interop-kpi-commons";
+import {
+  DBConnection,
+  IMain,
+  ITask,
+  buildColumnSet,
+} from "pagopa-interop-kpi-commons";
 import {
   genericInternalError,
   JwtGeneratedDbTable,
 } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
-import { buildColumnSet } from "../utilities/pgHelper.js";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
 import { ClientAssertionMapping } from "../model/db.js";
 
-export function clientAssertionRepository(t: ITask<unknown>) {
+export function clientAssertionRepository(conn: DBConnection) {
   const clientAssertionTable = JwtGeneratedDbTable.client_assertion;
 
   return {
     async insert(
+      t: ITask<unknown>,
       pgp: IMain,
       records: GeneratedTokenAuditDetails[]
     ): Promise<void> {
@@ -36,8 +41,7 @@ export function clientAssertionRepository(t: ITask<unknown>) {
           buildColumnSet<GeneratedTokenAuditDetails>(
             pgp,
             clientAssertionMapping,
-            clientAssertionTableName,
-            config.dbSchemaName
+            clientAssertionTableName
           );
 
         await t.none(pgp.helpers.insert(records, clientAssertionColumnSet));
@@ -48,11 +52,11 @@ export function clientAssertionRepository(t: ITask<unknown>) {
       }
     },
 
-    async merge(): Promise<void> {
+    async merge(t: ITask<unknown>): Promise<void> {
       try {
         await t.none(`
             MERGE INTO ${config.dbSchemaName}.${clientAssertionTable} AS target 
-            USING ${config.dbSchemaName}.${clientAssertionTable}${config.mergeTableSuffix} AS source
+            USING ${clientAssertionTable}${config.mergeTableSuffix} AS source
               ON target.jwt_id = source.jwt_id
             WHEN MATCHED THEN
               UPDATE
@@ -94,8 +98,8 @@ export function clientAssertionRepository(t: ITask<unknown>) {
 
     async clean(): Promise<void> {
       try {
-        await t.none(
-          `TRUNCATE TABLE ${config.dbSchemaName}.${clientAssertionTable}${config.mergeTableSuffix};`
+        await conn.none(
+          `TRUNCATE TABLE ${clientAssertionTable}${config.mergeTableSuffix};`
         );
       } catch (error: unknown) {
         throw genericInternalError(
