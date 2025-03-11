@@ -5,7 +5,7 @@ services:
   postgres:
     container_name: postgres
     volumes:
-      - ./postgres/audit-init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./postgres/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
     image: postgres:15
     ports:
       - 55000:5432

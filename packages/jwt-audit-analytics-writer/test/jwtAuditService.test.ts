@@ -19,15 +19,18 @@ import {
   dbService,
   fileManager,
   getMockJwtAudits,
-  getTableCount,
+  getStagingTableCount,
+  getTargetTableCount,
   jwtAuditService,
-  postgresDB,
+  dbContext,
   setupDbService,
   truncateTables,
   writeJwtAuditNdjson,
 } from "./utils.js";
 
 describe("JWT Audit Service tests", () => {
+  const { conn } = dbContext;
+
   beforeAll(async () => {
     await setupDbService.setupStagingTables();
   });
@@ -37,7 +40,7 @@ describe("JWT Audit Service tests", () => {
   });
 
   afterEach(async () => {
-    await truncateTables(postgresDB, config.dbSchemaName);
+    await truncateTables(conn, config.dbSchemaName);
   });
 
   describe("handleMessage", () => {
@@ -54,30 +57,26 @@ describe("JWT Audit Service tests", () => {
 
       await jwtAuditService.handleMessage(fullPathName, genericLogger);
 
-      const clientAssertionStagingCount = await getTableCount(
-        postgresDB,
-        config.dbSchemaName,
+      const clientAssertionStagingCount = await getStagingTableCount(
+        conn,
         clientAssertionStagingTableName
       );
       expect(clientAssertionStagingCount).toBe(0);
 
-      const generatedTokenStagingCount = await getTableCount(
-        postgresDB,
-        config.dbSchemaName,
+      const generatedTokenStagingCount = await getStagingTableCount(
+        conn,
         generateTokenStagingTableName
       );
       expect(generatedTokenStagingCount).toBe(0);
 
-      const clientAssertionCount = await getTableCount(
-        postgresDB,
-        config.dbSchemaName,
+      const clientAssertionCount = await getTargetTableCount(
+        conn,
         JwtGeneratedDbTable.client_assertion
       );
       expect(clientAssertionCount).toBe(10);
 
-      const generatedTokenCount = await getTableCount(
-        postgresDB,
-        config.dbSchemaName,
+      const generatedTokenCount = await getTargetTableCount(
+        conn,
         JwtGeneratedDbTable.generated_token
       );
       expect(generatedTokenCount).toBe(10);

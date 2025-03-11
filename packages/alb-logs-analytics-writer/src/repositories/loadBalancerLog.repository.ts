@@ -47,8 +47,7 @@ export function loadBalancerLogRepository(db: DB) {
         const logColumnSet = buildColumnSet<LoadBalancerLog>(
           pgp,
           logMapping,
-          logTableName,
-          config.dbSchemaName
+          logTableName
         );
         await db.none(pgp.helpers.insert(records, logColumnSet));
       } catch (error: unknown) {

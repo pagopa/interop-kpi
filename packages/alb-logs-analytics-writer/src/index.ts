@@ -15,7 +15,7 @@ const dbInstance = initDB({
   port: config.dbPort,
   database: config.dbName,
   useSSL: config.dbUseSSL,
-  maxConnectionPool: config.maxConnectionPool,
+  maxConnectionPool: config.dbMaxConnectionPool,
 });
 
 await setupDbServiceBuilder(dbInstance).setupStagingTables();

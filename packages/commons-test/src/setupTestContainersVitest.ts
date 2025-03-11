@@ -67,7 +67,7 @@ export async function setupTestContainersVitest(
       port: dbConfig.dbPort,
       database: dbConfig.dbName,
       useSSL: dbConfig.dbUseSSL,
-      maxConnectionPool: dbConfig.maxConnectionPool,
+      maxConnectionPool: dbConfig.dbMaxConnectionPool,
     });
   }
 
