@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { match } from "ts-pattern";
 
 const ApplicationAuditBeginRequest = z.object({
   correlationId: z.string(),
@@ -16,6 +15,10 @@ const ApplicationAuditBeginRequest = z.object({
   amazonTraceId: z.string(),
 });
 
+export type ApplicationAuditBeginRequest = z.infer<
+  typeof ApplicationAuditBeginRequest
+>;
+
 const ApplicationAuditEndRequest = ApplicationAuditBeginRequest.extend({
   phase: z.literal("END_REQUEST"),
   organizationId: z.string(),
@@ -24,26 +27,19 @@ const ApplicationAuditEndRequest = ApplicationAuditBeginRequest.extend({
   executionTimeMs: z.number(),
 });
 
-export const ApplicationAuditEvent = z
-  .discriminatedUnion("phase", [
-    ApplicationAuditBeginRequest,
-    ApplicationAuditEndRequest,
-  ])
-  .transform((obj, ctx) => {
-    const res = match(obj)
-      .with({ phase: "BEGIN_REQUEST" }, () =>
-        ApplicationAuditBeginRequest.safeParse(obj)
-      )
-      .with({ phase: "END_REQUEST" }, () =>
-        ApplicationAuditEndRequest.safeParse(obj)
-      )
-      .exhaustive();
+export type ApplicationAuditEndRequest = z.infer<
+  typeof ApplicationAuditEndRequest
+>;
 
-    if (!res.success) {
-      res.error.issues.forEach(ctx.addIssue);
-      return z.NEVER;
-    }
-    return res.data;
-  });
+export const ApplicationAuditEvent = z.discriminatedUnion("phase", [
+  z.object({
+    phase: z.literal("BEGIN_REQUEST"),
+    data: ApplicationAuditBeginRequest,
+  }),
+  z.object({
+    phase: z.literal("END_REQUEST"),
+    data: ApplicationAuditEndRequest,
+  }),
+]);
 
 export type ApplicationAuditEvent = z.infer<typeof ApplicationAuditEvent>;
