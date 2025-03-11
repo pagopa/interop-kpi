@@ -52,7 +52,7 @@ export function loadBalancerLogRepository(db: DB) {
         await db.none(pgp.helpers.insert(records, logColumnSet));
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error inserting into load_balancer_logs staging table: ${error}`
+          `Error inserting into alb_logs staging table: ${error}`
         );
       }
     },
@@ -162,7 +162,7 @@ export function loadBalancerLogRepository(db: DB) {
         `);
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error merging staging to target load_balancer_logs table: ${error}`
+          `Error merging staging to target alb_logs table: ${error}`
         );
       }
     },
@@ -174,7 +174,7 @@ export function loadBalancerLogRepository(db: DB) {
         );
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error cleaning staging load_balancer_logs table: ${error}`
+          `Error cleaning staging alb_logs table: ${error}`
         );
       }
     },

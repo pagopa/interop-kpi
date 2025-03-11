@@ -1,7 +1,7 @@
 import { LoadBalancerLog } from "./load-balancer-log.js";
 
 export const LoadBalancerLogTable = {
-  logs: "load_balancer_logs",
+  logs: "alb_logs",
 } as const;
 
 export type LoadBalancerLogTable =
