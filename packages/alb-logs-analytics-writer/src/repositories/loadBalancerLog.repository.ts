@@ -1,11 +1,15 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { DB, IMain, buildColumnSet } from "pagopa-interop-kpi-commons";
+import {
+  DBConnection,
+  IMain,
+  buildColumnSet,
+} from "pagopa-interop-kpi-commons";
 import { genericInternalError } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { LoadBalancerLog } from "../model/load-balancer-log.js";
 import { LoadBalancerLogMapping, LoadBalancerLogTable } from "../model/db.js";
 
-export function loadBalancerLogRepository(db: DB) {
+export function loadBalancerLogRepository(conn: DBConnection) {
   const loadBalancerTable = LoadBalancerLogTable.logs;
   return {
     async insert(pgp: IMain, records: LoadBalancerLog[]): Promise<void> {
@@ -49,7 +53,7 @@ export function loadBalancerLogRepository(db: DB) {
           logMapping,
           logTableName
         );
-        await db.none(pgp.helpers.insert(records, logColumnSet));
+        await conn.none(pgp.helpers.insert(records, logColumnSet));
       } catch (error: unknown) {
         throw genericInternalError(
           `Error inserting into alb_logs staging table: ${error}`
@@ -59,9 +63,9 @@ export function loadBalancerLogRepository(db: DB) {
 
     async merge(): Promise<void> {
       try {
-        await db.none(`
+        await conn.none(`
         MERGE INTO ${config.dbSchemaName}.${loadBalancerTable} AS target
-        USING ${config.dbSchemaName}.${loadBalancerTable}${config.mergeTableSuffix} AS source
+        USING ${loadBalancerTable}${config.mergeTableSuffix} AS source
           ON target.trace_id = source.trace_id
         WHEN MATCHED THEN
           UPDATE SET
@@ -169,8 +173,8 @@ export function loadBalancerLogRepository(db: DB) {
 
     async clean(): Promise<void> {
       try {
-        await db.none(
-          `TRUNCATE TABLE ${config.dbSchemaName}.${loadBalancerTable}${config.mergeTableSuffix};`
+        await conn.none(
+          `TRUNCATE TABLE ${loadBalancerTable}${config.mergeTableSuffix};`
         );
       } catch (error: unknown) {
         throw genericInternalError(
