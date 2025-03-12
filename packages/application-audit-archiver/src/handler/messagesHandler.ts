@@ -1,24 +1,26 @@
-import { EachMessagePayload } from "kafkajs";
 import {
   FileManager,
+  Logger,
   decodeKafkaMessage,
-  genericLogger,
-  logger,
 } from "pagopa-interop-kpi-commons";
 import {
   ApplicationAuditEvent,
   kafkaMissingMessageValue,
 } from "pagopa-interop-kpi-models";
-import { errorMapper } from "../utilities/errorMapper.js";
 import { config } from "../config/config.js";
+import { KafkaMessage } from "kafkajs";
 
-export function processMessage(fileManager: FileManager) {
-  return async ({ message, partition }: EachMessagePayload): Promise<void> => {
-    if (!message) {
-      throw kafkaMissingMessageValue(config.kafkaTopic);
-    }
+export async function handleMessages(
+  messages: KafkaMessage[],
+  fileManager: FileManager,
+  logger: Logger
+) {
+  if (!messages) {
+    throw kafkaMissingMessageValue(config.kafkaTopic);
+  }
 
-    try {
+  try {
+    for (const message of messages) {
       const applicationAuditMessage = decodeKafkaMessage(
         message,
         ApplicationAuditEvent
@@ -31,13 +33,10 @@ export function processMessage(fileManager: FileManager) {
         content: Buffer.from(JSON.stringify(applicationAuditMessage)),
       };
 
-      await fileManager.storeBytes(s3File, genericLogger);
-
-      genericLogger.info(
-        `Message processed. Partition: ${partition}, Offset: ${message.offset}`
-      );
-    } catch (error) {
-      throw errorMapper(error, logger({}), message.value?.toString());
+      await fileManager.storeBytes(s3File, logger);
     }
-  };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "generic error";
+    throw Error(`Write operation failed - ${message}`);
+  }
 }

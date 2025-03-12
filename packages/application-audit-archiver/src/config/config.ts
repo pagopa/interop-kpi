@@ -3,6 +3,7 @@ import {
   KafkaConsumerConfig,
   KafkaTopicConfig,
   FileManagerConfig,
+  KafkaBatchConsumerConfig,
 } from "pagopa-interop-kpi-commons";
 import { z } from "zod";
 
@@ -27,3 +28,6 @@ export type ApplicationAuditArchiverConfig = z.infer<
 
 export const config: ApplicationAuditArchiverConfig =
   applicationAuditArchiverConfig.parse(process.env);
+
+export const batchConsumerConfig: KafkaBatchConsumerConfig =
+  KafkaBatchConsumerConfig.parse(process.env);
