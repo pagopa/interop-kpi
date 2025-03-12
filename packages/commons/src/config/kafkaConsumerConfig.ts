@@ -9,12 +9,13 @@ export const KafkaConsumerConfig = KafkaConfig.and(AWSConfig).and(
       KAFKA_TOPIC_STARTING_OFFSET: z
         .union([z.literal("earliest"), z.literal("latest")])
         .default("latest"),
-      RESET_CONSUMER_OFFSETS: z.string().default("false"),
+      KAFKA_RESET_CONSUMER_OFFSETS: z.string().default("false"),
     })
     .transform((c) => ({
       kafkaGroupId: c.KAFKA_GROUP_ID,
       topicStartingOffset: c.KAFKA_TOPIC_STARTING_OFFSET,
-      resetConsumerOffsets: c.RESET_CONSUMER_OFFSETS.toLowerCase() === "true",
+      resetConsumerOffsets:
+        c.KAFKA_RESET_CONSUMER_OFFSETS.toLowerCase() === "true",
     }))
 );
 export type KafkaConsumerConfig = z.infer<typeof KafkaConsumerConfig>;
