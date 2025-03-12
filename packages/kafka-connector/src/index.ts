@@ -369,7 +369,7 @@ const consumerKafkaEventsListener = (consumer: Consumer): void => {
 
   consumer.on(consumer.events.REQUEST_TIMEOUT, (e) => {
     genericLogger.error(
-      `Error Request to a broker has timed out : ${JSON.stringify(e)}.`
+      `Error Request to a broker has timed out: ${JSON.stringify(e)}.`
     );
   });
 };

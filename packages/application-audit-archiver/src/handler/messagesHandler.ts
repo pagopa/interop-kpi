@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import {
   FileManager,
   Logger,
@@ -5,10 +6,10 @@ import {
 } from "pagopa-interop-kpi-commons";
 import {
   ApplicationAuditEvent,
-  kafkaMissingMessageValue,
+  kafkaMissingMessagesValue,
 } from "pagopa-interop-kpi-models";
-import { config } from "../config/config.js";
 import { KafkaMessage } from "kafkajs";
+import { config } from "../config/config.js";
 
 export async function handleMessages(
   messages: KafkaMessage[],
@@ -16,7 +17,7 @@ export async function handleMessages(
   logger: Logger
 ) {
   if (!messages) {
-    throw kafkaMissingMessageValue(config.kafkaTopic);
+    throw kafkaMissingMessagesValue(config.kafkaTopic);
   }
 
   try {
