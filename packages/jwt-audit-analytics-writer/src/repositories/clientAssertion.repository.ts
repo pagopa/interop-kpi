@@ -5,16 +5,13 @@ import {
   ITask,
   buildColumnSet,
 } from "pagopa-interop-kpi-commons";
-import {
-  genericInternalError,
-  JwtGeneratedDbTable,
-} from "pagopa-interop-kpi-models";
+import { genericInternalError, JwtDbTable } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
 import { ClientAssertionMapping } from "../model/db.js";
 
 export function clientAssertionRepository(conn: DBConnection) {
-  const clientAssertionTable = JwtGeneratedDbTable.client_assertion;
+  const clientAssertionTable = JwtDbTable.client_assertion;
 
   return {
     async insert(
