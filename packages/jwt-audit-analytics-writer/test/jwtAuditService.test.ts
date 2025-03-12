@@ -8,14 +8,13 @@ import {
   beforeAll,
   afterEach,
 } from "vitest";
-import { genericLogger } from "pagopa-interop-kpi-commons";
+import { batches, genericLogger } from "pagopa-interop-kpi-commons";
 import { JwtGeneratedDbTable } from "pagopa-interop-kpi-models";
 import {
   GeneratedTokenAuditDetails,
   tokenAuditSchema,
 } from "../src/model/domain/models.js";
 import { config } from "../src/config/config.js";
-import { batches } from "../src/utilities/batchHelper.js";
 import {
   dbService,
   fileManager,
