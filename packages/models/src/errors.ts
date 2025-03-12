@@ -77,6 +77,6 @@ export function kafkaMissingMessagesValue(
 ): InternalError<CommonErrorCodes> {
   return new InternalError({
     code: "kafkaMissingMessagesValue",
-    detail: `Missing value message in kafka message from topic: ${topic}`,
+    detail: `Missing value messages in kafka batch from topic: ${topic}`,
   });
 }
