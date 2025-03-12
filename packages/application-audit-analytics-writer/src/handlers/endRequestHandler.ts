@@ -4,7 +4,7 @@ import { Logger } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 import { batchMessages } from "../utilities/batchHelper.js";
 
-export async function handleEndRequestsMessages(
+export async function handleEndRequestMessages(
   messages: ApplicationAuditEndRequest[],
   logger: Logger
 ) {
@@ -22,22 +22,22 @@ export async function handleEndRequestsMessages(
 
     if (totalMsgsProcessed === 0) {
       logger.info(
-        `No Kafka messages processed for EndRequests batch. Skipping merge and cleanup.`
+        `No Kafka messages processed for EndRequest batch. Skipping merge and cleanup.`
       );
       return;
     }
 
     logger.info(
-      `Staging insertion completed for ${totalMsgsProcessed} of total ${messages.length} messages for EndRequests batch.`
+      `Staging insertion completed for ${totalMsgsProcessed} of total ${messages.length} messages for EndRequest batch.`
     );
 
     // TODO: merge operation
 
-    logger.info(`Staging data merged into target table for EndRequests batch.`);
+    logger.info(`Staging data merged into target table for EndRequest batch.`);
 
     // TODO: cleanup operation
 
-    logger.info(`Staging cleanup completed for EndRequests batch.`);
+    logger.info(`Staging cleanup completed for EndRequest batch.`);
   } catch (error: unknown) {
     if (totalMsgsProcessed > 0) {
       // TODO: cleanup operation
@@ -51,6 +51,6 @@ export async function handleEndRequestsMessages(
   }
 }
 
-export type HandleEndRequestsMessages = ReturnType<
-  typeof handleEndRequestsMessages
+export type HandleEndRequestMessages = ReturnType<
+  typeof handleEndRequestMessages
 >;

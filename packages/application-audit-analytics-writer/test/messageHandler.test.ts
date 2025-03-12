@@ -7,7 +7,7 @@ import { config } from "../src/config/config.js";
 
 describe("Messages Handler tests", () => {
   describe("processMessage", () => {
-    it("given invalid kafka message, method should throw an error", async () => {
+    it("missing kafka batch messages value should throw an error", async () => {
       const invalidBatchMessages = undefined as unknown as KafkaMessage[];
 
       await expect(

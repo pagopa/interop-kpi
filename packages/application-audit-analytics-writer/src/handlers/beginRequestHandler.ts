@@ -4,7 +4,7 @@ import { Logger } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 import { batchMessages } from "../utilities/batchHelper.js";
 
-export async function handleBeginRequestsMessages(
+export async function handleBeginRequestMessages(
   messages: ApplicationAuditBeginRequest[],
   logger: Logger
 ) {
@@ -22,37 +22,37 @@ export async function handleBeginRequestsMessages(
 
     if (totalMsgsProcessed === 0) {
       logger.info(
-        `No Kafka messages processed for BeginRequests batch. Skipping merge and cleanup.`
+        `No Kafka messages processed for BeginRequest batch. Skipping merge and cleanup.`
       );
       return;
     }
 
     logger.info(
-      `Staging insertion completed for ${totalMsgsProcessed} of total ${messages.length} messages for BeginRequests batch.`
+      `Staging insertion completed for ${totalMsgsProcessed} of total ${messages.length} messages for BeginRequest batch.`
     );
 
     // TODO: merge operation
 
     logger.info(
-      `Staging data merged into target table for BeginRequests batch.`
+      `Staging data merged into target table for BeginRequest batch.`
     );
 
     // TODO: cleanup operation
 
-    logger.info(`Staging cleanup completed for BeginRequests batch.`);
+    logger.info(`Staging cleanup completed for BeginRequest batch.`);
   } catch (error: unknown) {
     if (totalMsgsProcessed > 0) {
       // TODO: cleanup operation
       logger.warn(
-        `Processing messages for BeginRequests batch failed. Staging cleanup executed.`
+        `Processing messages for BeginRequest batch failed. Staging cleanup executed.`
       );
     }
     throw new Error(
-      `Processing messages for BeginRequests batch failed. ${error}`
+      `Processing messages for BeginRequest batch failed. ${error}`
     );
   }
 }
 
-export type HandleBeginRequestsMessages = ReturnType<
-  typeof handleBeginRequestsMessages
+export type HandleBeginRequestMessages = ReturnType<
+  typeof handleBeginRequestMessages
 >;

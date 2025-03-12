@@ -9,8 +9,8 @@ import {
 } from "pagopa-interop-kpi-models";
 import { match } from "ts-pattern";
 import { config } from "../config/config.js";
-import { handleBeginRequestsMessages } from "./beginRequestsHandler.js";
-import { handleEndRequestsMessages } from "./endRequestsHandler.js";
+import { handleBeginRequestMessages } from "./beginRequestHandler.js";
+import { handleEndRequestMessages } from "./endRequestHandler.js";
 
 export async function handleMessages(
   messages: KafkaMessage[],
@@ -35,6 +35,6 @@ export async function handleMessages(
       .exhaustive();
   }
 
-  await handleBeginRequestsMessages(beginRequestsMsgs, logger);
-  await handleEndRequestsMessages(endRequestsMsgs, logger);
+  await handleBeginRequestMessages(beginRequestsMsgs, logger);
+  await handleEndRequestMessages(endRequestsMsgs, logger);
 }
