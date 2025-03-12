@@ -1,22 +1,20 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { DB, IMain } from "pagopa-interop-kpi-commons";
+import { DBContext } from "pagopa-interop-kpi-commons";
 import { LoadBalancerLog } from "../model/load-balancer-log.js";
 import { loadBalancerLogRepository } from "../repositories/loadBalancerLog.repository.js";
 
-export function dbServiceBuilder(db: DB) {
-  const pgp: IMain = db.$config.pgp;
-
+export function dbServiceBuilder(db: DBContext) {
   return {
     async insertRecordsToStaging(records: LoadBalancerLog[]): Promise<void> {
-      await loadBalancerLogRepository(db).insert(pgp, records);
+      await loadBalancerLogRepository(db.conn).insert(db.pgp, records);
     },
 
     async mergeStagingToTarget(): Promise<void> {
-      await loadBalancerLogRepository(db).merge();
+      await loadBalancerLogRepository(db.conn).merge();
     },
 
     async cleanStaging(): Promise<void> {
-      await loadBalancerLogRepository(db).clean();
+      await loadBalancerLogRepository(db.conn).clean();
     },
   };
 }
