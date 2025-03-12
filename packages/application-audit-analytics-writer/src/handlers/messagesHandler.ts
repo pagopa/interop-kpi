@@ -20,21 +20,21 @@ export async function handleMessages(
     throw kafkaMissingMessagesValue(config.kafkaTopic);
   }
 
-  const beginRequestsMsgs: ApplicationAuditBeginRequest[] = [];
-  const endRequestsMsgs: ApplicationAuditEndRequest[] = [];
+  const beginRequestMsgs: ApplicationAuditBeginRequest[] = [];
+  const endRequestMsgs: ApplicationAuditEndRequest[] = [];
 
   for (const message of messages) {
     const decodedMessage = decodeKafkaMessage(message, ApplicationAuditEvent);
     match(decodedMessage)
       .with({ phase: "BEGIN_REQUEST" }, ({ data }) => {
-        beginRequestsMsgs.push(data);
+        beginRequestMsgs.push(data);
       })
       .with({ phase: "END_REQUEST" }, ({ data }) => {
-        endRequestsMsgs.push(data);
+        endRequestMsgs.push(data);
       })
       .exhaustive();
   }
 
-  await handleBeginRequestMessages(beginRequestsMsgs, logger);
-  await handleEndRequestMessages(endRequestsMsgs, logger);
+  await handleBeginRequestMessages(beginRequestMsgs, logger);
+  await handleEndRequestMessages(endRequestMsgs, logger);
 }
