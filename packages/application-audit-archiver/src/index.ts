@@ -1,7 +1,7 @@
 import { runBatchConsumer } from "kafka-connector";
 import { initFileManager, logger } from "pagopa-interop-kpi-commons";
-import { batchConsumerConfig, config } from "./config/config.js";
 import { EachBatchPayload } from "kafkajs";
+import { batchConsumerConfig, config } from "./config/config.js";
 import { handleMessages } from "./handler/messagesHandler.js";
 
 const fileManager = initFileManager(config);
@@ -13,7 +13,7 @@ async function processMessage({ batch }: EachBatchPayload): Promise<void> {
   await handleMessages(batch.messages, fileManager, loggerInstance);
 
   loggerInstance.info(
-    `Handling audit messages. Partition number: ${
+    `Handling application audit messages. Partition number: ${
       batch.partition
     }. Offset: ${batch.firstOffset()} -> ${batch.lastOffset()}`
   );
