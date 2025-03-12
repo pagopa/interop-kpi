@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterAll } from "vitest";
-import { JwtGeneratedDbTable } from "pagopa-interop-kpi-models";
+import { JwtDbTable } from "pagopa-interop-kpi-models";
 import { config } from "../src/config/config.js";
 import { setupStagingTablesError } from "../src/model/domain/errors.js";
 import { dbContext, getTablesByName, setupDbService } from "./utils.js";
@@ -15,8 +15,8 @@ describe("Setup DB Service tests", () => {
     it("should create staging tables successfully", async () => {
       await setupDbService.setupStagingTables();
 
-      const clientAssertionTableName = `${JwtGeneratedDbTable.client_assertion}${config.mergeTableSuffix}`;
-      const generateTokenTableName = `${JwtGeneratedDbTable.generated_token}${config.mergeTableSuffix}`;
+      const clientAssertionTableName = `${JwtDbTable.client_assertion}${config.mergeTableSuffix}`;
+      const generateTokenTableName = `${JwtDbTable.generated_token}${config.mergeTableSuffix}`;
 
       const result = await getTablesByName(conn, [
         clientAssertionTableName,

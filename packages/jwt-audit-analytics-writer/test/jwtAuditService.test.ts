@@ -9,7 +9,7 @@ import {
   afterEach,
 } from "vitest";
 import { batches, genericLogger } from "pagopa-interop-kpi-commons";
-import { JwtGeneratedDbTable } from "pagopa-interop-kpi-models";
+import { JwtDbTable } from "pagopa-interop-kpi-models";
 import {
   GeneratedTokenAuditDetails,
   tokenAuditSchema,
@@ -45,8 +45,8 @@ describe("JWT Audit Service tests", () => {
 
   describe("handleMessage", () => {
     it("should read the ndjson file from s3 and persist its data to the database successfully", async () => {
-      const clientAssertionStagingTableName = `${JwtGeneratedDbTable.client_assertion}${config.mergeTableSuffix}`;
-      const generateTokenStagingTableName = `${JwtGeneratedDbTable.generated_token}${config.mergeTableSuffix}`;
+      const clientAssertionStagingTableName = `${JwtDbTable.client_assertion}${config.mergeTableSuffix}`;
+      const generateTokenStagingTableName = `${JwtDbTable.generated_token}${config.mergeTableSuffix}`;
 
       const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(10);
       const { fullPathName } = await writeJwtAuditNdjson(
@@ -71,13 +71,13 @@ describe("JWT Audit Service tests", () => {
 
       const clientAssertionCount = await getTargetTableCount(
         conn,
-        JwtGeneratedDbTable.client_assertion
+        JwtDbTable.client_assertion
       );
       expect(clientAssertionCount).toBe(10);
 
       const generatedTokenCount = await getTargetTableCount(
         conn,
-        JwtGeneratedDbTable.generated_token
+        JwtDbTable.generated_token
       );
       expect(generatedTokenCount).toBe(10);
     });
