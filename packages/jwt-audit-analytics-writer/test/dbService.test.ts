@@ -7,10 +7,7 @@ import {
   beforeAll,
   afterEach,
 } from "vitest";
-import {
-  genericInternalError,
-  JwtGeneratedDbTable,
-} from "pagopa-interop-kpi-models";
+import { genericInternalError, JwtDbTable } from "pagopa-interop-kpi-models";
 import { ITask } from "pagopa-interop-kpi-commons";
 import { dbServiceBuilder } from "../src/services/dbService.js";
 import { config } from "../src/config/config.js";
@@ -28,10 +25,10 @@ import {
 
 describe("DB Service tests", () => {
   const { conn, pgp } = dbContext;
-  const clientAssertionStagingTableName = `${JwtGeneratedDbTable.client_assertion}${config.mergeTableSuffix}`;
-  const generatedTokenStagingTableName = `${JwtGeneratedDbTable.generated_token}${config.mergeTableSuffix}`;
-  const clientAssertionTargetTableName = `${JwtGeneratedDbTable.client_assertion}`;
-  const generatedTokenTargetTableName = `${JwtGeneratedDbTable.generated_token}`;
+  const clientAssertionStagingTableName = `${JwtDbTable.client_assertion}${config.mergeTableSuffix}`;
+  const generatedTokenStagingTableName = `${JwtDbTable.generated_token}${config.mergeTableSuffix}`;
+  const clientAssertionTargetTableName = `${JwtDbTable.client_assertion}`;
+  const generatedTokenTargetTableName = `${JwtDbTable.generated_token}`;
   const temporaryDbSchemaName = "pg_temp";
 
   beforeAll(async () => {

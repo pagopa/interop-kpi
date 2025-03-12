@@ -5,7 +5,7 @@ import {
   DescriptorId,
   EServiceId,
   generateId,
-  JwtGeneratedDbTable,
+  JwtDbTable,
   PurposeId,
   PurposeVersionId,
   TenantId,
@@ -204,12 +204,12 @@ export async function truncateTables(
   stagingTableSuffix?: string
 ): Promise<void> {
   await db.none(
-    `TRUNCATE TABLE ${schema}.${JwtGeneratedDbTable.client_assertion}${
+    `TRUNCATE TABLE ${schema}.${JwtDbTable.client_assertion}${
       stagingTableSuffix ?? ""
     } CASCADE;`
   );
   await db.none(
-    `TRUNCATE TABLE ${schema}.${JwtGeneratedDbTable.generated_token}${
+    `TRUNCATE TABLE ${schema}.${JwtDbTable.generated_token}${
       stagingTableSuffix ?? ""
     };`
   );
