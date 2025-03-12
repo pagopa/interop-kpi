@@ -24,7 +24,7 @@ export const KafkaBatchConsumerConfig = z
   .object({
     KAFKA_AVERAGE_MESSAGE_SIZE_IN_BYTES: z.coerce.number(),
     KAFKA_MESSAGES_TO_READ_PER_BATCH: z.coerce.number(),
-    KAFKA_MAX_WAIT_KAFKA_BATCH_MILLIS: z.coerce.number(),
+    KAFKA_MAX_WAIT_BATCH_MILLIS: z.coerce.number(),
   })
   .transform((c) => {
     const minBytes =
@@ -32,10 +32,8 @@ export const KafkaBatchConsumerConfig = z
       c.KAFKA_MESSAGES_TO_READ_PER_BATCH;
     return {
       minBytes,
-      maxWaitKafkaBatchMillis: c.KAFKA_MAX_WAIT_KAFKA_BATCH_MILLIS,
-      sessionTimeoutMillis: Math.round(
-        c.KAFKA_MAX_WAIT_KAFKA_BATCH_MILLIS * 1.5
-      ),
+      maxWaitKafkaBatchMillis: c.KAFKA_MAX_WAIT_BATCH_MILLIS,
+      sessionTimeoutMillis: Math.round(c.KAFKA_MAX_WAIT_BATCH_MILLIS * 1.5),
       maxBytes: Math.round(minBytes * 1.25),
     };
   });

@@ -1,42 +1,40 @@
-import { EachMessagePayload } from "kafkajs";
-import { decodeKafkaMessage, logger } from "pagopa-interop-kpi-commons";
+/* eslint-disable functional/immutable-data */
+import { KafkaMessage } from "kafkajs";
+import { decodeKafkaMessage, Logger } from "pagopa-interop-kpi-commons";
 import {
+  ApplicationAuditBeginRequest,
+  ApplicationAuditEndRequest,
   ApplicationAuditEvent,
-  CorrelationId,
-  generateId,
-  kafkaMissingMessageValue,
-  unsafeBrandId,
+  kafkaMissingMessagesValue,
 } from "pagopa-interop-kpi-models";
 import { match } from "ts-pattern";
 import { config } from "../config/config.js";
-import { DBService } from "../services/dbService.js";
+import { handleBeginRequestsMessages } from "./beginRequestsHandler.js";
+import { handleEndRequestsMessages } from "./endRequestsHandler.js";
 
-export function processMessage(dbService: DBService) {
-  return async ({ message, partition }: EachMessagePayload): Promise<void> => {
-    if (!message) {
-      throw kafkaMissingMessageValue(config.kafkaTopic);
-    }
+export async function handleMessages(
+  messages: KafkaMessage[],
+  logger: Logger
+): Promise<void> {
+  if (!messages) {
+    throw kafkaMissingMessagesValue(config.kafkaTopic);
+  }
 
+  const beginRequestsMsgs: ApplicationAuditBeginRequest[] = [];
+  const endRequestsMsgs: ApplicationAuditEndRequest[] = [];
+
+  for (const message of messages) {
     const decodedMessage = decodeKafkaMessage(message, ApplicationAuditEvent);
-    const loggerInstance = logger({
-      serviceName: config.serviceName,
-      streamId: decodedMessage.stream_id,
-      correlationId: decodedMessage.correlation_id
-        ? unsafeBrandId<CorrelationId>(decodedMessage.correlation_id)
-        : generateId<CorrelationId>(),
-    });
-
-    await match(decodedMessage)
-      .with({ phase: "BEGIN_REQUEST" }, async ({ data }) => {
-        await dbService.insertBeginRequest(data);
+    match(decodedMessage)
+      .with({ phase: "BEGIN_REQUEST" }, ({ data }) => {
+        beginRequestsMsgs.push(data);
       })
-      .with({ phase: "END_REQUEST" }, async ({ data }) => {
-        await dbService.insertEndRequest(data);
+      .with({ phase: "END_REQUEST" }, ({ data }) => {
+        endRequestsMsgs.push(data);
       })
       .exhaustive();
+  }
 
-    loggerInstance.info(
-      `Message was processed. Partition number: ${partition}. Offset: ${message.offset}`
-    );
-  };
+  await handleBeginRequestsMessages(beginRequestsMsgs, logger);
+  await handleEndRequestsMessages(endRequestsMsgs, logger);
 }

@@ -1,8 +1,28 @@
-import { runConsumer } from "kafka-connector";
-import { config } from "./config/config.js";
-import { processMessage } from "./handlers/messagesHandler.js";
-import { DBService, dbServiceBuilder } from "./services/dbService.js";
+import { runBatchConsumer } from "kafka-connector";
+import { logger } from "pagopa-interop-kpi-commons";
+import { EachBatchPayload } from "kafkajs";
+import { CorrelationId, generateId } from "pagopa-interop-kpi-models";
+import { batchConsumerConfig, config } from "./config/config.js";
+import { handleMessages } from "./handlers/messagesHandler.js";
 
-const dbService: DBService = dbServiceBuilder();
+const loggerInstance = logger({
+  serviceName: config.serviceName,
+  correlationId: generateId<CorrelationId>(),
+});
 
-await runConsumer(config, [config.kafkaTopic], processMessage(dbService));
+async function processMessage({ batch }: EachBatchPayload): Promise<void> {
+  await handleMessages(batch.messages, loggerInstance);
+
+  loggerInstance.info(
+    `Handling application audit messages. Partition number: ${
+      batch.partition
+    }. Offset: ${batch.firstOffset()} -> ${batch.lastOffset()}`
+  );
+}
+
+await runBatchConsumer(
+  config,
+  batchConsumerConfig,
+  [config.kafkaTopic],
+  processMessage
+);
