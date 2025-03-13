@@ -52,7 +52,3 @@ export async function handleBeginRequestMessages(
     );
   }
 }
-
-export type HandleBeginRequestMessages = ReturnType<
-  typeof handleBeginRequestMessages
->;

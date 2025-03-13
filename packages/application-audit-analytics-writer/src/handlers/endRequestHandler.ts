@@ -50,7 +50,3 @@ export async function handleEndRequestMessages(
     );
   }
 }
-
-export type HandleEndRequestMessages = ReturnType<
-  typeof handleEndRequestMessages
->;
