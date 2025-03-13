@@ -2,6 +2,8 @@ import { generateAuthToken } from "aws-msk-iam-sasl-signer-js";
 
 import {
   Consumer,
+  ConsumerRunConfig,
+  EachBatchPayload,
   EachMessagePayload,
   Kafka,
   KafkaConfig,
@@ -10,6 +12,7 @@ import {
 } from "kafkajs";
 import {
   genericLogger,
+  KafkaBatchConsumerConfig,
   KafkaConsumerConfig,
   Logger,
 } from "pagopa-interop-kpi-commons";
@@ -72,6 +75,105 @@ const getKafkaConfig = (config: KafkaConsumerConfig): KafkaConfig => {
             oauthBearerTokenProvider(config.awsRegion, genericLogger),
         },
       };
+};
+
+export async function resetPartitionsOffsets(
+  topics: string[],
+  kafka: Kafka,
+  consumer: Consumer
+): Promise<void> {
+  const admin = kafka.admin();
+
+  await admin.connect();
+
+  const fetchedTopics = await admin.fetchTopicMetadata({ topics });
+  fetchedTopics.topics.forEach((t) =>
+    t.partitions.forEach((p) =>
+      consumer.seek({
+        topic: t.name,
+        partition: p.partitionId,
+        offset: "-2",
+      })
+    )
+  );
+  await admin.disconnect();
+}
+const initKafka = (config: KafkaConsumerConfig): Kafka => {
+  const commonConfigProps = {
+    clientId: config.kafkaClientId,
+    brokers: config.kafkaBrokers,
+    logLevel: config.kafkaLogLevel,
+  };
+
+  const connectionStringKafkaConfig: KafkaConfig | undefined =
+    config.kafkaBrokerConnectionString
+      ? {
+          ...commonConfigProps,
+          reauthenticationThreshold: config.kafkaReauthenticationThreshold,
+          ssl: true,
+          sasl: {
+            mechanism: "plain",
+            username: "$ConnectionString",
+            password: config.kafkaBrokerConnectionString,
+          },
+        }
+      : undefined;
+
+  const iamAuthKafkaConfig: KafkaConfig = config.kafkaDisableAwsIamAuth
+    ? {
+        ...commonConfigProps,
+        ssl: false,
+      }
+    : {
+        ...commonConfigProps,
+        reauthenticationThreshold: config.kafkaReauthenticationThreshold,
+        ssl: true,
+        sasl: {
+          mechanism: "oauthbearer",
+          oauthBearerProvider: () =>
+            oauthBearerTokenProvider(config.awsRegion, genericLogger),
+        },
+      };
+
+  if (connectionStringKafkaConfig) {
+    genericLogger.warn(
+      "Using connection string mechanism for Kafka Broker authentication - this will override other mechanisms. If that is not desired, remove Kafka broker connection string from env variables."
+    );
+  }
+
+  const kafkaConfig: KafkaConfig =
+    connectionStringKafkaConfig ?? iamAuthKafkaConfig;
+
+  return new Kafka({
+    ...kafkaConfig,
+    logCreator:
+      (_logLevel) =>
+      ({ level, log }) => {
+        const { message, error } = log;
+
+        const filteredLevel = match(error)
+          .with(
+            P.string,
+            (error) =>
+              (level === logLevel.ERROR || level === logLevel.WARN) &&
+              error.includes("The group is rebalancing, so a rejoin is needed"),
+            () => logLevel.INFO
+          )
+          .otherwise(() => level);
+
+        // eslint-disable-next-line sonarjs/no-nested-template-literals
+        const msg = `${message}${error ? ` - ${error}` : ""}`;
+
+        match(filteredLevel)
+          .with(logLevel.NOTHING, logLevel.ERROR, () =>
+            genericLogger.error(msg)
+          )
+          .with(logLevel.WARN, () => genericLogger.warn(msg))
+          .with(logLevel.INFO, () => genericLogger.info(msg))
+          .with(logLevel.DEBUG, () => genericLogger.debug(msg))
+          .otherwise(() => genericLogger.error(msg));
+      },
+  });
 };
 
 export const initConsumer = async (
@@ -166,6 +268,66 @@ export const initConsumer = async (
   return consumer;
 };
 
+const initCustomConsumer = async ({
+  config,
+  topics,
+  consumerRunConfig,
+  batchConsumerConfig,
+}: {
+  config: KafkaConsumerConfig;
+  topics: string[];
+  consumerRunConfig: (consumer: Consumer) => ConsumerRunConfig;
+  batchConsumerConfig?: KafkaBatchConsumerConfig;
+}): Promise<Consumer> => {
+  genericLogger.debug(
+    `Consumer connecting to topics ${JSON.stringify(topics)}`
+  );
+
+  const kafka = initKafka(config);
+
+  const consumer = kafka.consumer({
+    groupId: config.kafkaGroupId,
+    retry: {
+      initialRetryTime: 100,
+      maxRetryTime: 3000,
+      retries: 3,
+      restartOnFailure: (error) => {
+        genericLogger.error(`Error during restart service: ${error.message}`);
+        return Promise.resolve(false);
+      },
+    },
+    maxWaitTimeInMs: batchConsumerConfig?.maxWaitKafkaBatchMillis,
+    minBytes: batchConsumerConfig?.minBytes,
+    maxBytes: batchConsumerConfig?.maxBytes,
+    sessionTimeout: batchConsumerConfig?.sessionTimeoutMillis,
+  });
+
+  if (config.resetConsumerOffsets) {
+    await resetPartitionsOffsets(topics, kafka, consumer);
+  }
+
+  consumerKafkaEventsListener(consumer);
+  errorEventsListener(consumer);
+
+  await consumer.connect();
+  genericLogger.debug("Consumer connected");
+
+  const topicExists = await validateTopicMetadata(kafka, topics);
+  if (!topicExists) {
+    processExit();
+  }
+
+  await consumer.subscribe({
+    topics,
+    fromBeginning: config.topicStartingOffset === "earliest",
+  });
+
+  genericLogger.info(`Consumer subscribed topic ${topics}`);
+
+  await consumer.run(consumerRunConfig(consumer));
+  return consumer;
+};
+
 const kafkaEventsListener = (consumer: Consumer): void => {
   if (genericLogger.isDebugEnabled()) {
     consumer.on(consumer.events.DISCONNECT, () => {
@@ -185,6 +347,29 @@ const kafkaEventsListener = (consumer: Consumer): void => {
   consumer.on(consumer.events.REQUEST_TIMEOUT, (e) => {
     genericLogger.error(
       `Error Request to a broker has timed out : ${JSON.stringify(e)}.`
+    );
+  });
+};
+
+const consumerKafkaEventsListener = (consumer: Consumer): void => {
+  if (genericLogger.isDebugEnabled()) {
+    consumer.on(consumer.events.DISCONNECT, () => {
+      genericLogger.debug(`Consumer has disconnected.`);
+    });
+
+    consumer.on(consumer.events.STOP, (e) => {
+      genericLogger.debug(`Consumer has stopped ${JSON.stringify(e)}.`);
+    });
+  }
+
+  consumer.on(consumer.events.CRASH, (e) => {
+    genericLogger.error(`Error Consumer crashed ${JSON.stringify(e)}.`);
+    processExit();
+  });
+
+  consumer.on(consumer.events.REQUEST_TIMEOUT, (e) => {
+    genericLogger.error(
+      `Error Request to a broker has timed out: ${JSON.stringify(e)}.`
     );
   });
 };
@@ -271,6 +456,41 @@ export const runConsumer = async (
 ): Promise<void> => {
   try {
     await initConsumer(config, topics, consumerHandler);
+  } catch (e) {
+    genericLogger.error(
+      `Generic error occurs during consumer initialization: ${e}`
+    );
+    processExit();
+  }
+};
+
+export const runBatchConsumer = async (
+  baseConsumerConfig: KafkaConsumerConfig,
+  batchConsumerConfig: KafkaBatchConsumerConfig,
+  topics: string[],
+  consumerHandlerBatch: (messagePayload: EachBatchPayload) => Promise<void>
+): Promise<void> => {
+  try {
+    const consumerRunConfig = (): ConsumerRunConfig => ({
+      eachBatch: async (payload: EachBatchPayload): Promise<void> => {
+        try {
+          await consumerHandlerBatch(payload);
+        } catch (e) {
+          throw kafkaMessageProcessError(
+            payload.batch.topic,
+            payload.batch.partition,
+            payload.batch.lastOffset().toString(),
+            e
+          );
+        }
+      },
+    });
+    await initCustomConsumer({
+      config: baseConsumerConfig,
+      topics,
+      consumerRunConfig,
+      batchConsumerConfig,
+    });
   } catch (e) {
     genericLogger.error(
       `Generic error occurs during consumer initialization: ${e}`

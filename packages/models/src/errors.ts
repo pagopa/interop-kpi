@@ -15,8 +15,7 @@ export class InternalError<T> extends Error {
 const errorCodes = {
   genericError: "GENERIC_ERROR",
   decodeSQSEventMessageError: "DECODE_SQS_EVENT_MESSAGE_ERROR",
-  kafkaMessageMissingData: "KAFKA_MESSAGE_MISSING_DATA",
-  kafkaMessageValueError: "KAFKA_MESSAGE_VALUE_ERROR",
+  kafkaMissingMessagesValue: "KAFKA_MISSING_MESSAGES_VALUE",
   kafkaMessageProcessError: "KAFKA_MESSAGE_PROCESS_ERROR",
 } as const;
 
@@ -73,21 +72,11 @@ export function kafkaMessageProcessError(
   });
 }
 
-export function kafkaMissingMessageValue(
+export function kafkaMissingMessagesValue(
   topic: string
 ): InternalError<CommonErrorCodes> {
   return new InternalError({
-    code: "kafkaMessageValueError",
-    detail: `Missing value message in kafka message from topic: ${topic}`,
-  });
-}
-
-export function kafkaMessageMissingData(
-  topic: string,
-  eventType: string
-): InternalError<CommonErrorCodes> {
-  return new InternalError({
-    code: "kafkaMessageMissingData",
-    detail: `Missing data in kafka message from topic: ${topic} and event type: ${eventType}`,
+    code: "kafkaMissingMessagesValue",
+    detail: `Missing value messages in kafka batch from topic: ${topic}`,
   });
 }
