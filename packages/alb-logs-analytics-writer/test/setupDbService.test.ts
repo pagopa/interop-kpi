@@ -3,7 +3,7 @@ import { setupDbServiceBuilder } from "../src/services/setupDbService.js";
 import { config } from "../src/config/config.js";
 import { LoadBalancerLogTable } from "../src/model/db.js";
 import { setupStagingTablesError } from "../src/model/errors.js";
-import { dbContext, getTableByName } from "./utils.js";
+import { dbContext, getTablesByName } from "./utils.js";
 
 describe("Setup DB Service Builder tests", () => {
   const loadBalancerTableName = LoadBalancerLogTable.logs;
@@ -13,7 +13,7 @@ describe("Setup DB Service Builder tests", () => {
 
   it("should execute the create temporary table query successfully", async () => {
     await setupDbService.setupStagingTables();
-    const result = (await getTableByName(conn, expectedTableName)).map(
+    const result = (await getTablesByName(conn, expectedTableName)).map(
       (res) => res.tablename
     );
     expect(result.length).toBe(1);

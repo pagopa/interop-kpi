@@ -79,7 +79,7 @@ export const dbContext: DBContext = {
   pgp: postgresDB.$config.pgp,
 };
 
-export async function getTableByName(
+export async function getTablesByName(
   db: DBConnection,
   table: string
 ): Promise<{ tablename: string }[]> {
