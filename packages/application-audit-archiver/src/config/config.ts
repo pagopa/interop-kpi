@@ -15,10 +15,12 @@ const applicationAuditArchiverConfig = LoggerConfig.and(KafkaConsumerConfig)
       .object({
         SERVICE_NAME: z.string(),
         S3_BUCKET_NAME: z.string(),
+        GZ_COMPRESSION_LEVEL: z.number().default(6),
       })
       .transform((c) => ({
         serviceName: c.SERVICE_NAME,
         s3BucketName: c.S3_BUCKET_NAME,
+        gzCompressionLevel: c.GZ_COMPRESSION_LEVEL,
       }))
   );
 
