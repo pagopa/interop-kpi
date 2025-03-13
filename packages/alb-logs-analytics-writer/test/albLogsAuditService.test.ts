@@ -18,6 +18,7 @@ import { LoadBalancerLogTable } from "pagopa-interop-kpi-models";
 import { config } from "../src/config/config.js";
 import { albLogsAuditServiceBuilder } from "../src/services/albLogsAuditService.js";
 import {
+  LoadBalancerLog,
   LoadBalancerLogArraySchema,
   LoadBalancerLogSchema,
 } from "../src/model/load-balancer-log.js";
@@ -31,7 +32,6 @@ import {
   truncateTable,
   validLogEntries,
   createValidGzipStream,
-  createValidMockLoadBalancerLog,
 } from "./utils.js";
 
 beforeAll(async () => {
@@ -121,10 +121,16 @@ describe("ALB Logs Audit Service", () => {
     expect(targetCount).toBe(5);
   });
   it("should properly read and transform a valid .gz log file", async () => {
-    const transformedLogs = await createValidMockLoadBalancerLog(
-      validLogEntries
+    const fileStream = createValidGzipStream(validLogEntries).pipe(
+      createGunzip()
     );
+    const parsedFileStream = transformFileStream(fileStream);
+    const transformedLogs: LoadBalancerLog[] = [];
 
+    for await (const log of parsedFileStream) {
+      // eslint-disable-next-line functional/immutable-data
+      transformedLogs.push(log);
+    }
     expect(transformedLogs).toHaveLength(5);
     const loadBalancerParsed =
       LoadBalancerLogArraySchema.safeParse(transformedLogs);
