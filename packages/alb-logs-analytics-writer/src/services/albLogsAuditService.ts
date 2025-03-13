@@ -43,18 +43,7 @@ export const albLogsAuditServiceBuilder = (
         s3key,
         logger
       )) {
-        const { success, data, error } =
-          LoadBalancerLogArraySchema.safeParse(batch);
-
-        if (!success) {
-          throw new Error(
-            `LoadBalancerLogSchema validation failed: ${JSON.stringify(
-              error.format()
-            )}`
-          );
-        }
-
-        await dbService.insertRecordsToStaging(data);
+        await dbService.insertRecordsToStaging(batch);
         totalRecordsProcessed += batch.length;
       }
 
