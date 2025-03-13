@@ -5,7 +5,6 @@ import { FileManager, Logger, batches } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 import {
   LoadBalancerLog,
-  LoadBalancerLogArraySchema,
   LoadBalancerLogSchema,
 } from "../model/load-balancer-log.js";
 import { transformFileStream } from "../utilities/transformFileStream.js";
