@@ -8,7 +8,6 @@ export type LoggerMetadata = {
   serviceName?: string;
   correlationId?: CorrelationId | null;
   messageId?: string;
-  streamId?: string;
 };
 
 export const parsedLoggerConfig = LoggerConfig.safeParse(process.env);
