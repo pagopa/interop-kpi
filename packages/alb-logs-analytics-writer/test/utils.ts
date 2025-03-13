@@ -124,6 +124,13 @@ export const validLogEntries = [
   `http 2024-03-01T12:04:00Z app/my-loadbalancer/xyz 192.168.1.5:443 10.0.0.5:80 0.004 0.005 0.004 302 302 30 350 "GET http://example.com/redirect HTTP/1.1" "Mozilla/5.0" - - arn:aws:elasticloadbalancing:us-east-2:xyz "Root=1-mno" "-" "-" 0 2024-03-01T12:04:00Z "forward" "-" "-" "10.0.0.5:80" "302" "-" "-" "TID-55667"`,
 ].join("\n");
 
+export const invalidEntries = `\
+# This is a comment
+2024-03-12T10:00:00Z ALB 192.168.0.1:443 200 500 1000 2000 "-" "-" "-" 100 200 "GET http://example.com HTTP/1.1" "Mozilla/5.0" "-" "-" "-" "Root=1-abc" "-" "-" 0 "2024-03-12T10:00:00Z" "forward" "-" "-" "-" "-" "-" "-" "-"
+INVALID RECORD HERE
+2024-03-12T10:00:00Z ALB 192.168.0.1:443 200 500 1000 2000 "-" "-" "-" 100 200 "GET http://example.com HTTP/1.1" "Mozilla/5.0" "-" "-" "-" "Root=1-def" "-" "-" 0 "2024-03-12T10:00:00Z" "forward" "-" "-" "-" "-" "-" "-" "-"
+`;
+
 export const sqsMessagesMock = {
   validMessage: {
     Records: [

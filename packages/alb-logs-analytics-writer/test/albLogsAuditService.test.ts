@@ -32,6 +32,7 @@ import {
   truncateTable,
   validLogEntries,
   createValidGzipStream,
+  invalidEntries,
 } from "./utils.js";
 
 beforeAll(async () => {
@@ -136,7 +137,21 @@ describe("ALB Logs Audit Service", () => {
       LoadBalancerLogArraySchema.safeParse(transformedLogs);
     expect(loadBalancerParsed.success).toBeTruthy();
   });
-  it("shoukd return the correct number of batches executed, and process the correct total number of valid records", async () => {
+  it("should skip invalid records but continue processing valid ones", async () => {
+    const s3Key = "logs/invalid.gz";
+
+    vi.spyOn(fileManager, "get").mockResolvedValue(
+      createValidGzipStream(invalidEntries)
+    );
+
+    await expect(
+      service.handleMessage(s3Key, genericLogger)
+    ).resolves.not.toThrow();
+
+    expect(dbService.insertRecordsToStaging).toHaveBeenCalledTimes(1);
+    expect(dbService.mergeStagingToTarget).toHaveBeenCalled();
+  });
+  it("should process all the records if all the file is well formed", async () => {
     vi.spyOn(fileManager, "get").mockResolvedValue(
       createValidGzipStream(validLogEntries)
     );
@@ -164,5 +179,30 @@ describe("ALB Logs Audit Service", () => {
 
     expect(totalRecordsProcessed).toBe(5);
     expect(batchesIteration.length).toBe(3); // with batch 2, it takes 3 iterations;
+  });
+  it("should process only the correct entries", async () => {
+    vi.spyOn(fileManager, "get").mockResolvedValue(
+      createValidGzipStream(invalidEntries)
+    );
+    const fileStream = (
+      await fileManager.get(config.s3Bucket, "s3Key", genericLogger)
+    ).pipe(createGunzip());
+    const parsedFileStream = transformFileStream(fileStream);
+
+    // eslint-disable-next-line functional/no-let
+    let totalRecordsProcessed = 0;
+
+    for await (const batch of batches(
+      LoadBalancerLogSchema,
+      parsedFileStream,
+      2,
+      "s3key",
+      genericLogger
+    )) {
+      // eslint-disable-next-line functional/immutable-data
+      totalRecordsProcessed += batch.length;
+    }
+
+    expect(totalRecordsProcessed).toBe(2); // number of correct line on invalidEntries;
   });
 });

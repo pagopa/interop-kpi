@@ -28,9 +28,8 @@ export function transformFileStream(fileStream: Gunzip): Transform {
   );
 }
 
-function convertTokensToLog(tokens: string[]): LoadBalancerLog {
-  const unquote = (str?: string): string | undefined =>
-    str?.replace(/^"|"$/g, "");
+function convertTokensToLog(tokens: string[]): LoadBalancerLog | null {
+  const unquote = (str: string): string => str?.replace(/^"|"$/g, "");
 
   const replaceDashWithUndefined = (value?: string): string | undefined =>
     value && value !== "-" ? value : undefined;
@@ -81,17 +80,17 @@ function convertTokensToLog(tokens: string[]): LoadBalancerLog {
     target_status_code: replaceDashWithUndefined(target_status_code),
     received_bytes,
     sent_bytes,
-    request: unquote(rawRequest) ?? "",
-    user_agent: unquote(rawUserAgent) ?? "",
+    request: unquote(rawRequest),
+    user_agent: unquote(rawUserAgent),
     ssl_cipher: replaceDashWithUndefined(rawSslCipher),
     ssl_protocol: replaceDashWithUndefined(rawSslProtocol),
     target_group_arn: replaceDashWithUndefined(rawTargetGroupArn),
-    trace_id: unquote(rawTraceId) ?? "",
+    trace_id: unquote(rawTraceId),
     domain_name: replaceDashWithUndefined(unquote(rawDomainName)),
     chosen_cert_arn: replaceDashWithUndefined(unquote(rawChosenCertArn)),
     matched_rule_priority,
     request_creation_time,
-    actions_executed: unquote(rawActionsExecuted) ?? "",
+    actions_executed: unquote(rawActionsExecuted),
     redirect_url: replaceDashWithUndefined(unquote(rawRedirectUrl)),
     error_reason: replaceDashWithUndefined(unquote(rawErrorReason)),
     target_port_list: replaceDashWithUndefined(unquote(rawTargetPortList)),
