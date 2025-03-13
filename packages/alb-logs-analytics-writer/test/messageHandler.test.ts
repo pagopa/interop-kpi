@@ -5,8 +5,8 @@ import {
   decodeSQSEventMessageError,
   InternalError,
 } from "pagopa-interop-kpi-models";
-import { sqsMessagesMock } from "./utils.js";
 import { processMessage } from "../src/handlers/messageHandler.js";
+import { sqsMessagesMock } from "./utils.js";
 
 describe("Alb Logs Message Handler tests", () => {
   const mockAlbLogsAuditService = {

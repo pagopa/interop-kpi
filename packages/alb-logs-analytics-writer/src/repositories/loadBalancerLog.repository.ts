@@ -4,10 +4,13 @@ import {
   IMain,
   buildColumnSet,
 } from "pagopa-interop-kpi-commons";
-import { genericInternalError } from "pagopa-interop-kpi-models";
+import {
+  LoadBalancerLogTable,
+  genericInternalError,
+} from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { LoadBalancerLog } from "../model/load-balancer-log.js";
-import { LoadBalancerLogMapping, LoadBalancerLogTable } from "../model/db.js";
+import { LoadBalancerLogMapping } from "../model/db.js";
 
 export function loadBalancerLogRepository(conn: DBConnection) {
   const loadBalancerTable = LoadBalancerLogTable.logs;

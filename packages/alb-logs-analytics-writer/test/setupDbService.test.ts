@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
+import { LoadBalancerLogTable } from "pagopa-interop-kpi-models";
 import { setupDbServiceBuilder } from "../src/services/setupDbService.js";
 import { config } from "../src/config/config.js";
-import { LoadBalancerLogTable } from "../src/model/db.js";
 import { setupStagingTablesError } from "../src/model/errors.js";
 import { dbContext, getTablesByName } from "./utils.js";
 
@@ -9,7 +9,7 @@ describe("Setup DB Service Builder tests", () => {
   const loadBalancerTableName = LoadBalancerLogTable.logs;
   const expectedTableName = `${loadBalancerTableName}${config.mergeTableSuffix}`;
   const { conn } = dbContext;
-  const setupDbService = setupDbServiceBuilder(conn as any);
+  const setupDbService = setupDbServiceBuilder(conn);
 
   it("should execute the create temporary table query successfully", async () => {
     await setupDbService.setupStagingTables();

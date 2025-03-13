@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { DBConnection } from "pagopa-interop-kpi-commons";
+import { LoadBalancerLogTable } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
-import { LoadBalancerLogTable } from "../model/db.js";
 import { setupStagingTablesError } from "../model/errors.js";
 
 export function setupDbServiceBuilder(conn: DBConnection) {

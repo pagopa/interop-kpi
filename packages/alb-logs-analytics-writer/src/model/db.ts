@@ -1,12 +1,5 @@
 import { LoadBalancerLog } from "./load-balancer-log.js";
 
-export const LoadBalancerLogTable = {
-  logs: "alb_logs",
-} as const;
-
-export type LoadBalancerLogTable =
-  (typeof LoadBalancerLogTable)[keyof typeof LoadBalancerLogTable];
-
 export interface LoadBalancerLogSchema {
   trace_id: string;
   type: string;

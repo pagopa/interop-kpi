@@ -4,3 +4,10 @@ export const JwtDbTable = {
 } as const;
 
 export type JwtDbTable = (typeof JwtDbTable)[keyof typeof JwtDbTable];
+
+export const LoadBalancerLogTable = {
+  logs: "alb_logs",
+} as const;
+
+export type LoadBalancerLogTable =
+  (typeof LoadBalancerLogTable)[keyof typeof LoadBalancerLogTable];
