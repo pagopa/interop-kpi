@@ -3,9 +3,11 @@ import { ApplicationAuditBeginRequest } from "pagopa-interop-kpi-models";
 import { Logger } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 import { batchMessages } from "../utilities/batchHelper.js";
+import { BeginRequestRepository } from "../repositories/beginRequest.repository.js";
 
 export async function handleBeginRequestMessages(
   messages: ApplicationAuditBeginRequest[],
+  beginRequestRepository: BeginRequestRepository,
   logger: Logger
 ) {
   // eslint-disable-next-line functional/no-let
@@ -16,7 +18,7 @@ export async function handleBeginRequestMessages(
       messages,
       config.msgsInsertPerBatch
     )) {
-      // TODO: batch insertion operation
+      await beginRequestRepository.batchInsert(batch);
       totalMsgsProcessed += batch.length;
     }
 
@@ -31,18 +33,18 @@ export async function handleBeginRequestMessages(
       `Staging insertion completed for ${totalMsgsProcessed} of total ${messages.length} messages for BeginRequest batch.`
     );
 
-    // TODO: merge operation
+    await beginRequestRepository.mergeStagingToTarget();
 
     logger.info(
       `Staging data merged into target table for BeginRequest batch.`
     );
 
-    // TODO: cleanup operation
+    await beginRequestRepository.cleanStaging();
 
     logger.info(`Staging cleanup completed for BeginRequest batch.`);
   } catch (error: unknown) {
     if (totalMsgsProcessed > 0) {
-      // TODO: cleanup operation
+      await beginRequestRepository.cleanStaging();
       logger.warn(
         `Processing messages for BeginRequest batch failed. Staging cleanup executed.`
       );

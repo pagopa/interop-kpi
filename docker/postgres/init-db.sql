@@ -67,3 +67,39 @@ CREATE TABLE IF NOT EXISTS infra.alb_logs (
     classification_reason VARCHAR(255),
     conn_trace_id VARCHAR(255)
 );
+
+CREATE SCHEMA IF NOT EXISTS application;
+
+CREATE TABLE IF NOT EXISTS application.begin_request_audit (
+    correlation_id VARCHAR(36) PRIMARY KEY,
+    service VARCHAR(255) NOT NULL,
+    service_version VARCHAR(255) NOT NULL,
+    endpoint VARCHAR(255) NOT NULL,
+    http_method VARCHAR(255) NOT NULL,
+    phase VARCHAR(255) NOT NULL,
+    requester_ip_address VARCHAR(255) NOT NULL,
+    node_ip VARCHAR(255) NOT NULL,
+    pod_name VARCHAR(255) NOT NULL,
+    uptime_seconds BIGINT NOT NULL,
+    timestamp TIMESTAMPTZ NOT NULL,
+    amazon_trace_id VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS application.end_request_audit (
+    correlation_id VARCHAR(36) PRIMARY KEY,
+    service VARCHAR(255) NOT NULL,
+    service_version VARCHAR(255) NOT NULL,
+    endpoint VARCHAR(255) NOT NULL,
+    http_method VARCHAR(255) NOT NULL,
+    phase VARCHAR(255) NOT NULL,
+    requester_ip_address VARCHAR(255) NOT NULL,
+    node_ip VARCHAR(255) NOT NULL,
+    pod_name VARCHAR(255) NOT NULL,
+    uptime_seconds BIGINT NOT NULL,
+    timestamp TIMESTAMPTZ NOT NULL,
+    amazon_trace_id VARCHAR(255) NOT NULL,
+    organization_id VARCHAR(36) NOT NULL,
+    user_id VARCHAR(36),
+    http_response_status INTEGER NOT NULL,
+    execution_time_ms BIGINT NOT NULL
+);

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { KafkaMessage } from "kafkajs";
 import { genericLogger } from "pagopa-interop-kpi-commons";
 import { handleMessages } from "../src/handlers/messagesHandler.js";
+import { dbContext } from "./utils.js";
 
 describe("Messages Handler tests", () => {
   describe("processMessage", () => {
@@ -9,7 +10,7 @@ describe("Messages Handler tests", () => {
       const emptyBatchMessages: KafkaMessage[] = [];
 
       await expect(
-        handleMessages(emptyBatchMessages, genericLogger)
+        handleMessages(emptyBatchMessages, dbContext, genericLogger)
       ).resolves.toBeUndefined();
     });
   });
