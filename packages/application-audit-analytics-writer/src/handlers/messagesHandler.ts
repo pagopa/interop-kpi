@@ -16,9 +16,6 @@ export async function handleMessages(
   messages: KafkaMessage[],
   logger: Logger
 ): Promise<void> {
-  if (!messages) {
-    throw kafkaMissingMessagesValue(config.kafkaTopic);
-  }
 
   const beginRequestMsgs: ApplicationAuditBeginRequest[] = [];
   const endRequestMsgs: ApplicationAuditEndRequest[] = [];
