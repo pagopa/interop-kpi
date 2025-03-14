@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS jwt.generated_token_audit_details (
 
 CREATE SCHEMA IF NOT EXISTS infra;
 
-CREATE TABLE IF NOT EXISTS infra.alb_logs (
+CREATE TABLE IF NOT EXISTS infra.alb_logs_audit (
     trace_id VARCHAR(255) NOT NULL,
     type VARCHAR(255) NOT NULL,
     time VARCHAR(255) NOT NULL,

@@ -6,7 +6,7 @@ export const JwtDbTable = {
 export type JwtDbTable = (typeof JwtDbTable)[keyof typeof JwtDbTable];
 
 export const LoadBalancerLogTable = {
-  logs: "alb_logs",
+  logs: "alb_logs_audit",
 } as const;
 
 export type LoadBalancerLogTable =
