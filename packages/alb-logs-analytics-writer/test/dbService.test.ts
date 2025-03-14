@@ -7,7 +7,10 @@ import {
   beforeAll,
   afterEach,
 } from "vitest";
-import { genericInternalError } from "pagopa-interop-kpi-models";
+import {
+  LoadBalancerLogTable,
+  genericInternalError,
+} from "pagopa-interop-kpi-models";
 import { LoadBalancerLog } from "../src/model/load-balancer-log.js";
 import { config } from "../src/config/config.js";
 import { dbServiceBuilder } from "../src/services/dbService.js";
@@ -23,8 +26,8 @@ import {
 
 describe("DB Service Tests for ALB Logs", () => {
   const temporaryDbSchemaName = "pg_temp";
-  const stagingTableName = `alb_logs${config.mergeTableSuffix}`;
-  const targetTableName = `alb_logs`;
+  const stagingTableName = `${LoadBalancerLogTable.logs}${config.mergeTableSuffix}`;
+  const targetTableName = LoadBalancerLogTable.logs;
 
   beforeAll(async () => {
     await setupDbService.setupStagingTables();

@@ -5,7 +5,7 @@ import { config } from "../src/config/config.js";
 import { setupStagingTablesError } from "../src/model/errors.js";
 import { dbContext, getTablesByName } from "./utils.js";
 
-describe("Setup DB Service Builder tests", () => {
+describe("Setup DB Service tests", () => {
   const loadBalancerTableName = LoadBalancerLogTable.logs;
   const expectedTableName = `${loadBalancerTableName}${config.mergeTableSuffix}`;
   const { conn } = dbContext;
