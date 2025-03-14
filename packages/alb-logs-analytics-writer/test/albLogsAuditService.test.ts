@@ -1,96 +1,208 @@
-import { PassThrough } from "stream";
-import { gzipSync } from "zlib";
-import { describe, expect, it, vi, afterEach } from "vitest";
-import { FileManager, Logger } from "pagopa-interop-kpi-commons";
+import { createGunzip } from "zlib";
+import {
+  describe,
+  expect,
+  it,
+  vi,
+  afterEach,
+  afterAll,
+  beforeAll,
+  beforeEach,
+} from "vitest";
+import {
+  FileManager,
+  batches,
+  genericLogger,
+} from "pagopa-interop-kpi-commons";
+import { LoadBalancerLogTable } from "pagopa-interop-kpi-models";
 import { config } from "../src/config/config.js";
 import { albLogsAuditServiceBuilder } from "../src/services/albLogsAuditService.js";
+import {
+  LoadBalancerLog,
+  LoadBalancerLogArraySchema,
+  LoadBalancerLogSchema,
+} from "../src/model/load-balancer-log.js";
+import { transformFileStream } from "../src/utilities/transformFileStream.js";
+import {
+  dbContext,
+  dbService,
+  fileManager,
+  getTargetTableCount,
+  setupDbService,
+  truncateTable,
+  validLogEntries,
+  createValidGzipStream,
+  invalidEntries,
+} from "./utils.js";
 
-const createGzipStream = (data: string): PassThrough => {
-  const stream = new PassThrough();
-  stream.end(gzipSync(data));
-  return stream;
-};
+beforeAll(async () => {
+  await setupDbService.setupStagingTables();
+});
 
-const validLogEntries = new Array(5)
-  .fill(
-    `http 2024-03-01T12:00:00Z app/my-loadbalancer/xyz 192.168.1.1:443 10.0.0.1:80 0.000 0.001 0.000 200 200 34 366 "GET http://example.com HTTP/1.1" "Mozilla/5.0" - - arn:aws:elasticloadbalancing:us-east-2:xyz "Root=1-abc" "-" "-" 0 2024-03-01T12:00:00Z "forward" "-" "-" "10.0.0.1:80" "200" "-" "-" "TID-12345"`
-  )
-  .join("\n");
+afterAll(() => {
+  vi.restoreAllMocks();
+});
 
-const validGzData = createGzipStream(validLogEntries);
-const emptyGzData = createGzipStream(""); // Ensure empty files are correctly compressed
-
-const mockFileManager: FileManager = {
-  delete: vi.fn().mockResolvedValue(undefined),
-  storeBytes: vi.fn().mockResolvedValue("mock-key"),
-  get: vi.fn().mockResolvedValue(validGzData),
-  listFiles: vi.fn().mockResolvedValue(["file1", "file2"]),
-};
-
-const mockDbService = {
-  insertRecordsToStaging: vi.fn().mockResolvedValue(undefined),
-  mergeStagingToTarget: vi.fn().mockResolvedValue(undefined),
-  cleanStaging: vi.fn().mockResolvedValue(undefined),
-};
-
-const mockLogger: Logger = {
-  isDebugEnabled: vi.fn().mockReturnValue(true),
-  debug: vi.fn(),
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
-};
+afterEach(async () => {
+  await truncateTable(dbContext.conn, config.dbSchemaName);
+});
 
 describe("ALB Logs Audit Service", () => {
-  afterEach(() => {
-    vi.clearAllMocks();
+  beforeEach(() => {
+    vi.spyOn(dbService, "insertRecordsToStaging");
+    vi.spyOn(dbService, "mergeStagingToTarget");
+    vi.spyOn(dbService, "cleanStaging");
   });
 
-  const service = albLogsAuditServiceBuilder(mockDbService, mockFileManager);
+  const validGzData = createValidGzipStream(validLogEntries);
+  const emptyGzData = createValidGzipStream("");
+
+  const service = albLogsAuditServiceBuilder(dbService, fileManager);
 
   it("should process a valid .gz log file", async () => {
     const s3Key = "logs/sample.gz";
+    vi.spyOn(fileManager, "get").mockResolvedValue(validGzData);
 
     await expect(
-      service.handleMessage(s3Key, mockLogger)
+      service.handleMessage(s3Key, genericLogger)
     ).resolves.not.toThrow();
 
-    expect(mockFileManager.get).toHaveBeenCalledWith(
+    expect(fileManager.get).toHaveBeenCalledWith(
       config.s3Bucket,
       s3Key,
-      mockLogger
+      genericLogger
     );
-    expect(mockDbService.insertRecordsToStaging).toHaveBeenCalled();
-    expect(mockDbService.mergeStagingToTarget).toHaveBeenCalled();
-    expect(mockDbService.cleanStaging).toHaveBeenCalled();
   });
 
   it("should throw an error if the file is not .gz", async () => {
     const s3Key = "logs/sample.txt";
 
-    await expect(service.handleMessage(s3Key, mockLogger)).rejects.toThrow(
+    await expect(service.handleMessage(s3Key, genericLogger)).rejects.toThrow(
       "Unsupported file format: logs/sample.txt. Only .gz files are allowed."
     );
   });
 
-  it("should handle an empty .gz log file correctly", async () => {
+  it("should handle an empty .gz log file correctly and not calling dbService operations", async () => {
     const fileManagerWithEmptyData: FileManager = {
-      ...mockFileManager,
+      ...fileManager,
       get: vi.fn().mockResolvedValue(emptyGzData),
     };
 
     const serviceWithEmptyFile = albLogsAuditServiceBuilder(
-      mockDbService,
+      dbService,
       fileManagerWithEmptyData
     );
     const s3Key = "logs/empty.gz";
 
     await expect(
-      serviceWithEmptyFile.handleMessage(s3Key, mockLogger)
+      serviceWithEmptyFile.handleMessage(s3Key, genericLogger)
     ).resolves.not.toThrow();
 
-    expect(mockDbService.insertRecordsToStaging).not.toHaveBeenCalled();
-    expect(mockDbService.mergeStagingToTarget).not.toHaveBeenCalled();
-    expect(mockDbService.cleanStaging).not.toHaveBeenCalled();
+    expect(dbService.insertRecordsToStaging).not.toHaveBeenCalled();
+    expect(dbService.mergeStagingToTarget).not.toHaveBeenCalled();
+    expect(dbService.cleanStaging).not.toHaveBeenCalled();
+  });
+  it("should insert the values on the DB", async () => {
+    const s3Key = "logs/integration.gz";
+
+    const gzStream = createValidGzipStream(validLogEntries);
+
+    vi.spyOn(fileManager, "get").mockResolvedValue(gzStream);
+
+    const integrationService = albLogsAuditServiceBuilder(
+      dbService,
+      fileManager
+    );
+    await integrationService.handleMessage(s3Key, genericLogger);
+
+    const targetCount = await getTargetTableCount(
+      dbContext.conn,
+      LoadBalancerLogTable.logs
+    );
+    expect(targetCount).toBe(5);
+  });
+  it("should properly read and transform a valid .gz log file", async () => {
+    const fileStream = createValidGzipStream(validLogEntries).pipe(
+      createGunzip()
+    );
+    const parsedFileStream = transformFileStream(fileStream);
+    const transformedLogs: LoadBalancerLog[] = [];
+
+    for await (const log of parsedFileStream) {
+      // eslint-disable-next-line functional/immutable-data
+      transformedLogs.push(log);
+    }
+    expect(transformedLogs).toHaveLength(5);
+    const loadBalancerParsed =
+      LoadBalancerLogArraySchema.safeParse(transformedLogs);
+    expect(loadBalancerParsed.success).toBeTruthy();
+  });
+  it("should skip invalid records but continue processing valid ones", async () => {
+    const s3Key = "logs/invalid.gz";
+
+    vi.spyOn(fileManager, "get").mockResolvedValue(
+      createValidGzipStream(invalidEntries)
+    );
+
+    await expect(
+      service.handleMessage(s3Key, genericLogger)
+    ).resolves.not.toThrow();
+
+    expect(dbService.insertRecordsToStaging).toHaveBeenCalledTimes(1);
+    expect(dbService.mergeStagingToTarget).toHaveBeenCalled();
+  });
+  it("should process all the records if all the file is well formed", async () => {
+    vi.spyOn(fileManager, "get").mockResolvedValue(
+      createValidGzipStream(validLogEntries)
+    );
+    const fileStream = (
+      await fileManager.get(config.s3Bucket, "s3Key", genericLogger)
+    ).pipe(createGunzip());
+    const parsedFileStream = transformFileStream(fileStream);
+
+    // eslint-disable-next-line functional/no-let
+    let totalRecordsProcessed = 0;
+
+    const batchesIteration: unknown[][] = [];
+
+    for await (const batch of batches(
+      LoadBalancerLogSchema,
+      parsedFileStream,
+      2,
+      "s3key",
+      genericLogger
+    )) {
+      // eslint-disable-next-line functional/immutable-data
+      batchesIteration.push(batch);
+      totalRecordsProcessed += batch.length;
+    }
+
+    expect(totalRecordsProcessed).toBe(5);
+    expect(batchesIteration.length).toBe(3); // with batch 2, it takes 3 iterations;
+  });
+  it("should process only the correct entries", async () => {
+    vi.spyOn(fileManager, "get").mockResolvedValue(
+      createValidGzipStream(invalidEntries)
+    );
+    const fileStream = (
+      await fileManager.get(config.s3Bucket, "s3Key", genericLogger)
+    ).pipe(createGunzip());
+    const parsedFileStream = transformFileStream(fileStream);
+
+    // eslint-disable-next-line functional/no-let
+    let totalRecordsProcessed = 0;
+
+    for await (const batch of batches(
+      LoadBalancerLogSchema,
+      parsedFileStream,
+      2,
+      "s3key",
+      genericLogger
+    )) {
+      // eslint-disable-next-line functional/immutable-data
+      totalRecordsProcessed += batch.length;
+    }
+
+    expect(totalRecordsProcessed).toBe(2); // number of correct line on invalidEntries;
   });
 });

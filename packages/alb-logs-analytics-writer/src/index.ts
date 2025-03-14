@@ -57,7 +57,7 @@ await SQS.runConsumer(
   {
     queueUrl: config.sqsNotificationEndpoint,
     serviceName: config.serviceName,
-    maxNumberOfMessages: 1,
+    maxNumberOfMessages: config.maxNumberOfMessages,
   },
   processMessage(albLogsAuditService)
 );
