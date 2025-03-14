@@ -6,7 +6,11 @@ import {
   decodeKafkaMessage,
   formatTimehhmmss,
 } from "pagopa-interop-kpi-commons";
-import { ApplicationAuditEvent, generateId } from "pagopa-interop-kpi-models";
+import {
+  ApplicationAuditEvent,
+  generateId,
+  genericInternalError,
+} from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { compressJson } from "../utilities/compression.js";
 
@@ -42,6 +46,6 @@ export async function handleMessages(
     await fileManager.storeBytes(s3File, logger);
   } catch (error) {
     const message = error instanceof Error ? error.message : "generic error";
-    throw Error(`Write operation failed - ${message}`);
+    throw genericInternalError(`Write operation failed - ${message}`);
   }
 }

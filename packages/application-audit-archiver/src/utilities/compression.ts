@@ -1,27 +1,21 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable functional/immutable-data */
 import { createGzip } from "zlib";
-import { pipeline } from "stream/promises";
-import { Readable, Writable } from "stream";
-import { config } from "../config/config.js";
+import { pipeline } from "stream";
+import { Readable } from "stream";
+import { promisify } from "util";
+
+const pipelineAsync = promisify(pipeline);
 
 export async function compressJson(jsonString: string): Promise<Buffer> {
+  const gzipStream = createGzip();
   const readStream = Readable.from(jsonString);
-  const gzipStream = createGzip({ level: config.gzCompressionLevel });
+  const chunks: Buffer[] = [];
 
   return new Promise<Buffer>((resolve, reject) => {
-    const chunks: Buffer[] = [];
+    gzipStream.on("data", (chunk) => chunks.push(chunk));
+    gzipStream.on("end", () => resolve(Buffer.concat(chunks)));
+    gzipStream.on("error", reject);
 
-    const writeStream = new Writable({
-      write(chunk, _, callback) {
-        resolve(Buffer.concat([...chunks, chunk]));
-        callback();
-      },
-      final(callback) {
-        resolve(Buffer.concat(chunks));
-        callback();
-      },
-    });
-
-    pipeline(readStream, gzipStream, writeStream).catch(reject);
+    pipelineAsync(readStream, gzipStream).catch(reject);
   });
 }
