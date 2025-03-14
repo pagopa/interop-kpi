@@ -1,6 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS jwt;
 
-CREATE TABLE IF NOT EXISTS jwt.client_assertion_audit_details (
+CREATE TABLE IF NOT EXISTS jwt.client_assertion_audit (
     jwt_id VARCHAR(36) PRIMARY KEY,
     issued_at TIMESTAMPTZ NOT NULL,
     algorithm VARCHAR(50) NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS jwt.client_assertion_audit_details (
     expiration_time TIMESTAMPTZ NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS jwt.generated_token_audit_details (
+CREATE TABLE IF NOT EXISTS jwt.generated_token_audit (
     jwt_id VARCHAR(36) PRIMARY KEY,
     correlation_id VARCHAR(36) NOT NULL,
     issued_at TIMESTAMPTZ NOT NULL,
