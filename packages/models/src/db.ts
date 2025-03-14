@@ -12,3 +12,9 @@ export const ApplicationDbTable = {
 
 export type ApplicationDbTable =
   (typeof ApplicationDbTable)[keyof typeof ApplicationDbTable];
+export const LoadBalancerLogTable = {
+  logs: "alb_logs",
+} as const;
+
+export type LoadBalancerLogTable =
+  (typeof LoadBalancerLogTable)[keyof typeof LoadBalancerLogTable];
