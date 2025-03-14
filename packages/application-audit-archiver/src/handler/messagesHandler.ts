@@ -4,7 +4,6 @@ import {
   FileManager,
   Logger,
   decodeKafkaMessage,
-  formatDateyyyyMMdd,
   formatTimehhmmss,
 } from "pagopa-interop-kpi-commons";
 import { ApplicationAuditEvent, generateId } from "pagopa-interop-kpi-models";
@@ -25,11 +24,13 @@ export async function handleMessages(
     const compressedBuffer = await compressJson(jsonString);
 
     const date = new Date();
-    const ymdDate = formatDateyyyyMMdd(date);
-    const hmsTime = formatTimehhmmss(date);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const time = formatTimehhmmss(date);
 
-    const fileName = `${ymdDate}_${hmsTime}_${generateId()}.json.gz`;
-    const filePath = `application-audit/${ymdDate}`;
+    const fileName = `${year}${month}${day}_${time}_${generateId()}.json.gz`;
+    const filePath = `application-audit/year=${year}/month=${month}/day=${day}`;
 
     const s3File = {
       bucket: config.s3BucketName,
