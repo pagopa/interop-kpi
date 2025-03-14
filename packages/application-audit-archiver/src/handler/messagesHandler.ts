@@ -30,7 +30,7 @@ export async function handleMessages(
     const time = formatTimehhmmss(date);
 
     const fileName = `${year}${month}${day}_${time}_${generateId()}.json.gz`;
-    const filePath = `application-audit/year=${year}/month=${month}/day=${day}`;
+    const filePath = `year=${year}/month=${month}/day=${day}`;
 
     const s3File = {
       bucket: config.s3BucketName,
