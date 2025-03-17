@@ -33,6 +33,7 @@ export function endRequestRepository(conn: DBConnection, pgp: IMain) {
           amazon_trace_id: (event) => event.amazonTraceId,
           organization_id: (event) => event.organizationId,
           user_id: (event) => event.userId,
+          self_care_id: (event) => event.selfcareId,
           http_response_status: (event) => event.httpResponseStatus,
           execution_time_ms: (event) => event.executionTimeMs,
         };
@@ -74,6 +75,7 @@ export function endRequestRepository(conn: DBConnection, pgp: IMain) {
               amazon_trace_id      = source.amazon_trace_id,
               organization_id      = source.organization_id,
               user_id              = source.user_id,
+              self_care_id         = source.self_care_id,
               http_response_status = source.http_response_status,
               execution_time_ms    = source.execution_time_ms
           WHEN NOT MATCHED THEN
@@ -92,6 +94,7 @@ export function endRequestRepository(conn: DBConnection, pgp: IMain) {
               amazon_trace_id,
               organization_id,
               user_id,
+              self_care_id,
               http_response_status,
               execution_time_ms
             )
@@ -110,6 +113,7 @@ export function endRequestRepository(conn: DBConnection, pgp: IMain) {
               source.amazon_trace_id,
               source.organization_id,
               source.user_id,
+              source.self_care_id,
               source.http_response_status,
               source.execution_time_ms
             );
