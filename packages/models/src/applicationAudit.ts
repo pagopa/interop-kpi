@@ -12,7 +12,7 @@ const ApplicationAuditBeginRequest = z.object({
   podName: z.string(),
   uptimeSeconds: z.number(),
   timestamp: z.number(),
-  amazonTraceId: z.string(),
+  amazonTraceId: z.string().optional(),
 });
 
 export type ApplicationAuditBeginRequest = z.infer<
@@ -21,10 +21,11 @@ export type ApplicationAuditBeginRequest = z.infer<
 
 const ApplicationAuditEndRequest = ApplicationAuditBeginRequest.extend({
   phase: z.literal("END_REQUEST"),
-  organizationId: z.string(),
+  organizationId: z.string().optional(),
   userId: z.string().optional(),
   httpResponseStatus: z.number(),
   executionTimeMs: z.number(),
+  selfcareId: z.string().optional(),
 });
 
 export type ApplicationAuditEndRequest = z.infer<

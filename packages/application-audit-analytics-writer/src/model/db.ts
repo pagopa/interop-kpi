@@ -15,14 +15,15 @@ export interface ApplicationAuditBeginRequestSchema {
   pod_name: string;
   uptime_seconds: number;
   timestamp: Date;
-  amazon_trace_id: string;
+  amazon_trace_id?: string;
 }
 
 export interface ApplicationAuditEndRequestSchema
   extends Omit<ApplicationAuditBeginRequestSchema, "phase"> {
   phase: "END_REQUEST";
-  organization_id: string;
+  organization_id?: string;
   user_id?: string;
+  self_care_id?: string;
   http_response_status: number;
   execution_time_ms: number;
 }
