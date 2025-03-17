@@ -67,7 +67,7 @@ describe("DB Service Tests for ALB Logs", () => {
 
       await expect(dbService.insertRecordsToStaging([])).rejects.toThrowError(
         genericInternalError(
-          `Error inserting into alb_logs staging table: ${mockQueryError}`
+          `Error inserting into alb_logs_audit staging table: ${mockQueryError}`
         )
       );
     });
