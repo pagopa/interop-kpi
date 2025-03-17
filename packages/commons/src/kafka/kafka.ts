@@ -18,10 +18,6 @@ export function decodeKafkaMessage<TEvent extends z.ZodType>(
   const parsed = Message(event).safeParse(message);
   if (!parsed.success) {
     throw new Error("Invalid message: " + JSON.stringify(parsed.error));
-  } else if (!parsed.data.value?.after) {
-    throw new Error(
-      "Invalid message: missing value " + JSON.stringify(parsed.data)
-    );
   }
-  return parsed.data.value.after;
+  return parsed.data;
 }
