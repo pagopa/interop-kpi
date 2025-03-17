@@ -19,14 +19,14 @@ export function setupDbServiceBuilder(conn: DBConnection) {
           );
         `;
 
-        const createEndRequestTableTableQuery = `
+        const createEndRequestTableQuery = `
           CREATE TEMPORARY TABLE IF NOT EXISTS ${endRequestTable}${config.mergeTableSuffix} (
             LIKE ${config.dbSchemaName}.${endRequestTable}
           );
         `;
 
         await conn.query(createbeginRequestTableQuery);
-        await conn.query(createEndRequestTableTableQuery);
+        await conn.query(createEndRequestTableQuery);
       } catch (error: unknown) {
         throw setupStagingTablesError(error);
       }

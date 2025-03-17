@@ -57,7 +57,7 @@ export function endRequestRepository(conn: DBConnection, pgp: IMain) {
       try {
         await conn.none(`
           MERGE INTO ${config.dbSchemaName}.${endRequestTable} AS target
-          USING ${config.dbSchemaName}.${endRequestTable}${config.mergeTableSuffix} AS source
+          USING ${endRequestTable}${config.mergeTableSuffix} AS source
           ON target.correlation_id = source.correlation_id
           WHEN MATCHED THEN
             UPDATE SET

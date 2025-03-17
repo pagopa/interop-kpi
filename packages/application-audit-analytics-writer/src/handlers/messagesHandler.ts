@@ -27,10 +27,10 @@ export async function handleMessages(
   for (const message of messages) {
     const decodedMessage = decodeKafkaMessage(message, ApplicationAuditEvent);
     match(decodedMessage)
-      .with({ phase: "BEGIN_REQUEST" }, ({ data }) => {
+      .with({ phase: "BEGIN_REQUEST" }, (data) => {
         beginRequestMsgs.push(data);
       })
-      .with({ phase: "END_REQUEST" }, ({ data }) => {
+      .with({ phase: "END_REQUEST" }, (data) => {
         endRequestMsgs.push(data);
       })
       .exhaustive();

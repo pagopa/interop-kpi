@@ -5,7 +5,7 @@ import { handleMessages } from "../src/handlers/messagesHandler.js";
 import { dbContext } from "./utils.js";
 
 describe("Messages Handler tests", () => {
-  describe("processMessage", () => {
+  describe("handleMessages", () => {
     it("processing empty messages from kafka should not throw error", async () => {
       const emptyBatchMessages: KafkaMessage[] = [];
 
