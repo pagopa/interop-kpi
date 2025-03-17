@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS application.end_request_audit (
     amazon_trace_id VARCHAR(255),
     organization_id VARCHAR(36),
     user_id VARCHAR(36),
-    self_care_id: VARCHAR(36),
+    self_care_id VARCHAR(36),
     http_response_status INTEGER NOT NULL,
     execution_time_ms BIGINT NOT NULL
 );
