@@ -57,9 +57,9 @@ export function endRequestRepository(conn: DBConnection, pgp: IMain) {
     async mergeStagingToTarget(): Promise<void> {
       try {
         await conn.none(`
-          MERGE INTO ${config.dbSchemaName}.${endRequestTable} AS target
+          MERGE INTO ${config.dbSchemaName}.${endRequestTable} 
           USING ${endRequestTable}${config.mergeTableSuffix} AS source
-          ON target.correlation_id = source.correlation_id
+          ON ${config.dbSchemaName}.${endRequestTable}.correlation_id = source.correlation_id
           WHEN MATCHED THEN
             UPDATE SET
               service              = source.service,

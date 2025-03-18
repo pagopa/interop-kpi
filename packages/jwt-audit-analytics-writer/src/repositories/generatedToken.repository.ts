@@ -60,9 +60,9 @@ export function generatedTokenRepository(conn: DBConnection) {
     async merge(t: ITask<unknown>): Promise<void> {
       try {
         await t.none(`
-            MERGE INTO ${config.dbSchemaName}.${generatedTokenTable} AS target
+            MERGE INTO ${config.dbSchemaName}.${generatedTokenTable} 
             USING ${generatedTokenTable}${config.mergeTableSuffix} AS source
-            ON target.jwt_id = source.jwt_id
+            ON ${config.dbSchemaName}.${generatedTokenTable}.jwt_id = source.jwt_id
             WHEN MATCHED THEN 
               UPDATE
                 SET correlation_id       = source.correlation_id,

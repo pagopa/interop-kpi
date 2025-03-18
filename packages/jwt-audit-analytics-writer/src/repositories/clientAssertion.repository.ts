@@ -52,9 +52,9 @@ export function clientAssertionRepository(conn: DBConnection) {
     async merge(t: ITask<unknown>): Promise<void> {
       try {
         await t.none(`
-            MERGE INTO ${config.dbSchemaName}.${clientAssertionTable} AS target 
+            MERGE INTO ${config.dbSchemaName}.${clientAssertionTable} 
             USING ${clientAssertionTable}${config.mergeTableSuffix} AS source
-              ON target.jwt_id = source.jwt_id
+              ON ${config.dbSchemaName}.${clientAssertionTable}.jwt_id = source.jwt_id
             WHEN MATCHED THEN
               UPDATE
                 SET issued_at       = source.issued_at,

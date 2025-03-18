@@ -53,9 +53,9 @@ export function beginRequestRepository(conn: DBConnection, pgp: IMain) {
     async mergeStagingToTarget(): Promise<void> {
       try {
         await conn.none(`
-          MERGE INTO ${config.dbSchemaName}.${beginRequestTable} AS target
+          MERGE INTO ${config.dbSchemaName}.${beginRequestTable} 
           USING ${beginRequestTable}${config.mergeTableSuffix} AS source
-          ON target.correlation_id = source.correlation_id
+          ON ${config.dbSchemaName}.${beginRequestTable}.correlation_id = source.correlation_id
           WHEN MATCHED THEN
             UPDATE SET
               service             = source.service,
