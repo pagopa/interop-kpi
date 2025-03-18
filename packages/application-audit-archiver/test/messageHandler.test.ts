@@ -27,7 +27,7 @@ describe("handleMessages", () => {
     await pipelineAsync(Readable.from(compressedBuffer), gunzip);
     expect(decompressed).toBe(jsonString);
   });
-  it("should process a single valid message", async () => {
+  it("should process a single valid message and store on s3bucket with valid name", async () => {
     const mockStoreBytes = vi.fn().mockResolvedValue("mocked-s3-key");
     fileManager.storeBytes = mockStoreBytes;
 
@@ -83,6 +83,7 @@ describe("handleMessages", () => {
     const parsed = JSON.parse(decompressed);
     expect(Array.isArray(parsed)).toBe(true);
     expect(parsed.length).toBe(2);
+    expect(mockStoreBytes).toHaveBeenCalledTimes(1);
   });
 
   it("should throw genericInternalError if storeBytes fails", async () => {
