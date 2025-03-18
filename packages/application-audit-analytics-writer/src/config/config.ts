@@ -20,7 +20,9 @@ const applicationAuditAnalyticsWriterConfig = LoggerConfig.and(
           .number()
           .min(100)
           .default(500),
-        MERGE_TABLE_SUFFIX: z.string(),
+        MERGE_TABLE_SUFFIX: z
+          .string()
+          .transform((val) => val.replace(/-/g, "")),
       })
       .transform((c) => ({
         serviceName: c.SERVICE_NAME,
