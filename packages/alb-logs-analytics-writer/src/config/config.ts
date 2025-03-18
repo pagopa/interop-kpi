@@ -18,7 +18,9 @@ export const AlbLogsAnalyticsWriterConfig = AWSConfig.and(ConsumerConfig)
       .object({
         SERVICE_NAME: z.string(),
         SQS_NOTIFICATION_ENDPOINT: z.string(),
-        MERGE_TABLE_SUFFIX: z.string(),
+        MERGE_TABLE_SUFFIX: z
+          .string()
+          .transform((val) => val.replace(/-/g, "")),
         BATCH_SIZE: z.coerce.number().min(100).default(500),
       })
       .transform((c) => ({
