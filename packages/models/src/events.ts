@@ -10,6 +10,7 @@ export const Message = <TEventZodType extends z.ZodType>(
       event
     ),
   });
+
 export type Message<TEvent> = z.infer<
   ReturnType<typeof Message<z.ZodType<TEvent>>>
 >;
