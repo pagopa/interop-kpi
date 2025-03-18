@@ -1,17 +1,19 @@
+/* eslint-disable functional/immutable-data */
+/* eslint-disable functional/no-let */
+import { createGunzip } from "zlib";
+import { pipeline, Readable } from "stream";
+import { promisify } from "util";
 import { describe, it, expect, vi } from "vitest";
+import { genericLogger, formatTimehhmmss } from "pagopa-interop-kpi-commons";
+import { ApplicationAuditEvent, Message } from "pagopa-interop-kpi-models";
 import { compressJson } from "../src/utilities/compression.js";
 import { handleMessages } from "../src/handler/messagesHandler.js";
-import { genericLogger, formatTimehhmmss } from "pagopa-interop-kpi-commons";
 import {
   fileManager,
   validKafkaMessage,
   invalidKafkaMessage,
   validAuditEvent,
 } from "./utils.js";
-import { createGunzip } from "zlib";
-import { pipeline, Readable } from "stream";
-import { promisify } from "util";
-import { ApplicationAuditEvent, Message } from "pagopa-interop-kpi-models";
 
 const pipelineAsync = promisify(pipeline);
 
