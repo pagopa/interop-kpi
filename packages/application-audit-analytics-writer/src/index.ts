@@ -1,17 +1,50 @@
 import { runBatchConsumer } from "kafka-connector";
-import { logger } from "pagopa-interop-kpi-commons";
+import {
+  DBContext,
+  initDB,
+  logger,
+  retryConnection,
+} from "pagopa-interop-kpi-commons";
 import { EachBatchPayload } from "kafkajs";
 import { CorrelationId, generateId } from "pagopa-interop-kpi-models";
 import { batchConsumerConfig, config } from "./config/config.js";
 import { handleMessages } from "./handlers/messagesHandler.js";
+import { setupDbServiceBuilder } from "./services/setupDbService.js";
 
-const loggerInstance = logger({
-  serviceName: config.serviceName,
-  correlationId: generateId<CorrelationId>(),
+const dbInstance = initDB({
+  username: config.dbUsername,
+  password: config.dbPassword,
+  host: config.dbHost,
+  port: config.dbPort,
+  database: config.dbName,
+  useSSL: config.dbUseSSL,
+  maxConnectionPool: config.dbMaxConnectionPool,
 });
 
+const connection = await dbInstance.connect();
+
+const dbContext: DBContext = {
+  conn: connection,
+  pgp: dbInstance.$config.pgp,
+};
+
+await retryConnection(
+  dbInstance,
+  dbContext,
+  config,
+  async (db) => {
+    await setupDbServiceBuilder(db.conn).setupStagingTables();
+  },
+  logger({ serviceName: config.serviceName })
+);
+
 async function processMessage({ batch }: EachBatchPayload): Promise<void> {
-  await handleMessages(batch.messages, loggerInstance);
+  const loggerInstance = logger({
+    serviceName: config.serviceName,
+    correlationId: generateId<CorrelationId>(),
+  });
+
+  await handleMessages(batch.messages, dbContext, loggerInstance);
 
   loggerInstance.info(
     `Handling application audit messages. Partition number: ${

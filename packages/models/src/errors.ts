@@ -17,6 +17,7 @@ const errorCodes = {
   decodeSQSEventMessageError: "DECODE_SQS_EVENT_MESSAGE_ERROR",
   kafkaMissingMessagesValue: "KAFKA_MISSING_MESSAGES_VALUE",
   kafkaMessageProcessError: "KAFKA_MESSAGE_PROCESS_ERROR",
+  setupStagingTablesError: "SETUP_STAGING_TABLES_ERROR",
 } as const;
 
 export type CommonErrorCodes = keyof typeof errorCodes;
@@ -78,5 +79,14 @@ export function kafkaMissingMessagesValue(
   return new InternalError({
     code: "kafkaMissingMessagesValue",
     detail: `Missing value messages in kafka batch from topic: ${topic}`,
+  });
+}
+
+export function setupStagingTablesError(
+  detail: unknown
+): InternalError<CommonErrorCodes> {
+  return new InternalError({
+    detail: `Database error occurred while setting up staging tables. ${detail}`,
+    code: "setupStagingTablesError",
   });
 }
