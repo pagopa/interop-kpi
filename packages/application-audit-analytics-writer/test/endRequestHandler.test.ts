@@ -40,7 +40,7 @@ describe("End request messages handler tests", () => {
         `Error merging staging to target end_request table: ${mockQueryError}`
       );
 
-      const beginRequestMsgs =
+      const endRequestMsgs =
         getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10);
 
       vi.spyOn(genericLogger, "warn");
@@ -50,21 +50,17 @@ describe("End request messages handler tests", () => {
       );
 
       await expect(
-        handleEndRequestMessages(
-          beginRequestMsgs,
-          endRequestRepo,
-          genericLogger
-        )
+        handleEndRequestMessages(endRequestMsgs, endRequestRepo, genericLogger)
       ).rejects.toThrowError();
 
-      const beginRequestStagingCount = await getStagingTableCount(
+      const endRequestStagingCount = await getStagingTableCount(
         conn,
         endRequestStagingTableName
       );
 
       expect(genericLogger.warn).toHaveBeenCalled();
       expect(endRequestRepo.cleanStaging).toHaveBeenCalled();
-      expect(beginRequestStagingCount).toBe(0);
+      expect(endRequestStagingCount).toBe(0);
     });
   });
 
