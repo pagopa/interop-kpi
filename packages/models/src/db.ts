@@ -1,6 +1,6 @@
 export const JwtDbTable = {
-  client_assertion: "client_assertion_audit_details",
-  generated_token: "generated_token_audit_details",
+  client_assertion: "client_assertion_audit",
+  generated_token: "generated_token_audit",
 } as const;
 
 export type JwtDbTable = (typeof JwtDbTable)[keyof typeof JwtDbTable];
@@ -13,7 +13,7 @@ export const ApplicationDbTable = {
 export type ApplicationDbTable =
   (typeof ApplicationDbTable)[keyof typeof ApplicationDbTable];
 export const LoadBalancerLogTable = {
-  logs: "alb_logs",
+  logs: "alb_logs_audit",
 } as const;
 
 export type LoadBalancerLogTable =
