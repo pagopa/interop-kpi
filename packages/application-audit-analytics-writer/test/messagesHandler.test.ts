@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { KafkaMessage } from "kafkajs";
 import { genericLogger } from "pagopa-interop-kpi-commons";
+import {
+  ApplicationAuditEvent,
+  ApplicationDbTable,
+} from "pagopa-interop-kpi-models";
 import { handleMessages } from "../src/handlers/messagesHandler.js";
+import { config } from "../src/config/config.js";
 import {
   dbContext,
   getMockApplicationAudits,
@@ -10,11 +15,6 @@ import {
   mockEventsToKafkaMessages,
   truncateTables,
 } from "./utils.js";
-import {
-  ApplicationAuditEvent,
-  ApplicationDbTable,
-} from "pagopa-interop-kpi-models";
-import { config } from "../src/config/config.js";
 
 describe("Messages Handler tests", () => {
   const { conn } = dbContext;

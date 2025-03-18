@@ -49,7 +49,7 @@ export function endRequestRepository(conn: DBConnection, pgp: IMain) {
         await conn.none(pgp.helpers.insert(events, endRequestColumnSet));
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error inserting into begin_request staging table: ${error}`
+          `Error inserting into end_request staging table: ${error}`
         );
       }
     },

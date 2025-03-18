@@ -6,8 +6,6 @@ import {
   genericLogger,
   retryConnection,
 } from "pagopa-interop-kpi-commons";
-import { setupDbServiceBuilder } from "../src/services/setupDbService.js";
-import { config } from "../src/config/config.js";
 import {
   ApplicationAuditEvent,
   ApplicationAuditPhase,
@@ -16,6 +14,8 @@ import {
 } from "pagopa-interop-kpi-models";
 import { match } from "ts-pattern";
 import { KafkaMessage } from "kafkajs";
+import { config } from "../src/config/config.js";
+import { setupDbServiceBuilder } from "../src/services/setupDbService.js";
 
 export const { cleanup, fileManager, postgresDB } =
   await setupTestContainersVitest(
