@@ -3,6 +3,7 @@ import {
   KafkaConsumerConfig,
   KafkaTopicConfig,
   KafkaBatchConsumerConfig,
+  DbConfig,
 } from "pagopa-interop-kpi-commons";
 import { z } from "zod";
 
@@ -10,6 +11,7 @@ const applicationAuditAnalyticsWriterConfig = LoggerConfig.and(
   KafkaConsumerConfig
 )
   .and(KafkaTopicConfig)
+  .and(DbConfig)
   .and(
     z
       .object({
@@ -18,10 +20,12 @@ const applicationAuditAnalyticsWriterConfig = LoggerConfig.and(
           .number()
           .min(100)
           .default(500),
+        MERGE_TABLE_SUFFIX: z.string(),
       })
       .transform((c) => ({
         serviceName: c.SERVICE_NAME,
         msgsInsertPerBatch: c.DB_MESSAGES_TO_INSERT_PER_BATCH,
+        mergeTableSuffix: c.MERGE_TABLE_SUFFIX,
       }))
   );
 
