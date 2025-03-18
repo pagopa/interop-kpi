@@ -67,9 +67,9 @@ export function loadBalancerLogRepository(conn: DBConnection) {
     async merge(): Promise<void> {
       try {
         await conn.none(`
-        MERGE INTO ${config.dbSchemaName}.${loadBalancerTable} AS target
+        MERGE INTO ${config.dbSchemaName}.${loadBalancerTable}
         USING ${loadBalancerTable}${config.mergeTableSuffix} AS source
-          ON target.trace_id = source.trace_id
+          ON ${config.dbSchemaName}.${loadBalancerTable}.trace_id = source.trace_id
         WHEN MATCHED THEN
           UPDATE SET
             type = source.type,
