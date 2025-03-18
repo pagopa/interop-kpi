@@ -20,18 +20,9 @@ export async function handleMessages(
   logger: Logger
 ) {
   try {
-    const batch = messages.flatMap((message) => {
-      try {
-        return [decodeKafkaMessage(message, ApplicationAuditEvent)];
-      } catch (error) {
-        logger.error(
-          `Skipping invalid message - ${JSON.stringify(message.value)}: ${
-            error instanceof Error ? error.message : String(error)
-          }`
-        );
-        return [];
-      }
-    });
+    const batch = messages.map((message) =>
+      decodeKafkaMessage(message, ApplicationAuditEvent)
+    );
 
     const jsonString = JSON.stringify(batch);
     const compressedBuffer = await compressJson(jsonString);

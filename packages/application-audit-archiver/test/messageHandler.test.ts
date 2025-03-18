@@ -8,10 +8,10 @@ import {
   invalidKafkaMessage,
   validAuditEvent,
 } from "./utils.js";
-import { config } from "../src/config/config.js";
 import { createGunzip } from "zlib";
 import { pipeline, Readable } from "stream";
 import { promisify } from "util";
+import { ApplicationAuditEvent, Message } from "pagopa-interop-kpi-models";
 
 const pipelineAsync = promisify(pipeline);
 
@@ -94,21 +94,18 @@ describe("handleMessages", () => {
     ).rejects.toThrowError(/Write operation failed - mocked error/);
   });
 
-  it("should throw genericInternalError if a message is invalid", async () => {
+  it("should throw genericInternalError if message is invalid", async () => {
     const mockStoreBytes = vi.fn().mockResolvedValue("mocked-s3-key");
     fileManager.storeBytes = mockStoreBytes;
+    const errorMessage = Message(ApplicationAuditEvent).safeParse(
+      invalidKafkaMessage
+    ).error;
     await expect(
       handleMessages([invalidKafkaMessage], fileManager, genericLogger)
-    ).rejects.toThrowError(/Write operation failed - mocked error/);
-  });
-
-  it("should process succesfully if one message is valid and others are not", async () => {
-    const mockStoreBytes = vi.fn().mockResolvedValue("mocked-s3-key");
-    fileManager.storeBytes = mockStoreBytes;
-    handleMessages(
-      [validKafkaMessage, invalidKafkaMessage],
-      fileManager,
-      genericLogger
+    ).rejects.toThrowError(
+      `Write operation failed - Invalid message: ${JSON.stringify(
+        errorMessage
+      )}`
     );
   });
 });
