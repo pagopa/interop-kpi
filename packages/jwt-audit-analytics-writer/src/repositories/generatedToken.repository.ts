@@ -38,7 +38,6 @@ export function generatedTokenRepository(conn: DBConnection) {
           not_before: (record) => new Date(record.notBefore),
           expiration_time: (record) => new Date(record.expirationTime),
           issuer: (record) => record.issuer,
-          client_assertion_jwt_id: (record) => record.clientAssertion.jwtId,
         };
 
         const tokenAuditTableName = `${generatedTokenTable}${config.mergeTableSuffix}`;
@@ -52,7 +51,7 @@ export function generatedTokenRepository(conn: DBConnection) {
         await t.none(pgp.helpers.insert(records, tokenAuditColumnSet));
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error inserting into generated_client staging table: ${error}`
+          `Error inserting into generated_token staging table: ${error}`
         );
       }
     },
@@ -80,8 +79,7 @@ export function generatedTokenRepository(conn: DBConnection) {
                     subject              = source.subject,
                     not_before           = source.not_before,
                     expiration_time      = source.expiration_time,
-                    issuer               = source.issuer,
-                    client_assertion_jwt_id = source.client_assertion_jwt_id
+                    issuer               = source.issuer
             WHEN NOT MATCHED THEN 
               INSERT (
                 jwt_id,
@@ -100,8 +98,7 @@ export function generatedTokenRepository(conn: DBConnection) {
                 subject,
                 not_before,
                 expiration_time,
-                issuer,
-                client_assertion_jwt_id
+                issuer
               )
               VALUES (
                 source.jwt_id,
@@ -120,13 +117,12 @@ export function generatedTokenRepository(conn: DBConnection) {
                 source.subject,
                 source.not_before,
                 source.expiration_time,
-                source.issuer,
-                source.client_assertion_jwt_id
+                source.issuer
               );
           `);
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error merging staging to target generated_client table: ${error}`
+          `Error merging staging to target generated_token table: ${error}`
         );
       }
     },
@@ -138,7 +134,7 @@ export function generatedTokenRepository(conn: DBConnection) {
         );
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error cleaning staging generated_client table: ${error}`
+          `Error cleaning staging generated_token table: ${error}`
         );
       }
     },

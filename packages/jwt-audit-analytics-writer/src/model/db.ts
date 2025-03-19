@@ -9,6 +9,7 @@ export interface ClientAssertionSchema {
   subject: string;
   audience: string;
   expiration_time: Date;
+  generated_token_jwt_id: string;
 }
 
 export interface GeneratedTokenSchema {
@@ -29,7 +30,6 @@ export interface GeneratedTokenSchema {
   not_before: Date;
   expiration_time: Date;
   issuer: string;
-  client_assertion_jwt_id: string;
 }
 
 /**

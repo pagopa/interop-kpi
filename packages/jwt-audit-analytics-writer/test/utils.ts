@@ -47,8 +47,8 @@ await retryConnection(
   postgresDB,
   dbContext,
   config,
-  async (db) => {
-    await setupDbServiceBuilder(db.conn).setupStagingTables();
+  async () => {
+    // Intentionally left blank to prevent table creation during setupStagingTables tests
   },
   genericLogger
 );
@@ -206,11 +206,11 @@ export async function truncateTables(
   await db.none(
     `TRUNCATE TABLE ${schema}.${JwtDbTable.client_assertion}${
       stagingTableSuffix ?? ""
-    } CASCADE;`
+    };`
   );
   await db.none(
     `TRUNCATE TABLE ${schema}.${JwtDbTable.generated_token}${
       stagingTableSuffix ?? ""
-    };`
+    } CASCADE;`
   );
 }

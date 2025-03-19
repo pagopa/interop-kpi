@@ -11,20 +11,19 @@ export function setupDbServiceBuilder(conn: DBConnection) {
   return {
     async setupStagingTables(): Promise<void> {
       try {
-        const createClientAssertionTableQuery = `
-          CREATE TEMPORARY TABLE IF NOT EXISTS ${clientAssertionTable}${config.mergeTableSuffix} (
-            LIKE ${config.dbSchemaName}.${clientAssertionTable}
-          );
-        `;
-
         const createGeneratedTokenTableQuery = `
           CREATE TEMPORARY TABLE IF NOT EXISTS ${generatedTokenTable}${config.mergeTableSuffix} (
             LIKE ${config.dbSchemaName}.${generatedTokenTable}
           );
         `;
 
-        await conn.query(createClientAssertionTableQuery);
+        const createClientAssertionTableQuery = `
+          CREATE TEMPORARY TABLE IF NOT EXISTS ${clientAssertionTable}${config.mergeTableSuffix} (
+            LIKE ${config.dbSchemaName}.${clientAssertionTable}
+          );
+        `;
         await conn.query(createGeneratedTokenTableQuery);
+        await conn.query(createClientAssertionTableQuery);
       } catch (error: unknown) {
         throw setupStagingTablesError(error);
       }
