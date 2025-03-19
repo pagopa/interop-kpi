@@ -124,6 +124,9 @@ importers:
       pagopa-interop-kpi-commons:
         specifier: workspace:*
         version: link:../commons
+      pagopa-interop-kpi-commons-test:
+        specifier: workspace:*
+        version: link:../commons-test
       pagopa-interop-kpi-models:
         specifier: workspace:*
         version: link:../models
