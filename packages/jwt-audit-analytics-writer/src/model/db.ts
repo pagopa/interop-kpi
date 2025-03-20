@@ -30,6 +30,7 @@ export interface GeneratedTokenSchema {
   not_before: Date;
   expiration_time: Date;
   issuer: string;
+  client_assertion_jwt_id: string;
 }
 
 /**

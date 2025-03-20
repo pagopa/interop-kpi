@@ -38,6 +38,7 @@ export function generatedTokenRepository(conn: DBConnection) {
           not_before: (record) => new Date(record.notBefore),
           expiration_time: (record) => new Date(record.expirationTime),
           issuer: (record) => record.issuer,
+          client_assertion_jwt_id: (record) => record.clientAssertion.jwtId,
         };
 
         const tokenAuditTableName = `${generatedTokenTable}${config.mergeTableSuffix}`;
@@ -79,7 +80,8 @@ export function generatedTokenRepository(conn: DBConnection) {
                     subject              = source.subject,
                     not_before           = source.not_before,
                     expiration_time      = source.expiration_time,
-                    issuer               = source.issuer
+                    issuer               = source.issuer,
+                    client_assertion_jwt_id = source.client_assertion_jwt_id
             WHEN NOT MATCHED THEN 
               INSERT (
                 jwt_id,
@@ -98,7 +100,8 @@ export function generatedTokenRepository(conn: DBConnection) {
                 subject,
                 not_before,
                 expiration_time,
-                issuer
+                issuer,
+                client_assertion_jwt_id
               )
               VALUES (
                 source.jwt_id,
@@ -117,7 +120,8 @@ export function generatedTokenRepository(conn: DBConnection) {
                 source.subject,
                 source.not_before,
                 source.expiration_time,
-                source.issuer
+                source.issuer,
+                source.client_assertion_jwt_id
               );
           `);
       } catch (error: unknown) {

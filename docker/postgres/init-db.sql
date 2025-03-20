@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS jwt.generated_token_audit (
     subject VARCHAR(255) NOT NULL,
     not_before TIMESTAMPTZ NOT NULL,
     expiration_time TIMESTAMPTZ NOT NULL,
-    issuer VARCHAR(255) NOT NULL
+    issuer VARCHAR(255) NOT NULL,
+    client_assertion_jwt_id VARCHAR(36) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS jwt.client_assertion_audit (
