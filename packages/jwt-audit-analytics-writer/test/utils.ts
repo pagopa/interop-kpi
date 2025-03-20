@@ -206,11 +206,11 @@ export async function truncateTables(
   await db.none(
     `TRUNCATE TABLE ${schema}.${JwtDbTable.client_assertion}${
       stagingTableSuffix ?? ""
-    } CASCADE;`
+    };`
   );
   await db.none(
     `TRUNCATE TABLE ${schema}.${JwtDbTable.generated_token}${
       stagingTableSuffix ?? ""
-    };`
+    } CASCADE;`
   );
 }

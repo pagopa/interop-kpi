@@ -52,7 +52,7 @@ export function generatedTokenRepository(conn: DBConnection) {
         await t.none(pgp.helpers.insert(records, tokenAuditColumnSet));
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error inserting into generated_client staging table: ${error}`
+          `Error inserting into generated_token staging table: ${error}`
         );
       }
     },
@@ -126,7 +126,7 @@ export function generatedTokenRepository(conn: DBConnection) {
           `);
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error merging staging to target generated_client table: ${error}`
+          `Error merging staging to target generated_token table: ${error}`
         );
       }
     },
@@ -138,7 +138,7 @@ export function generatedTokenRepository(conn: DBConnection) {
         );
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error cleaning staging generated_client table: ${error}`
+          `Error cleaning staging generated_token table: ${error}`
         );
       }
     },

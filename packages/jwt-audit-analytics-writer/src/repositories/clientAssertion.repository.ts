@@ -30,6 +30,7 @@ export function clientAssertionRepository(conn: DBConnection) {
           audience: (record) => record.clientAssertion.audience,
           expiration_time: (record) =>
             new Date(record.clientAssertion.expirationTime),
+          generated_token_jwt_id: (record) => record.jwtId,
         };
 
         const clientAssertionTableName = `${clientAssertionTable}${config.mergeTableSuffix}`;
@@ -54,7 +55,7 @@ export function clientAssertionRepository(conn: DBConnection) {
         await t.none(`
             MERGE INTO ${config.dbSchemaName}.${clientAssertionTable} 
             USING ${clientAssertionTable}${config.mergeTableSuffix} AS source
-              ON ${config.dbSchemaName}.${clientAssertionTable}.jwt_id = source.jwt_id
+              ON ${config.dbSchemaName}.${clientAssertionTable}.generated_token_jwt_id = source.generated_token_jwt_id
             WHEN MATCHED THEN
               UPDATE
                 SET issued_at       = source.issued_at,
@@ -73,7 +74,8 @@ export function clientAssertionRepository(conn: DBConnection) {
                 issuer, 
                 subject, 
                 audience, 
-                expiration_time
+                expiration_time,
+                generated_token_jwt_id
                 )
               VALUES (
                 source.jwt_id, 
@@ -83,7 +85,8 @@ export function clientAssertionRepository(conn: DBConnection) {
                 source.issuer, 
                 source.subject, 
                 source.audience, 
-                source.expiration_time
+                source.expiration_time,
+                source.generated_token_jwt_id
               );
           `);
       } catch (error: unknown) {

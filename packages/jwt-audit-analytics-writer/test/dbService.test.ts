@@ -64,7 +64,7 @@ describe("DB Service tests", () => {
       expect(clientAssertionStagingCount).toBe(10);
     });
 
-    it("should throw an error if database query fails", async () => {
+    it("should throw an error if database query fails on generated_token table", async () => {
       const mockQueryError =
         "TypeError: Cannot generate an INSERT from an empty array.";
 
@@ -76,19 +76,19 @@ describe("DB Service tests", () => {
 
       await expect(dbService.insertRecordsToStaging([])).rejects.toThrowError(
         genericInternalError(
-          `Error inserting into client_assertion staging table: ${mockQueryError}`
+          `Error inserting into generated_token staging table: ${mockQueryError}`
         )
       );
     });
 
-    it("should throw an error and rollback client_assertion records when generated_token inserts fails", async () => {
+    it("should throw an error and rollback generated_token records when client_assertion inserts fails", async () => {
       const mockQueryError =
         "TypeError: Cannot generate an INSERT from an empty array.";
       const mockError = genericInternalError(
-        `Error inserting into generated_token staging table: ${mockQueryError}`
+        `Error inserting into client_assertion staging table: ${mockQueryError}`
       );
 
-      const mockGeneratedTokenRepository = vi.fn().mockImplementation(() => ({
+      const mockClientAssertionRepository = vi.fn().mockImplementation(() => ({
         insert: vi.fn(() => Promise.reject(mockError)),
         merge: vi.fn(() => Promise.resolve()),
         clean: vi.fn(() => Promise.resolve()),
@@ -99,17 +99,17 @@ describe("DB Service tests", () => {
       const dbService = dbServiceBuilder(
         dbContext,
         clientAssertionRepository,
-        mockGeneratedTokenRepository
+        mockClientAssertionRepository
       );
 
       await expect(
         dbService.insertRecordsToStaging(records)
       ).rejects.toThrowError(mockError);
 
-      const clientAssertionStagingCountAfterRollback =
+      const generatedTokenStagingCountAfterRollback =
         await getStagingTableCount(conn, clientAssertionStagingTableName);
 
-      expect(clientAssertionStagingCountAfterRollback).toBe(0);
+      expect(generatedTokenStagingCountAfterRollback).toBe(0);
     });
   });
 
@@ -140,42 +140,41 @@ describe("DB Service tests", () => {
       expect(generatedTokenTargetCountAfterMerge).toBe(10);
     });
 
-    it("should throw an error and rollback merged client_assertion records when generated_token merge fails", async () => {
+    it("should throw an error and rollback merged generated_token records when client_assertion merge fails", async () => {
       const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(10);
       const mockQueryError = "Generic merge error";
       const mockError = genericInternalError(
-        `Error merging staging to target generated_client table: ${mockQueryError}`
+        `Error merging staging to target client_assertion table: ${mockQueryError}`
       );
 
       await conn.tx(async (t: ITask<unknown>) => {
-        await clientAssertionRepository(conn).insert(t, pgp, records);
-
         await generatedTokenRepository(conn).insert(t, pgp, records);
+        await clientAssertionRepository(conn).insert(t, pgp, records);
       });
 
-      const clientAssertionStagingCountAfterInsert = await getStagingTableCount(
+      const generatedTokenStagingCountAfterInsert = await getStagingTableCount(
         conn,
-        clientAssertionStagingTableName
+        generatedTokenStagingTableName
       );
-      expect(clientAssertionStagingCountAfterInsert).toBe(10);
+      expect(generatedTokenStagingCountAfterInsert).toBe(10);
 
       await expect(
         conn.tx(async (t: ITask<unknown>) => {
-          const generatedTokenRepoSpy = generatedTokenRepository(conn);
-          vi.spyOn(generatedTokenRepoSpy, "merge").mockImplementation(() =>
+          const clientAssertionRepoSpy = clientAssertionRepository(conn);
+          vi.spyOn(clientAssertionRepoSpy, "merge").mockImplementation(() =>
             Promise.reject(mockError)
           );
 
-          await clientAssertionRepository(conn).merge(t);
-          await generatedTokenRepoSpy.merge(t);
+          await generatedTokenRepository(conn).merge(t);
+          await clientAssertionRepoSpy.merge(t);
         })
       ).rejects.toThrowError(mockError);
 
-      const clientAssertionCountAfterRollback = await getTargetTableCount(
+      const generatedTokenCountAfterRollback = await getTargetTableCount(
         conn,
-        clientAssertionTargetTableName
+        generatedTokenTargetTableName
       );
-      expect(clientAssertionCountAfterRollback).toBe(0);
+      expect(generatedTokenCountAfterRollback).toBe(0);
     });
   });
 

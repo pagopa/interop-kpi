@@ -9,6 +9,7 @@ export interface ClientAssertionSchema {
   subject: string;
   audience: string;
   expiration_time: Date;
+  generated_token_jwt_id: string;
 }
 
 export interface GeneratedTokenSchema {
