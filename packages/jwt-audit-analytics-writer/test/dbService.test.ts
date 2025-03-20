@@ -166,6 +166,13 @@ describe("DB Service tests", () => {
           );
 
           await generatedTokenRepository(conn).merge(t);
+
+          const generatedTokenCountTargetAfterMerge = await getTargetTableCount(
+            conn,
+            generatedTokenTargetTableName
+          );
+          await expect(generatedTokenCountTargetAfterMerge).toBe(10);
+
           await clientAssertionRepoSpy.merge(t);
         })
       ).rejects.toThrowError(mockError);

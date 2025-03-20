@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS jwt.client_assertion_audit (
     audience VARCHAR(255) NOT NULL,
     expiration_time TIMESTAMPTZ NOT NULL,
     generated_token_jwt_id VARCHAR(36) PRIMARY KEY,
-    CONSTRAINT fk_generated_token FOREIGN KEY (generated_token_jwt_id) REFERENCES jwt.generated_token_audit(jwt_id) ON DELETE CASCADE
+    CONSTRAINT fk_generated_token FOREIGN KEY (generated_token_jwt_id) REFERENCES jwt.generated_token_audit(jwt_id)
 );
 
 CREATE SCHEMA IF NOT EXISTS infra;

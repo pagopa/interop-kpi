@@ -203,14 +203,13 @@ export async function truncateTables(
   schema: string,
   stagingTableSuffix?: string
 ): Promise<void> {
+  const truncateClientAssertion = `${schema}.${JwtDbTable.client_assertion}${
+    stagingTableSuffix ?? ""
+  }`;
+  const truncateGeneratedToken = `${schema}.${JwtDbTable.generated_token}${
+    stagingTableSuffix ?? ""
+  }`;
   await db.none(
-    `TRUNCATE TABLE ${schema}.${JwtDbTable.client_assertion}${
-      stagingTableSuffix ?? ""
-    };`
-  );
-  await db.none(
-    `TRUNCATE TABLE ${schema}.${JwtDbTable.generated_token}${
-      stagingTableSuffix ?? ""
-    } CASCADE;`
+    `TRUNCATE TABLE ${truncateClientAssertion}, ${truncateGeneratedToken};`
   );
 }
