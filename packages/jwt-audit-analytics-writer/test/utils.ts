@@ -47,8 +47,8 @@ await retryConnection(
   postgresDB,
   dbContext,
   config,
-  async () => {
-    // Intentionally left blank to prevent table creation during setupStagingTables tests
+  async (db) => {
+    await setupDbServiceBuilder(db.conn).setupStagingTables();
   },
   genericLogger
 );
