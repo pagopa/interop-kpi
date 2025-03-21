@@ -3,12 +3,12 @@ import {
   LoggerConfig,
   S3Config,
   AWSConfig,
-  ConsumerConfig,
+  SQSConsumerConfig,
   DbConfig,
 } from "pagopa-interop-kpi-commons";
 import { z } from "zod";
 
-export const AlbLogsAnalyticsWriterConfig = AWSConfig.and(ConsumerConfig)
+export const AlbLogsAnalyticsWriterConfig = AWSConfig.and(SQSConsumerConfig)
   .and(LoggerConfig)
   .and(FileManagerConfig)
   .and(S3Config)
