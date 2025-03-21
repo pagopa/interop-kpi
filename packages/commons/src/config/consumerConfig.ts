@@ -7,7 +7,7 @@ export const SQSConsumerConfig = z
       .number()
       .min(1)
       .max(20)
-      .default(1),
+      .default(10),
     SQS_VISIBILITY_TIMEOUT_SECONDS: z.coerce.number().min(10).default(30),
   })
   .transform((c) => ({
