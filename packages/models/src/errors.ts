@@ -18,7 +18,7 @@ const errorCodes = {
   kafkaMissingMessagesValue: "KAFKA_MISSING_MESSAGES_VALUE",
   kafkaMessageProcessError: "KAFKA_MESSAGE_PROCESS_ERROR",
   setupStagingTablesError: "SETUP_STAGING_TABLES_ERROR",
-  sqsMessageNotValid: "SQS_MESSAGE_NOT_VALID_EROR",
+  sqsMessageNotValid: "SQS_MESSAGE_NOT_VALID_ERROR",
 } as const;
 
 export type CommonErrorCodes = keyof typeof errorCodes;
