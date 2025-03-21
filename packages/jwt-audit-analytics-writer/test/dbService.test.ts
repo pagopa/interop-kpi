@@ -171,7 +171,7 @@ describe("DB Service tests", () => {
             conn,
             generatedTokenTargetTableName
           );
-          await expect(generatedTokenCountTargetAfterMerge).toBe(10);
+          expect(generatedTokenCountTargetAfterMerge).toBe(10);
 
           await clientAssertionRepoSpy.merge(t);
         })
