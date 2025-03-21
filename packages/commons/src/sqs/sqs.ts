@@ -10,6 +10,8 @@ import {
 import { InternalError } from "pagopa-interop-kpi-models";
 import { genericLogger, Logger } from "../logging/index.js";
 import { SQSConsumerConfig } from "../config/consumerConfig.js";
+import { match } from "ts-pattern";
+import { validateSqsMessage } from "./messageValidation.js";
 
 const serializeError = (error: unknown): string => {
   try {
@@ -55,12 +57,23 @@ const processQueue = async (
         }
 
         try {
-          await consumerHandler(message);
-          await deleteMessage(
-            sqsClient,
-            config.queueUrl,
-            message.ReceiptHandle
-          );
+          const result = validateSqsMessage(message);
+          if (!message.ReceiptHandle) {
+            throw new Error(
+              `ReceiptHandle not found in Message: ${JSON.stringify(message)}`
+            );
+          }
+          const receiptHandle = message.ReceiptHandle;
+
+          await match(result)
+            .with("InvalidEvent", async () => {
+              await deleteMessage(sqsClient, config.queueUrl, receiptHandle);
+            })
+            .with("ValidEvent", async () => {
+              await consumerHandler(message);
+              await deleteMessage(sqsClient, config.queueUrl, receiptHandle);
+            })
+            .exhaustive();
         } catch (e) {
           loggerInstance.error(
             `Unexpected error consuming message: ${JSON.stringify(
