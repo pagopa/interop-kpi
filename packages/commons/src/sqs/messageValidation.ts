@@ -1,6 +1,6 @@
 import { sqsMessageNotValid } from "pagopa-interop-kpi-models";
-import { Message } from "./sqs.js";
 import { genericLogger } from "../index.js";
+import { Message } from "./sqs.js";
 
 type WhitelistedEvent =
   | "ObjectCreated"

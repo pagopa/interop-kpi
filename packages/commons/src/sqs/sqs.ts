@@ -8,10 +8,10 @@ import {
   SQSClientConfig,
 } from "@aws-sdk/client-sqs";
 import { InternalError } from "pagopa-interop-kpi-models";
+import { match } from "ts-pattern";
 import { genericLogger } from "../logging/index.js";
 import { ConsumerConfig } from "../config/consumerConfig.js";
 import { validateSqsMessage } from "./messageValidation.js";
-import { match } from "ts-pattern";
 
 const serializeError = (error: unknown): string => {
   try {
