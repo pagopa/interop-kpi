@@ -43,10 +43,5 @@ export async function getTablesByName(
   return await db.query<Array<{ tablename: string }>>(query, [tables]);
 }
 
-export const testConfig = {
-  mergeTableSuffix: "_staging",
-  dbSchemaName: "infra",
-};
-
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 export const s3Bucket = inject("fileManagerConfig")!.s3Bucket;
