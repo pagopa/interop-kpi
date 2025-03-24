@@ -8,3 +8,4 @@ export * from "./utils/batchHelper.js";
 export * from "./sqs/index.js";
 export * from "./repositories/db.js";
 export * from "./kafka/kafka.js";
+export * from "./setup-db-service/setupDbservice.js";

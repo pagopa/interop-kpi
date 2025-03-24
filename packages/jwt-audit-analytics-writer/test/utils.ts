@@ -21,11 +21,11 @@ import {
   genericLogger,
   Logger,
   retryConnection,
+  setupDbServiceBuilder,
 } from "pagopa-interop-kpi-commons";
 import { GeneratedTokenAuditDetails } from "../src/model/domain/models.js";
 import { jwtAuditServiceBuilder } from "../src/services/jwtAuditService.js";
 import { dbServiceBuilder } from "../src/services/dbService.js";
-import { setupDbServiceBuilder } from "../src/services/setupDbService.js";
 import { config } from "../src/config/config.js";
 
 export const { cleanup, fileManager, postgresDB } =
@@ -48,14 +48,17 @@ await retryConnection(
   dbContext,
   config,
   async (db) => {
-    await setupDbServiceBuilder(db.conn).setupStagingTables();
+    await setupDbServiceBuilder(db.conn, config).setupStagingTables([
+      JwtDbTable.client_assertion,
+      JwtDbTable.generated_token,
+    ]);
   },
   genericLogger
 );
 
 export const dbService = dbServiceBuilder(dbContext);
 
-export const setupDbService = setupDbServiceBuilder(dbContext.conn);
+export const setupDbService = setupDbServiceBuilder(dbContext.conn, config);
 
 export const jwtAuditService = jwtAuditServiceBuilder(dbService, fileManager);
 

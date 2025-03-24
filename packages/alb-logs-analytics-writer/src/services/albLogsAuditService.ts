@@ -42,6 +42,7 @@ export const albLogsAuditServiceBuilder = (
         s3key,
         logger
       )) {
+        batch = batch.filter((log) => log.user_agent !== "healtchecker");
         await dbService.insertRecordsToStaging(batch);
         totalRecordsProcessed += batch.length;
       }

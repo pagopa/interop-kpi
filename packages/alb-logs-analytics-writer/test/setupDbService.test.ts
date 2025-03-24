@@ -16,6 +16,7 @@ describe("Setup DB Service tests", () => {
     const result = (await getTablesByName(conn, expectedTableName)).map(
       (res) => res.tablename
     );
+    console.log("RESULT", result);
     expect(result.length).toBe(1);
     expect(result).toContain(expectedTableName);
   });
