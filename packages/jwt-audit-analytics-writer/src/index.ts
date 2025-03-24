@@ -7,6 +7,7 @@ import {
   retryConnection,
   setupDbServiceBuilder,
 } from "pagopa-interop-kpi-commons";
+import { JwtDbTable } from "pagopa-interop-kpi-models";
 import { config } from "./config/config.js";
 import { processMessage } from "./handlers/messageHandler.js";
 import {
@@ -14,7 +15,6 @@ import {
   jwtAuditServiceBuilder,
 } from "./services/jwtAuditService.js";
 import { DBService, dbServiceBuilder } from "./services/dbService.js";
-import { JwtDbTable } from "pagopa-interop-kpi-models";
 
 const dbInstance = initDB({
   username: config.dbUsername,

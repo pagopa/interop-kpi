@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+
 import { inject, afterEach } from "vitest";
-import { setupTestContainersVitest } from "../src/index.js";
 import {
   DBContext,
   DBConnection,
   setupDbServiceBuilder,
 } from "pagopa-interop-kpi-commons";
+import { setupTestContainersVitest } from "../src/index.js";
 export const config = {
   mergeTableSuffix: "_staging",
   dbSchemaName: "infra",

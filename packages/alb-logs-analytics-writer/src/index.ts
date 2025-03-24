@@ -7,6 +7,7 @@ import {
   retryConnection,
   setupDbServiceBuilder,
 } from "pagopa-interop-kpi-commons";
+import { LoadBalancerLogTable } from "pagopa-interop-kpi-models";
 import { processMessage } from "./handlers/messageHandler.js";
 import { config } from "./config/config.js";
 import {
@@ -14,7 +15,6 @@ import {
   albLogsAuditServiceBuilder,
 } from "./services/albLogsAuditService.js";
 import { dbServiceBuilder } from "./services/dbService.js";
-import { LoadBalancerLogTable } from "pagopa-interop-kpi-models";
 
 const dbInstance = initDB({
   username: config.dbUsername,

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, afterAll } from "vitest";
 import { setupStagingTablesError } from "pagopa-interop-kpi-models";
-import { dbContext, getTablesByName } from "./utils.js";
 import { setupDbServiceBuilder } from "pagopa-interop-kpi-commons";
+import { dbContext, getTablesByName } from "./utils.js";
 
 describe("Setup DB Service tests for all schemas", () => {
   afterAll(() => {
@@ -20,7 +20,7 @@ describe("Setup DB Service tests for all schemas", () => {
     );
     const result = await getTablesByName(conn, expectedTables);
     expect(result.length).toBe(expectedTables.length);
-    const createdTableNames = result.map((row: any) => row.tablename);
+    const createdTableNames = result.map((row) => row.tablename);
     expectedTables.forEach((table) => {
       expect(createdTableNames).toContain(table);
     });
