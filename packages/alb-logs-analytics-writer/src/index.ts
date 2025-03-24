@@ -56,8 +56,11 @@ await SQS.runConsumer(
   sqsClient,
   {
     queueUrl: config.sqsNotificationEndpoint,
-    serviceName: config.serviceName,
     maxNumberOfMessages: config.maxNumberOfMessages,
+    waitTimeSeconds: config.waitTimeSeconds,
+    visibilityTimeout: config.visibilityTimeout,
+    serviceName: config.serviceName,
   },
-  processMessage(albLogsAuditService)
+  processMessage(albLogsAuditService),
+  logger({ serviceName: config.serviceName })
 );

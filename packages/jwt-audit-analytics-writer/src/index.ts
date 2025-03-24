@@ -59,7 +59,10 @@ await SQS.runConsumer(
   {
     queueUrl: config.sqsNotificationEndpoint,
     maxNumberOfMessages: config.maxNumberOfMessages,
+    waitTimeSeconds: config.waitTimeSeconds,
+    visibilityTimeout: config.visibilityTimeout,
     serviceName: config.serviceName,
   },
-  processMessage(jwtAuditService)
+  processMessage(jwtAuditService),
+  logger({ serviceName: config.serviceName })
 );

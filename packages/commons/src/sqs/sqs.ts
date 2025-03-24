@@ -9,8 +9,8 @@ import {
 } from "@aws-sdk/client-sqs";
 import { InternalError } from "pagopa-interop-kpi-models";
 import { match } from "ts-pattern";
-import { genericLogger } from "../logging/index.js";
-import { ConsumerConfig } from "../config/consumerConfig.js";
+import { genericLogger, Logger } from "../logging/index.js";
+import { SQSConsumerConfig } from "../config/consumerConfig.js";
 import { validateSqsMessage } from "./messageValidation.js";
 
 const serializeError = (error: unknown): string => {
@@ -34,13 +34,16 @@ const processQueue = async (
   sqsClient: SQSClient,
   config: {
     queueUrl: string;
-  } & ConsumerConfig,
-  consumerHandler: (messagePayload: Message) => Promise<void>
+  } & SQSConsumerConfig,
+  consumerHandler: (messagePayload: Message) => Promise<void>,
+  loggerInstance: Logger
 ): Promise<void> => {
   const command = new ReceiveMessageCommand({
     QueueUrl: config.queueUrl,
     MaxNumberOfMessages: config.maxNumberOfMessages,
     MessageAttributeNames: ["All"],
+    WaitTimeSeconds: config.waitTimeSeconds,
+    VisibilityTimeout: config.visibilityTimeout,
   });
 
   do {
@@ -72,7 +75,7 @@ const processQueue = async (
             })
             .exhaustive();
         } catch (e) {
-          genericLogger.error(
+          loggerInstance.error(
             `Unexpected error consuming message: ${JSON.stringify(
               message
             )}. QueueUrl: ${config.queueUrl}. ${e}`
@@ -91,15 +94,16 @@ export const runConsumer = async (
   config: {
     serviceName: string;
     queueUrl: string;
-  } & ConsumerConfig,
-  consumerHandler: (messagePayload: Message) => Promise<void>
+  } & SQSConsumerConfig,
+  consumerHandler: (messagePayload: Message) => Promise<void>,
+  loggerInstance: Logger
 ): Promise<void> => {
-  genericLogger.info(`Consumer processing on Queue: ${config.queueUrl}`);
+  loggerInstance.info(`Consumer processing on Queue: ${config.queueUrl}`);
 
   try {
-    await processQueue(sqsClient, config, consumerHandler);
+    await processQueue(sqsClient, config, consumerHandler, loggerInstance);
   } catch (e) {
-    genericLogger.error(
+    loggerInstance.error(
       `Generic error occurs processing Queue: ${
         config.queueUrl
       }. Details: ${serializeError(e)}`
@@ -107,7 +111,7 @@ export const runConsumer = async (
     await processExit();
   }
 
-  genericLogger.info(
+  loggerInstance.info(
     `Queue processing Completed for Queue: ${config.queueUrl}`
   );
 };
