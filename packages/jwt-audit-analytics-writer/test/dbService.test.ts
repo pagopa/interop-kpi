@@ -32,7 +32,10 @@ describe("DB Service tests", () => {
   const temporaryDbSchemaName = "pg_temp";
 
   beforeAll(async () => {
-    await setupDbService.setupStagingTables();
+    await setupDbService.setupStagingTables([
+      clientAssertionTargetTableName,
+      generatedTokenTargetTableName,
+    ]);
   });
 
   afterAll(async () => {

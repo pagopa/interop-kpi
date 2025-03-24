@@ -32,7 +32,10 @@ describe("JWT Audit Service tests", () => {
   const { conn } = dbContext;
 
   beforeAll(async () => {
-    await setupDbService.setupStagingTables();
+    await setupDbService.setupStagingTables([
+      JwtDbTable.client_assertion,
+      JwtDbTable.generated_token,
+    ]);
   });
 
   afterAll(async () => {

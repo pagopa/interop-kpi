@@ -30,7 +30,7 @@ describe("DB Service Tests for ALB Logs", () => {
   const targetTableName = LoadBalancerLogTable.logs;
 
   beforeAll(async () => {
-    await setupDbService.setupStagingTables();
+    await setupDbService.setupStagingTables([targetTableName]);
   });
 
   afterAll(async () => {

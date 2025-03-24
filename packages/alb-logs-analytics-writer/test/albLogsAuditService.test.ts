@@ -36,7 +36,7 @@ import {
 } from "./utils.js";
 
 beforeAll(async () => {
-  await setupDbService.setupStagingTables();
+  await setupDbService.setupStagingTables([LoadBalancerLogTable.logs]);
 });
 
 afterAll(() => {
