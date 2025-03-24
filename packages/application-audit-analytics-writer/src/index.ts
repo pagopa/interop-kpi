@@ -8,8 +8,8 @@ import {
 } from "pagopa-interop-kpi-commons";
 import { EachBatchPayload } from "kafkajs";
 import {
+  ApplicationDbTable,
   CorrelationId,
-  JwtDbTable,
   generateId,
 } from "pagopa-interop-kpi-models";
 import { batchConsumerConfig, config } from "./config/config.js";
@@ -38,8 +38,8 @@ await retryConnection(
   config,
   async (db) => {
     await setupDbServiceBuilder(db.conn, config).setupStagingTables([
-      JwtDbTable.client_assertion,
-      JwtDbTable.generated_token,
+      ApplicationDbTable.begin_request,
+      ApplicationDbTable.end_request,
     ]);
   },
   logger({ serviceName: config.serviceName })

@@ -33,8 +33,8 @@ describe("DB Service tests", () => {
 
   beforeAll(async () => {
     await setupDbService.setupStagingTables([
-      clientAssertionTargetTableName,
       generatedTokenTargetTableName,
+      clientAssertionTargetTableName,
     ]);
   });
 

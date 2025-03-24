@@ -39,8 +39,8 @@ await retryConnection(
   config,
   async (db) => {
     await setupDbServiceBuilder(db.conn, config).setupStagingTables([
-      JwtDbTable.client_assertion,
       JwtDbTable.generated_token,
+      JwtDbTable.client_assertion,
     ]);
   },
   logger({ serviceName: config.serviceName })

@@ -33,8 +33,8 @@ describe("JWT Audit Service tests", () => {
 
   beforeAll(async () => {
     await setupDbService.setupStagingTables([
-      JwtDbTable.client_assertion,
       JwtDbTable.generated_token,
+      JwtDbTable.client_assertion,
     ]);
   });
 
