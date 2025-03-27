@@ -4,12 +4,16 @@ import {
   initDB,
   logger,
   retryConnection,
+  setupDbServiceBuilder,
 } from "pagopa-interop-kpi-commons";
 import { EachBatchPayload } from "kafkajs";
-import { CorrelationId, generateId } from "pagopa-interop-kpi-models";
+import {
+  ApplicationDbTable,
+  CorrelationId,
+  generateId,
+} from "pagopa-interop-kpi-models";
 import { batchConsumerConfig, config } from "./config/config.js";
 import { handleMessages } from "./handlers/messagesHandler.js";
-import { setupDbServiceBuilder } from "./services/setupDbService.js";
 
 const dbInstance = initDB({
   username: config.dbUsername,
@@ -33,7 +37,10 @@ await retryConnection(
   dbContext,
   config,
   async (db) => {
-    await setupDbServiceBuilder(db.conn).setupStagingTables();
+    await setupDbServiceBuilder(db.conn, config).setupStagingTables([
+      ApplicationDbTable.begin_request,
+      ApplicationDbTable.end_request,
+    ]);
   },
   logger({ serviceName: config.serviceName })
 );

@@ -5,17 +5,18 @@ import {
   DBContext,
   genericLogger,
   retryConnection,
+  setupDbServiceBuilder,
 } from "pagopa-interop-kpi-commons";
 import {
   ApplicationAuditEvent,
   ApplicationAuditPhase,
+  ApplicationDbTable,
   applicationAuditPhase,
   generateId,
 } from "pagopa-interop-kpi-models";
 import { match } from "ts-pattern";
 import { KafkaMessage } from "kafkajs";
 import { config } from "../src/config/config.js";
-import { setupDbServiceBuilder } from "../src/services/setupDbService.js";
 
 export const { cleanup, fileManager, postgresDB } =
   await setupTestContainersVitest(
@@ -37,12 +38,15 @@ await retryConnection(
   dbContext,
   config,
   async (db) => {
-    await setupDbServiceBuilder(db.conn).setupStagingTables();
+    await setupDbServiceBuilder(db.conn, config).setupStagingTables([
+      ApplicationDbTable.begin_request,
+      ApplicationDbTable.end_request,
+    ]);
   },
   genericLogger
 );
 
-export const setupDbService = setupDbServiceBuilder(dbContext.conn);
+export const setupDbService = setupDbServiceBuilder(dbContext.conn, config);
 
 export function mockEventsToKafkaMessages(
   events: ApplicationAuditEvent[]

@@ -7,9 +7,9 @@ import {
   DBContext,
   genericLogger,
   retryConnection,
+  setupDbServiceBuilder,
 } from "pagopa-interop-kpi-commons";
 import { LoadBalancerLogTable } from "pagopa-interop-kpi-models";
-import { setupDbServiceBuilder } from "../src/services/setupDbService.js";
 import { dbServiceBuilder } from "../src/services/dbService.js";
 import { config } from "../src/config/config.js";
 import { transformFileStream } from "../src/utilities/transformFileStream.js";
@@ -36,14 +36,16 @@ await retryConnection(
   dbContext,
   config,
   async (db) => {
-    await setupDbServiceBuilder(db.conn).setupStagingTables();
+    await setupDbServiceBuilder(db.conn, config).setupStagingTables([
+      LoadBalancerLogTable.logs,
+    ]);
   },
   genericLogger
 );
 
 export const dbService = dbServiceBuilder(dbContext);
 
-export const setupDbService = setupDbServiceBuilder(dbContext.conn);
+export const setupDbService = setupDbServiceBuilder(dbContext.conn, config);
 
 export const albLogsAuditService = albLogsAuditServiceBuilder(
   dbService,
