@@ -4,14 +4,16 @@ import {
   IMain,
   ITask,
   buildColumnSet,
+  generateMergeQuery,
 } from "pagopa-interop-kpi-commons";
 import { genericInternalError, JwtDbTable } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
-import { ClientAssertionMapping } from "../model/db.js";
+import { ClientAssertionMapping, ClientAssertionSchema } from "../model/db.js";
 
 export function clientAssertionRepository(conn: DBConnection) {
   const clientAssertionTable = JwtDbTable.client_assertion;
+  const clientAssertionStagingTable = `${clientAssertionTable}${config.mergeTableSuffix}`;
 
   return {
     async insert(
@@ -33,77 +35,44 @@ export function clientAssertionRepository(conn: DBConnection) {
           generated_token_jwt_id: (record) => record.jwtId,
         };
 
-        const clientAssertionTableName = `${clientAssertionTable}${config.mergeTableSuffix}`;
-
         const clientAssertionColumnSet =
           buildColumnSet<GeneratedTokenAuditDetails>(
             pgp,
             clientAssertionMapping,
-            clientAssertionTableName
+            clientAssertionStagingTable
           );
 
         await t.none(pgp.helpers.insert(records, clientAssertionColumnSet));
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error inserting into client_assertion staging table: ${error}`
+          `Error inserting into ${clientAssertionStagingTable} staging table: ${error}`
         );
       }
     },
 
     async merge(t: ITask<unknown>): Promise<void> {
       try {
-        await t.none(`
-            MERGE INTO ${config.dbSchemaName}.${clientAssertionTable} 
-            USING ${clientAssertionTable}${config.mergeTableSuffix} AS source
-              ON ${config.dbSchemaName}.${clientAssertionTable}.generated_token_jwt_id = source.generated_token_jwt_id
-            WHEN MATCHED THEN
-              UPDATE
-                SET issued_at       = source.issued_at,
-                    algorithm       = source.algorithm,
-                    key_id          = source.key_id,
-                    issuer          = source.issuer,
-                    subject         = source.subject,
-                    audience        = source.audience,
-                    expiration_time = source.expiration_time
-            WHEN NOT MATCHED THEN
-              INSERT (
-                jwt_id, 
-                issued_at, 
-                algorithm, 
-                key_id, 
-                issuer, 
-                subject, 
-                audience, 
-                expiration_time,
-                generated_token_jwt_id
-                )
-              VALUES (
-                source.jwt_id, 
-                source.issued_at, 
-                source.algorithm, 
-                source.key_id, 
-                source.issuer, 
-                source.subject, 
-                source.audience, 
-                source.expiration_time,
-                source.generated_token_jwt_id
-              );
-          `);
+        const clientAssertionMergeQuery = generateMergeQuery(
+          ClientAssertionSchema,
+          config.dbSchemaName,
+          clientAssertionTable,
+          config.mergeTableSuffix,
+          "generated_token_jwt_id"
+        );
+        await t.none(clientAssertionMergeQuery);
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error merging staging to target client_assertion table: ${error}`
+          `Error merging staging to target ${clientAssertionTable} table: ${error}`
         );
       }
     },
 
     async clean(): Promise<void> {
       try {
-        await conn.none(
-          `TRUNCATE TABLE ${clientAssertionTable}${config.mergeTableSuffix};`
-        );
+        await conn.none(`TRUNCATE TABLE ${clientAssertionStagingTable};`);
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error cleaning staging client_assertion table: ${error}`
+          `Error cleaning staging ${clientAssertionStagingTable} table: ${error}`
         );
       }
     },
