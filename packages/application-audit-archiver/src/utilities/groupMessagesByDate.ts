@@ -1,4 +1,3 @@
-/* eslint-disable functional/immutable-data */
 import { KafkaMessage } from "kafkajs";
 import { decodeKafkaMessage } from "pagopa-interop-kpi-commons";
 import { ApplicationAuditEvent } from "pagopa-interop-kpi-models";
