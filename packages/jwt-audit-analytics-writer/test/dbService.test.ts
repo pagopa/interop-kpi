@@ -25,16 +25,16 @@ import {
 
 describe("DB Service tests", () => {
   const { conn, pgp } = dbContext;
-  const clientAssertionStagingTableName = `${JwtDbTable.client_assertion}${config.mergeTableSuffix}`;
-  const generatedTokenStagingTableName = `${JwtDbTable.generated_token}${config.mergeTableSuffix}`;
-  const clientAssertionTargetTableName = `${JwtDbTable.client_assertion}`;
-  const generatedTokenTargetTableName = `${JwtDbTable.generated_token}`;
+  const clientAssertionStagingTable = `${JwtDbTable.client_assertion}${config.mergeTableSuffix}`;
+  const generatedTokenStagingTable = `${JwtDbTable.generated_token}${config.mergeTableSuffix}`;
+  const clientAssertionTargetTable = `${JwtDbTable.client_assertion}`;
+  const generatedTokenTargetTable = `${JwtDbTable.generated_token}`;
   const temporaryDbSchemaName = "pg_temp";
 
   beforeAll(async () => {
     await setupDbService.setupStagingTables([
-      generatedTokenTargetTableName,
-      clientAssertionTargetTableName,
+      generatedTokenTargetTable,
+      clientAssertionTargetTable,
     ]);
   });
 
@@ -61,7 +61,7 @@ describe("DB Service tests", () => {
 
       const clientAssertionStagingCount = await getStagingTableCount(
         conn,
-        clientAssertionStagingTableName
+        clientAssertionStagingTable
       );
 
       expect(clientAssertionStagingCount).toBe(10);
@@ -79,7 +79,7 @@ describe("DB Service tests", () => {
 
       await expect(dbService.insertRecordsToStaging([])).rejects.toThrowError(
         genericInternalError(
-          `Error inserting into generated_token staging table: ${mockQueryError}`
+          `Error inserting into ${generatedTokenStagingTable} staging table: ${mockQueryError}`
         )
       );
     });
@@ -88,7 +88,7 @@ describe("DB Service tests", () => {
       const mockQueryError =
         "TypeError: Cannot generate an INSERT from an empty array.";
       const mockError = genericInternalError(
-        `Error inserting into client_assertion staging table: ${mockQueryError}`
+        `Error inserting into ${clientAssertionStagingTable} staging table: ${mockQueryError}`
       );
 
       const mockClientAssertionRepository = vi.fn().mockImplementation(() => ({
@@ -110,7 +110,7 @@ describe("DB Service tests", () => {
       ).rejects.toThrowError(mockError);
 
       const generatedTokenStagingCountAfterRollback =
-        await getStagingTableCount(conn, clientAssertionStagingTableName);
+        await getStagingTableCount(conn, clientAssertionStagingTable);
 
       expect(generatedTokenStagingCountAfterRollback).toBe(0);
     });
@@ -131,12 +131,12 @@ describe("DB Service tests", () => {
 
       const clientAssertionTargetCountAfterMerge = await getTargetTableCount(
         conn,
-        clientAssertionTargetTableName
+        clientAssertionTargetTable
       );
 
       const generatedTokenTargetCountAfterMerge = await getTargetTableCount(
         conn,
-        generatedTokenTargetTableName
+        generatedTokenTargetTable
       );
 
       expect(clientAssertionTargetCountAfterMerge).toBe(10);
@@ -147,7 +147,7 @@ describe("DB Service tests", () => {
       const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(10);
       const mockQueryError = "Generic merge error";
       const mockError = genericInternalError(
-        `Error merging staging to target client_assertion table: ${mockQueryError}`
+        `Error merging staging to target ${clientAssertionStagingTable} table: ${mockQueryError}`
       );
 
       await conn.tx(async (t: ITask<unknown>) => {
@@ -157,7 +157,7 @@ describe("DB Service tests", () => {
 
       const generatedTokenStagingCountAfterInsert = await getStagingTableCount(
         conn,
-        generatedTokenStagingTableName
+        generatedTokenStagingTable
       );
       expect(generatedTokenStagingCountAfterInsert).toBe(10);
 
@@ -172,7 +172,7 @@ describe("DB Service tests", () => {
 
           const generatedTokenCountTargetAfterMerge = await getTargetTableCount(
             conn,
-            generatedTokenTargetTableName
+            generatedTokenTargetTable
           );
           expect(generatedTokenCountTargetAfterMerge).toBe(10);
 
@@ -182,7 +182,7 @@ describe("DB Service tests", () => {
 
       const generatedTokenCountAfterRollback = await getTargetTableCount(
         conn,
-        generatedTokenTargetTableName
+        generatedTokenTargetTable
       );
       expect(generatedTokenCountAfterRollback).toBe(0);
     });
@@ -203,11 +203,11 @@ describe("DB Service tests", () => {
       await dbService.cleanStaging();
 
       const clientAssertionCountStagingAfterTruncate =
-        await getStagingTableCount(conn, clientAssertionStagingTableName);
+        await getStagingTableCount(conn, clientAssertionStagingTable);
       expect(clientAssertionCountStagingAfterTruncate).toBe(0);
 
       const generatedTokenCountStagingAfterTruncate =
-        await getStagingTableCount(conn, generatedTokenStagingTableName);
+        await getStagingTableCount(conn, generatedTokenStagingTable);
       expect(generatedTokenCountStagingAfterTruncate).toBe(0);
     });
   });

@@ -1,37 +1,40 @@
+import { z } from "zod";
 import { GeneratedTokenAuditDetails } from "./domain/models.js";
 
-export interface ClientAssertionSchema {
-  jwt_id: string;
-  issued_at: Date;
-  algorithm: string;
-  key_id: string;
-  issuer: string;
-  subject: string;
-  audience: string;
-  expiration_time: Date;
-  generated_token_jwt_id: string;
-}
+export const ClientAssertionSchema = z.object({
+  jwt_id: z.string(),
+  issued_at: z.date(),
+  algorithm: z.string(),
+  key_id: z.string(),
+  issuer: z.string(),
+  subject: z.string(),
+  audience: z.string(),
+  expiration_time: z.date(),
+  generated_token_jwt_id: z.string(),
+});
+export type ClientAssertionSchema = z.infer<typeof ClientAssertionSchema>;
 
-export interface GeneratedTokenSchema {
-  jwt_id: string;
-  correlation_id: string;
-  issued_at: Date;
-  client_id: string;
-  organization_id: string;
-  agreement_id: string;
-  eservice_id: string;
-  descriptor_id: string;
-  purpose_id: string;
-  purpose_version_id: string;
-  algorithm: string;
-  key_id: string;
-  audience: string;
-  subject: string;
-  not_before: Date;
-  expiration_time: Date;
-  issuer: string;
-  client_assertion_jwt_id: string;
-}
+export const GeneratedTokenSchema = z.object({
+  jwt_id: z.string(),
+  correlation_id: z.string(),
+  issued_at: z.date(),
+  client_id: z.string(),
+  organization_id: z.string(),
+  agreement_id: z.string(),
+  eservice_id: z.string(),
+  descriptor_id: z.string(),
+  purpose_id: z.string(),
+  purpose_version_id: z.string(),
+  algorithm: z.string(),
+  key_id: z.string(),
+  audience: z.string(),
+  subject: z.string(),
+  not_before: z.date(),
+  expiration_time: z.date(),
+  issuer: z.string(),
+  client_assertion_jwt_id: z.string(),
+});
+export type GeneratedTokenSchema = z.infer<typeof GeneratedTokenSchema>;
 
 /**
  * ClientAssertionMapping is a type alias that defines a mapping interface to convert

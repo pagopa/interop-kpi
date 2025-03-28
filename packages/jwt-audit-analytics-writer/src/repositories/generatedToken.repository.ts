@@ -4,14 +4,16 @@ import {
   IMain,
   ITask,
   buildColumnSet,
+  generateMergeQuery,
 } from "pagopa-interop-kpi-commons";
 import { genericInternalError, JwtDbTable } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
-import { GeneratedTokenMapping } from "../model/db.js";
+import { GeneratedTokenMapping, GeneratedTokenSchema } from "../model/db.js";
 
 export function generatedTokenRepository(conn: DBConnection) {
   const generatedTokenTable = JwtDbTable.generated_token;
+  const tokenAuditStagingTable = `${generatedTokenTable}${config.mergeTableSuffix}`;
 
   return {
     async insert(
@@ -41,104 +43,43 @@ export function generatedTokenRepository(conn: DBConnection) {
           client_assertion_jwt_id: (record) => record.clientAssertion.jwtId,
         };
 
-        const tokenAuditTableName = `${generatedTokenTable}${config.mergeTableSuffix}`;
-
         const tokenAuditColumnSet = buildColumnSet<GeneratedTokenAuditDetails>(
           pgp,
           generatedTokenMapping,
-          tokenAuditTableName
+          tokenAuditStagingTable
         );
 
         await t.none(pgp.helpers.insert(records, tokenAuditColumnSet));
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error inserting into generated_token staging table: ${error}`
+          `Error inserting into ${tokenAuditStagingTable} staging table: ${error}`
         );
       }
     },
 
     async merge(t: ITask<unknown>): Promise<void> {
       try {
-        await t.none(`
-            MERGE INTO ${config.dbSchemaName}.${generatedTokenTable} 
-            USING ${generatedTokenTable}${config.mergeTableSuffix} AS source
-            ON ${config.dbSchemaName}.${generatedTokenTable}.jwt_id = source.jwt_id
-            WHEN MATCHED THEN 
-              UPDATE
-                SET correlation_id       = source.correlation_id,
-                    issued_at            = source.issued_at,
-                    client_id            = source.client_id,
-                    organization_id      = source.organization_id,
-                    agreement_id         = source.agreement_id,
-                    eservice_id          = source.eservice_id,
-                    descriptor_id        = source.descriptor_id,
-                    purpose_id           = source.purpose_id,
-                    purpose_version_id   = source.purpose_version_id,
-                    algorithm            = source.algorithm,
-                    key_id               = source.key_id,
-                    audience             = source.audience,
-                    subject              = source.subject,
-                    not_before           = source.not_before,
-                    expiration_time      = source.expiration_time,
-                    issuer               = source.issuer,
-                    client_assertion_jwt_id = source.client_assertion_jwt_id
-            WHEN NOT MATCHED THEN 
-              INSERT (
-                jwt_id,
-                correlation_id,
-                issued_at,
-                client_id,
-                organization_id,
-                agreement_id,
-                eservice_id,
-                descriptor_id,
-                purpose_id,
-                purpose_version_id,
-                algorithm,
-                key_id,
-                audience,
-                subject,
-                not_before,
-                expiration_time,
-                issuer,
-                client_assertion_jwt_id
-              )
-              VALUES (
-                source.jwt_id,
-                source.correlation_id,
-                source.issued_at,
-                source.client_id,
-                source.organization_id,
-                source.agreement_id,
-                source.eservice_id,
-                source.descriptor_id,
-                source.purpose_id,
-                source.purpose_version_id,
-                source.algorithm,
-                source.key_id,
-                source.audience,
-                source.subject,
-                source.not_before,
-                source.expiration_time,
-                source.issuer,
-                source.client_assertion_jwt_id
-              );
-          `);
+        const generatedTokenMergeQuery = generateMergeQuery(
+          GeneratedTokenSchema,
+          config.dbSchemaName,
+          generatedTokenTable,
+          config.mergeTableSuffix,
+          "jwt_id"
+        );
+        await t.none(generatedTokenMergeQuery);
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error merging staging to target generated_token table: ${error}`
+          `Error merging staging to target ${generatedTokenTable} table: ${error}`
         );
       }
     },
 
     async clean(): Promise<void> {
       try {
-        await conn.none(
-          `TRUNCATE TABLE ${generatedTokenTable}${config.mergeTableSuffix};`
-        );
+        await conn.none(`TRUNCATE TABLE ${tokenAuditStagingTable};`);
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error cleaning staging generated_token table: ${error}`
+          `Error cleaning staging ${tokenAuditStagingTable} table: ${error}`
         );
       }
     },
