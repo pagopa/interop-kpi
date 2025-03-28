@@ -18,7 +18,7 @@ export async function handleMessages(
   try {
     const groupedMessages = groupMessagesByDate(messages);
 
-    for (const [dateKey, groupMessages] of Object.entries(groupedMessages)) {
+    for (const [dateKey, groupMessages] of groupedMessages.entries()) {
       const [year, month, day] = dateKey.split("-");
       const jsonString = JSON.stringify(groupMessages);
       const compressedBuffer = await compressJson(jsonString);
