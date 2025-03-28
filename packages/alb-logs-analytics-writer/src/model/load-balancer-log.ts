@@ -37,3 +37,5 @@ const LoadBalancerLogArraySchema = z.array(LoadBalancerLogSchema);
 
 export type LoadBalancerLog = z.infer<typeof LoadBalancerLogSchema>;
 export { LoadBalancerLogSchema, LoadBalancerLogArraySchema };
+
+export const EXCLUDED_USER_AGENT = "ELB-HealthChecker/2.0";

@@ -4,6 +4,7 @@ import { createGunzip } from "zlib";
 import { FileManager, Logger, batches } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 import {
+  EXCLUDED_USER_AGENT,
   LoadBalancerLog,
   LoadBalancerLogSchema,
 } from "../model/load-balancer-log.js";
@@ -42,7 +43,7 @@ export const albLogsAuditServiceBuilder = (
         logger
       )) {
         const filteredBatch = batch.filter(
-          (record) => record.user_agent !== "HealthChecker/2.0"
+          (record) => record.user_agent !== EXCLUDED_USER_AGENT
         );
 
         if (filteredBatch.length === 0) {
