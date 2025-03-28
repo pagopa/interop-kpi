@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable functional/immutable-data */
 import { KafkaMessage } from "kafkajs";
 import {
   FileManager,
@@ -20,30 +22,40 @@ export async function handleMessages(
   logger: Logger
 ) {
   try {
-    const batch = messages.map((message) =>
-      decodeKafkaMessage(message, ApplicationAuditEvent)
-    );
+    const grouped: Record<string, ApplicationAuditEvent[]> = {};
 
-    const jsonString = JSON.stringify(batch);
-    const compressedBuffer = await compressJson(jsonString);
+    for (const message of messages) {
+      const item = decodeKafkaMessage(message, ApplicationAuditEvent);
+      const date = new Date(item.timestamp);
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const time = formatTimehhmmss(date);
+      const key = `${year}-${month}-${day}`;
+      if (!grouped[key]) {
+        grouped[key] = [];
+      }
+      grouped[key].push(item);
+    }
 
-    const fileName = `${year}${month}${day}_${time}_${generateId()}.json.gz`;
-    const filePath = `year=${year}/month=${month}/day=${day}`;
+    for (const [dateKey, groupMessages] of Object.entries(grouped)) {
+      const [year, month, day] = dateKey.split("-");
+      const jsonString = JSON.stringify(groupMessages);
+      const compressedBuffer = await compressJson(jsonString);
 
-    const s3File = {
-      bucket: config.s3BucketName,
-      path: filePath,
-      name: fileName,
-      content: compressedBuffer,
-    };
+      const time = formatTimehhmmss(new Date());
+      const fileName = `${year}${month}${day}_${time}_${generateId()}.json.gz`;
+      const filePath = `year=${year}/month=${month}/day=${day}`;
 
-    await fileManager.storeBytes(s3File, logger);
+      const s3File = {
+        bucket: config.s3BucketName,
+        path: filePath,
+        name: fileName,
+        content: compressedBuffer,
+      };
+
+      await fileManager.storeBytes(s3File, logger);
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : "generic error";
     throw genericInternalError(`Write operation failed - ${message}`);

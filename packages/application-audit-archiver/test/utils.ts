@@ -22,18 +22,20 @@ export const validAuditEvent: ApplicationAuditEvent = {
   nodeIp: "192.168.1.10",
   podName: "pod-1",
   uptimeSeconds: 3600,
-  timestamp: Date.now(),
+  timestamp: new Date("2025-03-18T12:34:56").getTime(),
   amazonTraceId: "trace-123",
 };
 
-export const validKafkaMessage: KafkaMessage = {
+export const getValidKafkaMessage = (
+  message: ApplicationAuditEvent
+): KafkaMessage => ({
   key: Buffer.from("key1"),
-  value: Buffer.from(JSON.stringify(validAuditEvent)),
+  value: Buffer.from(JSON.stringify(message)),
   timestamp: new Date().toISOString(),
   offset: "0",
   attributes: 0,
   headers: {},
-};
+});
 
 export const invalidAuditEvent = {
   correlationId: "corr-invalid",
