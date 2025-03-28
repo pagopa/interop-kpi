@@ -10,43 +10,102 @@ export const ApplicationAuditPhase = z.enum([
   applicationAuditPhase.END_REQUEST,
 ]);
 
+export const applicationAuditService = {
+  BFF: "backend-for-frontend",
+  AUDIT_SERVER: "auth-server",
+} as const;
+
+export const ApplicationAuditService = z.enum([
+  applicationAuditService.BFF,
+  applicationAuditService.AUDIT_SERVER,
+]);
+
+export const applicationAuditEndppoint = {
+  SESSION_TOKENS: "/session/tokens",
+} as const;
+
+export const ApplicationAuditEndppoint = z.enum([
+  applicationAuditEndppoint.SESSION_TOKENS,
+]);
+
 export type ApplicationAuditPhase = z.infer<typeof ApplicationAuditPhase>;
 
-const ApplicationAuditBeginRequest = z.object({
+export const ApplicationAuditBeginRequest = z.object({
   correlationId: z.string(),
   service: z.string(),
   serviceVersion: z.string(),
   endpoint: z.string(),
   httpMethod: z.string(),
   phase: z.literal(applicationAuditPhase.BEGIN_REQUEST),
-  requesterIpAddress: z.string(),
+  requesterIpAddress: z.string().optional(),
   nodeIp: z.string(),
   podName: z.string(),
   uptimeSeconds: z.number(),
   timestamp: z.number(),
   amazonTraceId: z.string().optional(),
 });
-
 export type ApplicationAuditBeginRequest = z.infer<
   typeof ApplicationAuditBeginRequest
 >;
 
-const ApplicationAuditEndRequest = ApplicationAuditBeginRequest.extend({
+export const ApplicationAuditEndRequest = ApplicationAuditBeginRequest.extend({
   phase: z.literal(applicationAuditPhase.END_REQUEST),
   organizationId: z.string().optional(),
   userId: z.string().optional(),
   httpResponseStatus: z.number(),
   executionTimeMs: z.number(),
-  selfcareId: z.string().optional(),
 });
-
 export type ApplicationAuditEndRequest = z.infer<
   typeof ApplicationAuditEndRequest
 >;
 
-export const ApplicationAuditEvent = z.discriminatedUnion("phase", [
-  ApplicationAuditBeginRequest,
+export const ApplicationAuditEndRequestAuthServer =
+  ApplicationAuditEndRequest.omit({ userId: true }).extend({
+    service: z.literal(applicationAuditService.AUDIT_SERVER),
+    clientId: z.string().optional(),
+  });
+export type ApplicationAuditEndRequestAuthServer = z.infer<
+  typeof ApplicationAuditEndRequestAuthServer
+>;
+
+export const ApplicationAuditEndRequestSessionTokenExchange =
+  ApplicationAuditEndRequest.omit({ userId: true }).extend({
+    service: z.literal(applicationAuditService.BFF),
+    endpoint: z.literal(applicationAuditEndppoint.SESSION_TOKENS),
+    selfcareId: z.string().optional(),
+  });
+export type ApplicationAuditEndRequestSessionTokenExchange = z.infer<
+  typeof ApplicationAuditEndRequestSessionTokenExchange
+>;
+
+const EndRequestEvent = z.union([
+  ApplicationAuditEndRequestAuthServer,
+  ApplicationAuditEndRequestSessionTokenExchange,
   ApplicationAuditEndRequest,
 ]);
 
+export const ApplicationAuditEvent = z.union([
+  ApplicationAuditBeginRequest,
+  EndRequestEvent,
+]);
+
 export type ApplicationAuditEvent = z.infer<typeof ApplicationAuditEvent>;
+
+export function isEndRequestSessionTokenExchange(
+  data: ApplicationAuditEvent
+): data is ApplicationAuditEndRequestSessionTokenExchange {
+  return (
+    data.phase === applicationAuditPhase.END_REQUEST &&
+    data.service === applicationAuditService.BFF &&
+    data.endpoint === applicationAuditEndppoint.SESSION_TOKENS
+  );
+}
+
+export function isEndRequestAuthServer(
+  data: ApplicationAuditEvent
+): data is ApplicationAuditEndRequestAuthServer {
+  return (
+    data.phase === applicationAuditPhase.END_REQUEST &&
+    data.service === applicationAuditService.AUDIT_SERVER
+  );
+}

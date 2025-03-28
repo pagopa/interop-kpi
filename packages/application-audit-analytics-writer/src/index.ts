@@ -40,6 +40,8 @@ await retryConnection(
     await setupDbServiceBuilder(db.conn, config).setupStagingTables([
       ApplicationDbTable.begin_request,
       ApplicationDbTable.end_request,
+      ApplicationDbTable.end_request_session_token_exchange,
+      ApplicationDbTable.end_request_auth_server,
     ]);
   },
   logger({ serviceName: config.serviceName })

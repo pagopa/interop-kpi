@@ -6,8 +6,11 @@ import {
 } from "pagopa-interop-kpi-models";
 import { genericLogger } from "pagopa-interop-kpi-commons";
 import { config } from "../src/config/config.js";
-import { endRequestRepository } from "../src/repositories/endRequest.repository.js";
-import { handleEndRequestMessages } from "../src/handlers/endRequestHandler.js";
+import {
+  EndRequestRepository,
+  endRequestRepository,
+} from "../src/repositories/endRequest.repository.js";
+import { processBatch } from "../src/handlers/batchHandler.js";
 import {
   dbContext,
   getMockApplicationAudits,
@@ -16,9 +19,10 @@ import {
   truncateTables,
 } from "./utils.js";
 
-describe("End request messages handler tests", () => {
+describe("End request batch handler tests", () => {
   const { conn, pgp } = dbContext;
-  const endRequestStagingTableName = `${ApplicationDbTable.end_request}${config.mergeTableSuffix}`;
+  const endRequestTable = ApplicationDbTable.end_request;
+  const endRequestStagingTable = `${endRequestTable}${config.mergeTableSuffix}`;
   const temporaryDbSchemaName = "pg_temp";
 
   const endRequestRepo = endRequestRepository(conn, pgp);
@@ -26,22 +30,22 @@ describe("End request messages handler tests", () => {
   afterEach(async () => {
     vi.restoreAllMocks();
 
-    const stagingTables = [endRequestStagingTableName];
+    const stagingTables = [endRequestStagingTable];
     await truncateTables(conn, temporaryDbSchemaName, stagingTables);
 
-    const targetTables = [ApplicationDbTable.end_request];
+    const targetTables = [endRequestTable];
     await truncateTables(conn, config.dbSchemaName, targetTables);
   });
 
-  describe("handleEndRequestMessages", () => {
+  describe("processBatch", () => {
     it("should trigger staging table cleanup if an error occurs and at least one message is processed", async () => {
       const mockQueryError = new Error("Generic merge error");
       const mockError = genericInternalError(
-        `Error merging staging to target end_request table: ${mockQueryError}`
+        `Error merging staging to target ${endRequestTable} table: ${mockQueryError}`
       );
 
       const endRequestMsgs =
-        getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10);
+        getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10, 0, 0);
 
       vi.spyOn(genericLogger, "warn");
       vi.spyOn(endRequestRepo, "cleanStaging");
@@ -50,12 +54,17 @@ describe("End request messages handler tests", () => {
       );
 
       await expect(
-        handleEndRequestMessages(endRequestMsgs, endRequestRepo, genericLogger)
+        processBatch<ApplicationAuditEndRequest, EndRequestRepository>(
+          endRequestMsgs,
+          endRequestRepo,
+          "EndRequest",
+          genericLogger
+        )
       ).rejects.toThrowError();
 
       const endRequestStagingCount = await getStagingTableCount(
         conn,
-        endRequestStagingTableName
+        endRequestStagingTable
       );
 
       expect(genericLogger.warn).toHaveBeenCalled();
@@ -67,13 +76,13 @@ describe("End request messages handler tests", () => {
   describe("batchInsert", () => {
     it("should insert application audit events successfully", async () => {
       const endRequestMsgs =
-        getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10);
+        getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10, 0, 0);
 
       await endRequestRepo.batchInsert(endRequestMsgs);
 
       const endRequestStagingCount = await getStagingTableCount(
         conn,
-        endRequestStagingTableName
+        endRequestStagingTable
       );
 
       expect(endRequestStagingCount).toBe(10);
@@ -83,7 +92,7 @@ describe("End request messages handler tests", () => {
       const mockQueryError =
         "TypeError: Cannot generate an INSERT from an empty array.";
       const mockError = genericInternalError(
-        `Error inserting into end_request staging table: ${mockQueryError}`
+        `Error inserting into ${endRequestStagingTable} staging table: ${mockQueryError}`
       );
 
       await expect(endRequestRepo.batchInsert([])).rejects.toThrowError(
@@ -95,7 +104,7 @@ describe("End request messages handler tests", () => {
   describe("mergeStagingToTarget", () => {
     it("should merge staging data into target tables successfully", async () => {
       const endRequestMsgs =
-        getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10);
+        getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10, 0, 0);
 
       await endRequestRepo.batchInsert(endRequestMsgs);
       await endRequestRepo.mergeStagingToTarget();
@@ -111,11 +120,11 @@ describe("End request messages handler tests", () => {
     it("should throw an error if database query fails", async () => {
       const mockQueryError = new Error("Generic merge error");
       const mockError = genericInternalError(
-        `Error merging staging to target end_request table: ${mockQueryError}`
+        `Error merging staging to target ${endRequestTable} table: ${mockQueryError}`
       );
 
       const endRequestMsgs =
-        getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10);
+        getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10, 0, 0);
 
       await endRequestRepo.batchInsert(endRequestMsgs);
 
@@ -130,7 +139,7 @@ describe("End request messages handler tests", () => {
   describe("cleanStaging", () => {
     it("should truncate staging table successfully after merge", async () => {
       const endRequestMsgs =
-        getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10);
+        getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10, 0, 0);
 
       await endRequestRepo.batchInsert(endRequestMsgs);
       await endRequestRepo.mergeStagingToTarget();
@@ -138,7 +147,7 @@ describe("End request messages handler tests", () => {
 
       const endRequestTargetCount = await getStagingTableCount(
         dbContext.conn,
-        endRequestStagingTableName
+        endRequestStagingTable
       );
       expect(endRequestTargetCount).toBe(0);
     });

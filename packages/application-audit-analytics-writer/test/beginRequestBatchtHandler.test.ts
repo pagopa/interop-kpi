@@ -6,8 +6,11 @@ import {
 } from "pagopa-interop-kpi-models";
 import { genericLogger } from "pagopa-interop-kpi-commons";
 import { config } from "../src/config/config.js";
-import { beginRequestRepository } from "../src/repositories/beginRequest.repository.js";
-import { handleBeginRequestMessages } from "../src/handlers/beginRequestHandler.js";
+import {
+  BeginRequestRepository,
+  beginRequestRepository,
+} from "../src/repositories/beginRequest.repository.js";
+import { processBatch } from "../src/handlers/batchHandler.js";
 import {
   dbContext,
   getMockApplicationAudits,
@@ -16,32 +19,32 @@ import {
   truncateTables,
 } from "./utils.js";
 
-describe("Begin request messages handler tests", () => {
+describe("Begin request batch handler tests", () => {
   const { conn, pgp } = dbContext;
-  const beginRequestStagingTableName = `${ApplicationDbTable.begin_request}${config.mergeTableSuffix}`;
+  const beginRequestTable = ApplicationDbTable.begin_request;
+  const beginRequestStagingTable = `${beginRequestTable}${config.mergeTableSuffix}`;
   const temporaryDbSchemaName = "pg_temp";
 
   const beginRequestRepo = beginRequestRepository(conn, pgp);
 
   afterEach(async () => {
     vi.restoreAllMocks();
-
-    const stagingTables = [beginRequestStagingTableName];
+    const stagingTables = [beginRequestStagingTable];
     await truncateTables(conn, temporaryDbSchemaName, stagingTables);
 
-    const targetTables = [ApplicationDbTable.begin_request];
+    const targetTables = [beginRequestTable];
     await truncateTables(conn, config.dbSchemaName, targetTables);
   });
 
-  describe("handleBeginRequestMessages", () => {
+  describe("processBatch", () => {
     it("should trigger staging table cleanup if an error occurs and at least one message is processed", async () => {
       const mockQueryError = new Error("Generic merge error");
       const mockError = genericInternalError(
-        `Error merging staging to target begin_request table: ${mockQueryError}`
+        `Error merging staging to target ${beginRequestStagingTable} table: ${mockQueryError}`
       );
 
       const beginRequestMsgs =
-        getMockApplicationAudits<ApplicationAuditBeginRequest>(10, 0);
+        getMockApplicationAudits<ApplicationAuditBeginRequest>(10, 0, 0, 0);
 
       vi.spyOn(genericLogger, "warn");
       vi.spyOn(beginRequestRepo, "cleanStaging");
@@ -50,16 +53,17 @@ describe("Begin request messages handler tests", () => {
       );
 
       await expect(
-        handleBeginRequestMessages(
+        processBatch<ApplicationAuditBeginRequest, BeginRequestRepository>(
           beginRequestMsgs,
           beginRequestRepo,
+          "BeginRequest",
           genericLogger
         )
       ).rejects.toThrowError();
 
       const beginRequestStagingCount = await getStagingTableCount(
         conn,
-        beginRequestStagingTableName
+        beginRequestStagingTable
       );
 
       expect(genericLogger.warn).toHaveBeenCalled();
@@ -71,13 +75,13 @@ describe("Begin request messages handler tests", () => {
   describe("batchInsert", () => {
     it("should insert application audit events successfully", async () => {
       const beginRequestMsgs =
-        getMockApplicationAudits<ApplicationAuditBeginRequest>(10, 0);
+        getMockApplicationAudits<ApplicationAuditBeginRequest>(10, 0, 0, 0);
 
       await beginRequestRepo.batchInsert(beginRequestMsgs);
 
       const beginRequestStagingCount = await getStagingTableCount(
         conn,
-        beginRequestStagingTableName
+        beginRequestStagingTable
       );
 
       expect(beginRequestStagingCount).toBe(10);
@@ -87,7 +91,7 @@ describe("Begin request messages handler tests", () => {
       const mockQueryError =
         "TypeError: Cannot generate an INSERT from an empty array.";
       const mockError = genericInternalError(
-        `Error inserting into begin_request staging table: ${mockQueryError}`
+        `Error inserting into ${beginRequestStagingTable} staging table: ${mockQueryError}`
       );
 
       await expect(beginRequestRepo.batchInsert([])).rejects.toThrowError(
@@ -99,7 +103,7 @@ describe("Begin request messages handler tests", () => {
   describe("mergeStagingToTarget", () => {
     it("should merge staging data into target tables successfully", async () => {
       const beginRequestMsgs =
-        getMockApplicationAudits<ApplicationAuditBeginRequest>(10, 0);
+        getMockApplicationAudits<ApplicationAuditBeginRequest>(10, 0, 0, 0);
 
       await beginRequestRepo.batchInsert(beginRequestMsgs);
       await beginRequestRepo.mergeStagingToTarget();
@@ -115,11 +119,11 @@ describe("Begin request messages handler tests", () => {
     it("should throw an error if database query fails", async () => {
       const mockQueryError = new Error("Generic merge error");
       const mockError = genericInternalError(
-        `Error merging staging to target begin_request table: ${mockQueryError}`
+        `Error merging staging to target ${beginRequestTable} table: ${mockQueryError}`
       );
 
       const beginRequestMsgs =
-        getMockApplicationAudits<ApplicationAuditBeginRequest>(5, 0);
+        getMockApplicationAudits<ApplicationAuditBeginRequest>(5, 0, 0, 0);
 
       await beginRequestRepo.batchInsert(beginRequestMsgs);
 
@@ -134,7 +138,7 @@ describe("Begin request messages handler tests", () => {
   describe("cleanStaging", () => {
     it("should truncate staging table successfully after merge", async () => {
       const beginRequestMsgs =
-        getMockApplicationAudits<ApplicationAuditBeginRequest>(10, 0);
+        getMockApplicationAudits<ApplicationAuditBeginRequest>(10, 0, 0, 0);
 
       await beginRequestRepo.batchInsert(beginRequestMsgs);
       await beginRequestRepo.mergeStagingToTarget();
@@ -142,7 +146,7 @@ describe("Begin request messages handler tests", () => {
 
       const beginRequestTargetCount = await getStagingTableCount(
         dbContext.conn,
-        beginRequestStagingTableName
+        beginRequestStagingTable
       );
       expect(beginRequestTargetCount).toBe(0);
     });

@@ -18,20 +18,19 @@ import {
 
 describe("Messages Handler tests", () => {
   const { conn } = dbContext;
-  const beginRequestStagingTableName = `${ApplicationDbTable.begin_request}${config.mergeTableSuffix}`;
-  const endRequestStagingTableName = `${ApplicationDbTable.end_request}${config.mergeTableSuffix}`;
-  const temporaryDbSchemaName = "pg_temp";
+  const beginRequestStagingTable = `${ApplicationDbTable.begin_request}${config.mergeTableSuffix}`;
+  const endRequestStagingTable = `${ApplicationDbTable.end_request}${config.mergeTableSuffix}`;
+  const temporaryDbSchema = "pg_temp";
 
   afterEach(async () => {
-    const stagingTables = [
-      beginRequestStagingTableName,
-      endRequestStagingTableName,
-    ];
-    await truncateTables(conn, temporaryDbSchemaName, stagingTables);
+    const stagingTables = [beginRequestStagingTable, endRequestStagingTable];
+    await truncateTables(conn, temporaryDbSchema, stagingTables);
 
     const targetTables = [
       ApplicationDbTable.begin_request,
       ApplicationDbTable.end_request,
+      ApplicationDbTable.end_request_session_token_exchange,
+      ApplicationDbTable.end_request_auth_server,
     ];
     await truncateTables(conn, config.dbSchemaName, targetTables);
   });
@@ -46,37 +45,70 @@ describe("Messages Handler tests", () => {
     });
 
     it("should parse kafka messages and persist their data to the database successfully", async () => {
-      const beginRequestStagingTableName = `${ApplicationDbTable.begin_request}${config.mergeTableSuffix}`;
-      const endRequestStagingTableName = `${ApplicationDbTable.end_request}${config.mergeTableSuffix}`;
+      const beginRequestStagingTable = `${ApplicationDbTable.begin_request}${config.mergeTableSuffix}`;
+      const endRequestStagingTable = `${ApplicationDbTable.end_request}${config.mergeTableSuffix}`;
+      const endRequestSessionTokenExchangeStagingTable = `${ApplicationDbTable.end_request_session_token_exchange}${config.mergeTableSuffix}`;
+      const endRequestAuthServerStagingTable = `${ApplicationDbTable.end_request_auth_server}${config.mergeTableSuffix}`;
 
-      const events = getMockApplicationAudits<ApplicationAuditEvent>(5, 15);
+      const events = getMockApplicationAudits<ApplicationAuditEvent>(
+        6,
+        3,
+        2,
+        1
+      );
       const messages = mockEventsToKafkaMessages(events);
 
       await handleMessages(messages, dbContext, genericLogger);
 
       const beginRequestStagingCount = await getStagingTableCount(
         conn,
-        beginRequestStagingTableName
+        beginRequestStagingTable
       );
       expect(beginRequestStagingCount).toBe(0);
 
       const endRequestStagingCount = await getStagingTableCount(
         conn,
-        endRequestStagingTableName
+        endRequestStagingTable
       );
       expect(endRequestStagingCount).toBe(0);
+
+      const endRequestSessionTokenExchangeStagingCount =
+        await getStagingTableCount(
+          conn,
+          endRequestSessionTokenExchangeStagingTable
+        );
+      expect(endRequestSessionTokenExchangeStagingCount).toBe(0);
+
+      const endRequestAuthServerStagingCount = await getStagingTableCount(
+        conn,
+        endRequestAuthServerStagingTable
+      );
+      expect(endRequestAuthServerStagingCount).toBe(0);
 
       const beginRequestTargetCount = await getTargetTableCount(
         conn,
         ApplicationDbTable.begin_request
       );
-      expect(beginRequestTargetCount).toBe(5);
+      expect(beginRequestTargetCount).toBe(6);
 
-      const endRequestTargetTokenCount = await getTargetTableCount(
+      const endRequestTargetCount = await getTargetTableCount(
         conn,
         ApplicationDbTable.end_request
       );
-      expect(endRequestTargetTokenCount).toBe(15);
+      expect(endRequestTargetCount).toBe(3);
+
+      const endRequestSessionTokenExchangeTargetCount =
+        await getTargetTableCount(
+          conn,
+          ApplicationDbTable.end_request_session_token_exchange
+        );
+      expect(endRequestSessionTokenExchangeTargetCount).toBe(2);
+
+      const endRequestAuthServerTargetCount = await getTargetTableCount(
+        conn,
+        ApplicationDbTable.end_request_auth_server
+      );
+      expect(endRequestAuthServerTargetCount).toBe(1);
     });
 
     it("should throw a parsing error when encountering a kafka message with a null value", async () => {
