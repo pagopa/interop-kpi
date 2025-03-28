@@ -68,14 +68,14 @@ export function loadBalancerLogRepository(conn: DBConnection) {
 
     async merge(): Promise<void> {
       try {
-        const clientAssertionMergeQuery = generateMergeQuery(
+        const loadBalancerMergeQuery = generateMergeQuery(
           LoadBalancerLogSchema,
           config.dbSchemaName,
           loadBalancerTable,
           config.mergeTableSuffix,
           "trace_id"
         );
-        await conn.none(clientAssertionMergeQuery);
+        await conn.none(loadBalancerMergeQuery);
       } catch (error: unknown) {
         throw genericInternalError(
           `Error merging staging to target ${loadBalancerTable} table: ${error}`
