@@ -34,7 +34,6 @@ export const albLogsAuditServiceBuilder = (
       const parsedFileStream = transformFileStream(fileStream);
 
       logger.info(`Processing records for file: ${s3key}`);
-
       for await (const batch of batches<LoadBalancerLog>(
         LoadBalancerLogSchema,
         parsedFileStream,
@@ -42,8 +41,16 @@ export const albLogsAuditServiceBuilder = (
         s3key,
         logger
       )) {
-        await dbService.insertRecordsToStaging(batch);
-        totalRecordsProcessed += batch.length;
+        const filteredBatch = batch.filter(
+          (record) => record.user_agent !== "HealthChecker/2.0"
+        );
+
+        if (filteredBatch.length === 0) {
+          continue;
+        }
+
+        await dbService.insertRecordsToStaging(filteredBatch);
+        totalRecordsProcessed += filteredBatch.length;
       }
 
       if (totalRecordsProcessed === 0) {
