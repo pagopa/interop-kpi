@@ -53,12 +53,16 @@ export const albLogsAuditServiceBuilder = (
         return;
       }
 
-      logger.info(`Staging records insertion completed for file: ${s3key}`);
+      logger.info(
+        `Staging insertion completed with ${totalRecordsProcessed} records processed for file: ${s3key}.`
+      );
 
       await dbService.mergeStagingToTarget();
+
       logger.info(`Staging data merged into target tables for file: ${s3key}`);
 
       await dbService.cleanStaging();
+
       logger.info(`Staging cleanup completed for file: ${s3key}`);
     } catch (error) {
       if (totalRecordsProcessed !== 0) {

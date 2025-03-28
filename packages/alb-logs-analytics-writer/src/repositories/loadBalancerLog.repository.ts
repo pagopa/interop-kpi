@@ -3,6 +3,7 @@ import {
   DBConnection,
   IMain,
   buildColumnSet,
+  generateMergeQuery,
 } from "pagopa-interop-kpi-commons";
 import {
   LoadBalancerLogTable,
@@ -10,10 +11,12 @@ import {
 } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { LoadBalancerLog } from "../model/load-balancer-log.js";
-import { LoadBalancerLogMapping } from "../model/db.js";
+import { LoadBalancerLogMapping, LoadBalancerLogSchema } from "../model/db.js";
 
 export function loadBalancerLogRepository(conn: DBConnection) {
   const loadBalancerTable = LoadBalancerLogTable.logs;
+  const loadBalancerStagingTable = `${loadBalancerTable}${config.mergeTableSuffix}`;
+
   return {
     async insert(pgp: IMain, records: LoadBalancerLog[]): Promise<void> {
       try {
@@ -50,138 +53,42 @@ export function loadBalancerLogRepository(conn: DBConnection) {
           conn_trace_id: (record) => record.conn_trace_id,
         };
 
-        const logTableName = `${loadBalancerTable}${config.mergeTableSuffix}`;
         const logColumnSet = buildColumnSet<LoadBalancerLog>(
           pgp,
           logMapping,
-          logTableName
+          loadBalancerStagingTable
         );
         await conn.none(pgp.helpers.insert(records, logColumnSet));
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error inserting into alb_logs_audit staging table: ${error}`
+          `Error inserting into ${loadBalancerStagingTable} staging table: ${error}`
         );
       }
     },
 
     async merge(): Promise<void> {
       try {
-        await conn.none(`
-        MERGE INTO ${config.dbSchemaName}.${loadBalancerTable}
-        USING ${loadBalancerTable}${config.mergeTableSuffix} AS source
-          ON ${config.dbSchemaName}.${loadBalancerTable}.trace_id = source.trace_id
-        WHEN MATCHED THEN
-          UPDATE SET
-            type = source.type,
-            time = source.time,
-            elb = source.elb,
-            client = source.client,
-            target = source.target,
-            request_processing_time = source.request_processing_time,
-            target_processing_time = source.target_processing_time,
-            response_processing_time = source.response_processing_time,
-            elb_status_code = source.elb_status_code,
-            target_status_code = source.target_status_code,
-            received_bytes = source.received_bytes,
-            sent_bytes = source.sent_bytes,
-            request = source.request,
-            user_agent = source.user_agent,
-            ssl_cipher = source.ssl_cipher,
-            ssl_protocol = source.ssl_protocol,
-            target_group_arn = source.target_group_arn,
-            domain_name = source.domain_name,
-            chosen_cert_arn = source.chosen_cert_arn,
-            matched_rule_priority = source.matched_rule_priority,
-            request_creation_time = source.request_creation_time,
-            actions_executed = source.actions_executed,
-            redirect_url = source.redirect_url,
-            error_reason = source.error_reason,
-            target_port_list = source.target_port_list,
-            target_status_code_list = source.target_status_code_list,
-            classification = source.classification,
-            classification_reason = source.classification_reason,
-            conn_trace_id = source.conn_trace_id
-        WHEN NOT MATCHED THEN
-          INSERT (
-            type,
-            time,
-            elb,
-            client,
-            target,
-            request_processing_time,
-            target_processing_time,
-            response_processing_time,
-            elb_status_code,
-            target_status_code,
-            received_bytes,
-            sent_bytes,
-            request,
-            user_agent,
-            ssl_cipher,
-            ssl_protocol,
-            target_group_arn,
-            trace_id,
-            domain_name,
-            chosen_cert_arn,
-            matched_rule_priority,
-            request_creation_time,
-            actions_executed,
-            redirect_url,
-            error_reason,
-            target_port_list,
-            target_status_code_list,
-            classification,
-            classification_reason,
-            conn_trace_id
-          )
-          VALUES (
-            source.type,
-            source.time,
-            source.elb,
-            source.client,
-            source.target,
-            source.request_processing_time,
-            source.target_processing_time,
-            source.response_processing_time,
-            source.elb_status_code,
-            source.target_status_code,
-            source.received_bytes,
-            source.sent_bytes,
-            source.request,
-            source.user_agent,
-            source.ssl_cipher,
-            source.ssl_protocol,
-            source.target_group_arn,
-            source.trace_id,
-            source.domain_name,
-            source.chosen_cert_arn,
-            source.matched_rule_priority,
-            source.request_creation_time,
-            source.actions_executed,
-            source.redirect_url,
-            source.error_reason,
-            source.target_port_list,
-            source.target_status_code_list,
-            source.classification,
-            source.classification_reason,
-            source.conn_trace_id
-          );        
-        `);
+        const loadBalancerMergeQuery = generateMergeQuery(
+          LoadBalancerLogSchema,
+          config.dbSchemaName,
+          loadBalancerTable,
+          config.mergeTableSuffix,
+          "trace_id"
+        );
+        await conn.none(loadBalancerMergeQuery);
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error merging staging to target alb_logs_audit table: ${error}`
+          `Error merging staging to target ${loadBalancerTable} table: ${error}`
         );
       }
     },
 
     async clean(): Promise<void> {
       try {
-        await conn.none(
-          `TRUNCATE TABLE ${loadBalancerTable}${config.mergeTableSuffix};`
-        );
+        await conn.none(`TRUNCATE TABLE ${loadBalancerStagingTable};`);
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error cleaning staging alb_logs_audit table: ${error}`
+          `Error cleaning staging ${loadBalancerStagingTable} table: ${error}`
         );
       }
     },
