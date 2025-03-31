@@ -6,6 +6,7 @@ import {
   GeneratedTokenAuditDetails,
   tokenAuditSchema,
 } from "../model/domain/models.js";
+import { elapsedTime } from "../utilities/loggerHelper.js";
 import { DBService } from "./dbService.js";
 
 export const jwtAuditServiceBuilder = (
@@ -15,13 +16,17 @@ export const jwtAuditServiceBuilder = (
   async handleMessage(s3key: string, logger: Logger): Promise<void> {
     // eslint-disable-next-line functional/no-let
     let totalRecordsProcessed: number = 0;
+    const startTime = Date.now();
 
     try {
       const fileStream = await fileManager.get(config.s3Bucket, s3key, logger);
       const parsedFileStream = fileStream.pipe(ndjson.parse());
 
-      logger.info(`Processing records for file: ${s3key}`);
+      logger.info(
+        `${elapsedTime(startTime)} Processing records for file: ${s3key}`
+      );
 
+      const batchStartTime = Date.now();
       for await (const batch of batches<GeneratedTokenAuditDetails>(
         tokenAuditSchema,
         parsedFileStream,
@@ -35,27 +40,43 @@ export const jwtAuditServiceBuilder = (
 
       if (totalRecordsProcessed === 0) {
         logger.info(
-          `No records processed for file: ${s3key}. Skipping merge and cleanup.`
+          `${elapsedTime(
+            batchStartTime
+          )} No records processed for file: ${s3key}. Skipping merge and cleanup.`
         );
         return;
       }
 
       logger.info(
-        `Staging insertion completed with ${totalRecordsProcessed} records processed for file: ${s3key}.`
+        `${elapsedTime(
+          batchStartTime
+        )} Staging insertion completed with ${totalRecordsProcessed} records processed for file: ${s3key}.`
       );
 
+      const mergeStartTime = Date.now();
       await dbService.mergeStagingToTarget();
 
-      logger.info(`Staging data merged into target tables for file: ${s3key}`);
+      logger.info(
+        `${elapsedTime(
+          mergeStartTime
+        )} Staging data merged into target tables for file: ${s3key}`
+      );
 
+      const cleanupStartTime = Date.now();
       await dbService.cleanStaging();
 
-      logger.info(`Staging cleanup completed for file: ${s3key}`);
+      logger.info(
+        `${elapsedTime(
+          cleanupStartTime
+        )} Staging cleanup completed for file: ${s3key}`
+      );
     } catch (error: unknown) {
       if (totalRecordsProcessed > 0) {
         await dbService.cleanStaging();
         logger.warn(
-          `Error processing file ${s3key}. Performed staging cleanup.`
+          `${elapsedTime(
+            startTime
+          )} Error processing file ${s3key}. Performed staging cleanup.`
         );
       }
       throw error;
