@@ -15,10 +15,21 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 COPY tsconfig.json turbo.json /app/
 COPY ./packages/application-audit-archiver /app/packages/application-audit-archiver
 COPY ./packages/commons /app/packages/commons
-COPY ./packages/kafka-connector /app/packages/kafka-connector
 COPY ./packages/models /app/packages/models
+COPY ./packages/kafka-connector /app/packages/kafka-connector
 
-RUN pnpm build && mkdir /out && cp -a --parents -t /out node_modules packages/application-audit-archiver/dist
+RUN pnpm build && \
+    rm -rf /app/node_modules/.modules.yaml && \
+    rm -rf /app/node_modules/.cache && \
+    mkdir /out && \
+    cp -a --parents -t /out \
+    node_modules packages/application-audit-archiver/node_modules \
+    package*.json packages/application-audit-archiver/package*.json \
+    packages/commons \
+    packages/models \
+    packages/kafka-connector \
+    packages/application-audit-archiver/dist && \
+    find /out -exec touch -h --date=@0 {} \;  
 
 FROM node:20.14.0-slim@sha256:5e8ac65a0231d76a388683d07ca36a9769ab019a85d85169fe28e206f7a3208e as final 
 
