@@ -27,6 +27,7 @@ RUN pnpm build && \
     package*.json packages/application-audit-analytics-writer/package*.json \
     packages/commons \
     packages/models \
+    packages/kafka-connector \
     packages/application-audit-analytics-writer/dist && \
     find /out -exec touch -h --date=@0 {} \;  
 
