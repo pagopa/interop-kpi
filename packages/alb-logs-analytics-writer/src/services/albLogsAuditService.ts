@@ -4,6 +4,7 @@ import { createGunzip } from "zlib";
 import { FileManager, Logger, batches } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 import {
+  EXCLUDED_USER_AGENT,
   LoadBalancerLog,
   LoadBalancerLogSchema,
 } from "../model/load-balancer-log.js";
@@ -34,7 +35,6 @@ export const albLogsAuditServiceBuilder = (
       const parsedFileStream = transformFileStream(fileStream);
 
       logger.info(`Processing records for file: ${s3key}`);
-
       for await (const batch of batches<LoadBalancerLog>(
         LoadBalancerLogSchema,
         parsedFileStream,
@@ -42,8 +42,16 @@ export const albLogsAuditServiceBuilder = (
         s3key,
         logger
       )) {
-        await dbService.insertRecordsToStaging(batch);
-        totalRecordsProcessed += batch.length;
+        const filteredBatch = batch.filter(
+          (record) => record.user_agent !== EXCLUDED_USER_AGENT
+        );
+
+        if (filteredBatch.length === 0) {
+          continue;
+        }
+
+        await dbService.insertRecordsToStaging(filteredBatch);
+        totalRecordsProcessed += filteredBatch.length;
       }
 
       if (totalRecordsProcessed === 0) {
