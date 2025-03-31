@@ -3,16 +3,12 @@ import { KafkaMessage } from "kafkajs";
 import {
   FileManager,
   Logger,
-  decodeKafkaMessage,
   formatTimehhmmss,
 } from "pagopa-interop-kpi-commons";
-import {
-  ApplicationAuditEvent,
-  generateId,
-  genericInternalError,
-} from "pagopa-interop-kpi-models";
+import { generateId, genericInternalError } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { compressJson } from "../utilities/compression.js";
+import { groupMessagesByDate } from "../utilities/groupMessagesByDate.js";
 
 export async function handleMessages(
   messages: KafkaMessage[],
@@ -20,30 +16,26 @@ export async function handleMessages(
   logger: Logger
 ) {
   try {
-    const batch = messages.map((message) =>
-      decodeKafkaMessage(message, ApplicationAuditEvent)
-    );
+    const groupedMessages = groupMessagesByDate(messages);
 
-    const jsonString = JSON.stringify(batch);
-    const compressedBuffer = await compressJson(jsonString);
+    for (const [dateKey, groupMessages] of groupedMessages.entries()) {
+      const [year, month, day] = dateKey.split("-");
+      const jsonString = JSON.stringify(groupMessages);
+      const compressedBuffer = await compressJson(jsonString);
 
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const time = formatTimehhmmss(date);
+      const time = formatTimehhmmss(new Date());
+      const fileName = `${year}${month}${day}_${time}_${generateId()}.json.gz`;
+      const filePath = `year=${year}/month=${month}/day=${day}`;
 
-    const fileName = `${year}${month}${day}_${time}_${generateId()}.json.gz`;
-    const filePath = `year=${year}/month=${month}/day=${day}`;
+      const s3File = {
+        bucket: config.s3BucketName,
+        path: filePath,
+        name: fileName,
+        content: compressedBuffer,
+      };
 
-    const s3File = {
-      bucket: config.s3BucketName,
-      path: filePath,
-      name: fileName,
-      content: compressedBuffer,
-    };
-
-    await fileManager.storeBytes(s3File, logger);
+      await fileManager.storeBytes(s3File, logger);
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : "generic error";
     throw genericInternalError(`Write operation failed - ${message}`);
