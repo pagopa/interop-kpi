@@ -64,7 +64,7 @@ export function generatedTokenRepository(conn: DBConnection) {
           config.dbSchemaName,
           generatedTokenTable,
           config.mergeTableSuffix,
-          "jwt_id"
+          ["jwt_id"]
         );
         await t.none(generatedTokenMergeQuery);
       } catch (error: unknown) {

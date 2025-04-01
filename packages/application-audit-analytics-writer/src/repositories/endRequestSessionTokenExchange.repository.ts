@@ -73,7 +73,7 @@ export function endRequestSessionTokenExchangeRepository(
           config.dbSchemaName,
           endRequestSessionTokenExchangeTable,
           config.mergeTableSuffix,
-          "correlation_id"
+          ["correlation_id", "service"]
         );
         await conn.none(eendRequestSessionTokenExchangeMergeQuery);
       } catch (error: unknown) {

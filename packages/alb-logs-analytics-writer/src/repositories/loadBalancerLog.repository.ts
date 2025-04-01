@@ -73,7 +73,7 @@ export function loadBalancerLogRepository(conn: DBConnection) {
           config.dbSchemaName,
           loadBalancerTable,
           config.mergeTableSuffix,
-          "trace_id"
+          ["trace_id"]
         );
         await conn.none(loadBalancerMergeQuery);
       } catch (error: unknown) {

@@ -69,7 +69,7 @@ export function endRequestAuthServerRepository(conn: DBConnection, pgp: IMain) {
           config.dbSchemaName,
           endRequestAuthServerTable,
           config.mergeTableSuffix,
-          "correlation_id"
+          ["correlation_id", "service"]
         );
         await conn.none(endRequestAuthServerMergeQuery);
       } catch (error: unknown) {

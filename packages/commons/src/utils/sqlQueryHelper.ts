@@ -7,7 +7,7 @@ import { z } from "zod";
  * @param schemaName - The target db schema name.
  * @param tableName - The staging and target table name.
  * @param stagingSuffix - A suffix appended to the table name to indicate the staging table.
- * @param keyOn - The key to be used for the ON condition (e.g., "correlation_id").
+ * @param keysOn - The keys to be used for the ON condition (e.g., ["correlation_id"]).
  * @returns The generated MERGE SQL query as a string.
  */
 export function generateMergeQuery<T extends z.ZodRawShape>(
@@ -15,7 +15,7 @@ export function generateMergeQuery<T extends z.ZodRawShape>(
   schemaName: string,
   tableName: string,
   stagingSuffix: string,
-  keyOn: keyof T
+  keysOn: Array<keyof T>
 ): string {
   const keys = Object.keys(tableSchema.shape);
 
@@ -24,10 +24,17 @@ export function generateMergeQuery<T extends z.ZodRawShape>(
   const columns = keys.join(", ");
   const values = keys.map((k) => `source.${k}`).join(", ");
 
+  const onCondition = keysOn
+    .map(
+      (key) =>
+        `${schemaName}.${tableName}.${String(key)} = source.${String(key)}`
+    )
+    .join(" AND ");
+
   return `
       MERGE INTO ${schemaName}.${tableName}
       USING ${tableName}${stagingSuffix} AS source
-      ON ${schemaName}.${tableName}.${String(keyOn)} = source.${String(keyOn)}
+      ON ${onCondition}
       WHEN MATCHED THEN
         UPDATE SET
           ${updateSet}
