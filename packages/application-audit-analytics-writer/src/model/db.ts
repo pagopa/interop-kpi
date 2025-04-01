@@ -1,32 +1,66 @@
 import {
   ApplicationAuditBeginRequest,
   ApplicationAuditEndRequest,
+  ApplicationAuditEndRequestAuthServer,
+  ApplicationAuditEndRequestSessionTokenExchange,
 } from "pagopa-interop-kpi-models";
+import { z } from "zod";
 
-export interface ApplicationAuditBeginRequestSchema {
-  correlation_id: string;
-  service: string;
-  service_version: string;
-  endpoint: string;
-  http_method: string;
-  phase: "BEGIN_REQUEST";
-  requester_ip_address: string;
-  node_ip: string;
-  pod_name: string;
-  uptime_seconds: number;
-  timestamp: Date;
-  amazon_trace_id?: string;
-}
+export const ApplicationAuditBeginRequestSchema = z.object({
+  correlation_id: z.string(),
+  service: z.string(),
+  service_version: z.string(),
+  endpoint: z.string(),
+  http_method: z.string(),
+  phase: z.literal("BEGIN_REQUEST"),
+  requester_ip_address: z.string().optional(),
+  node_ip: z.string(),
+  pod_name: z.string(),
+  uptime_seconds: z.number(),
+  timestamp: z.date(),
+  amazon_trace_id: z.string().optional(),
+});
+export type ApplicationAuditBeginRequestSchema = z.infer<
+  typeof ApplicationAuditBeginRequestSchema
+>;
 
-export interface ApplicationAuditEndRequestSchema
-  extends Omit<ApplicationAuditBeginRequestSchema, "phase"> {
-  phase: "END_REQUEST";
-  organization_id?: string;
-  user_id?: string;
-  self_care_id?: string;
-  http_response_status: number;
-  execution_time_ms: number;
-}
+export const ApplicationAuditEndRequestSchema =
+  ApplicationAuditBeginRequestSchema.omit({
+    phase: true,
+  }).extend({
+    phase: z.literal("END_REQUEST"),
+    organization_id: z.string().optional(),
+    user_id: z.string().optional(),
+    http_response_status: z.number(),
+    execution_time_ms: z.number(),
+  });
+export type ApplicationAuditEndRequestSchema = z.infer<
+  typeof ApplicationAuditEndRequestSchema
+>;
+
+export const ApplicationAuditEndRequestSessionTokenExchangeSchema =
+  ApplicationAuditEndRequestSchema.omit({
+    user_id: true,
+  }).extend({
+    self_care_id: z.string().optional(),
+  });
+export type ApplicationAuditEndRequestSessionTokenExchangeSchema = z.infer<
+  typeof ApplicationAuditEndRequestSessionTokenExchangeSchema
+>;
+
+export const ApplicationAuditEndRequestAuthServerSchema =
+  ApplicationAuditEndRequestSchema.omit({
+    user_id: true,
+  }).extend({
+    client_id: z.string().optional(),
+  });
+export type ApplicationAuditEndRequestAuthServerSchema = z.infer<
+  typeof ApplicationAuditEndRequestAuthServerSchema
+>;
+
+export type Mapping<T, E> = {
+  [K in keyof T]: (event: E) => T[K];
+};
 
 /**
  * ApplicationAuditBeginRequestMapping is a type alias that defines a mapping interface to convert
@@ -34,11 +68,10 @@ export interface ApplicationAuditEndRequestSchema
  * It ensures that the output of each mapping function exactly matches the expected type
  * for the corresponding column defined in ApplicationAuditBeginRequestSchema.
  */
-export type ApplicationAuditBeginRequestMapping = {
-  [K in keyof ApplicationAuditBeginRequestSchema]: (
-    event: ApplicationAuditBeginRequest
-  ) => ApplicationAuditBeginRequestSchema[K];
-};
+export type ApplicationAuditBeginRequestMapping = Mapping<
+  ApplicationAuditBeginRequestSchema,
+  ApplicationAuditBeginRequest
+>;
 
 /**
  * ApplicationAuditEndRequestMapping is a type alias that defines a mapping interface to convert
@@ -46,8 +79,29 @@ export type ApplicationAuditBeginRequestMapping = {
  * It ensures that the output of each mapping function exactly matches the expected type
  * for the corresponding column defined in ApplicationAuditEndRequestSchema.
  */
-export type ApplicationAuditEndRequestMapping = {
-  [K in keyof ApplicationAuditEndRequestSchema]: (
-    event: ApplicationAuditEndRequest
-  ) => ApplicationAuditEndRequestSchema[K];
-};
+export type ApplicationAuditEndRequestMapping = Mapping<
+  ApplicationAuditEndRequestSchema,
+  ApplicationAuditEndRequest
+>;
+
+/**
+ * ApplicationAuditEndRequestAuthServerMapping is a type alias that defines a mapping interface to convert
+ * a ApplicationAuditEndRequestAuth event into a shape that conforms to ApplicationAuditEndRequestAuthServerSchema.
+ * It ensures that the output of each mapping function exactly matches the expected type
+ * for the corresponding column defined in ApplicationAuditEndRequestAuthServerSchema.
+ */
+export type ApplicationAuditEndRequestAuthServerMapping = Mapping<
+  ApplicationAuditEndRequestAuthServerSchema,
+  ApplicationAuditEndRequestAuthServer
+>;
+
+/**
+ * ApplicationAuditEndRequestSessionTokenExchangeMapping is a type alias that defines a mapping interface to convert
+ * a ApplicationAuditEndRequestSessionTokenExchangeMapping event into a shape that conforms to ApplicationAuditEndRequestSessionTokenExchangeSchema.
+ * It ensures that the output of each mapping function exactly matches the expected type
+ * for the corresponding column defined in ApplicationAuditEndRequestSessionTokenExchangeSchema.
+ */
+export type ApplicationAuditEndRequestSessionTokenExchangeMapping = Mapping<
+  ApplicationAuditEndRequestSessionTokenExchangeSchema,
+  ApplicationAuditEndRequestSessionTokenExchange
+>;

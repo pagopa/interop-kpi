@@ -26,11 +26,11 @@ import {
 
 describe("DB Service Tests for ALB Logs", () => {
   const temporaryDbSchemaName = "pg_temp";
-  const stagingTableName = `${LoadBalancerLogTable.logs}${config.mergeTableSuffix}`;
-  const targetTableName = LoadBalancerLogTable.logs;
+  const stagingTable = `${LoadBalancerLogTable.logs}${config.mergeTableSuffix}`;
+  const targetTable = LoadBalancerLogTable.logs;
 
   beforeAll(async () => {
-    await setupDbService.setupStagingTables([targetTableName]);
+    await setupDbService.setupStagingTables([targetTable]);
   });
 
   afterAll(async () => {
@@ -54,7 +54,7 @@ describe("DB Service Tests for ALB Logs", () => {
       await dbService.insertRecordsToStaging(records);
       const stagingCount = await getStagingTableCount(
         dbContext.conn,
-        stagingTableName
+        stagingTable
       );
 
       expect(stagingCount).toBe(5);
@@ -67,7 +67,7 @@ describe("DB Service Tests for ALB Logs", () => {
 
       await expect(dbService.insertRecordsToStaging([])).rejects.toThrowError(
         genericInternalError(
-          `Error inserting into alb_logs_audit staging table: ${mockQueryError}`
+          `Error inserting into ${stagingTable} staging table: ${mockQueryError}`
         )
       );
     });
@@ -83,7 +83,7 @@ describe("DB Service Tests for ALB Logs", () => {
 
       const targetCount = await getTargetTableCount(
         dbContext.conn,
-        targetTableName
+        targetTable
       );
       expect(targetCount).toBe(5);
     });
@@ -102,7 +102,7 @@ describe("DB Service Tests for ALB Logs", () => {
 
       const stagingCountAfterClean = await getStagingTableCount(
         dbContext.conn,
-        stagingTableName
+        stagingTable
       );
       expect(stagingCountAfterClean).toBe(0);
     });

@@ -11,7 +11,9 @@ import {
   ApplicationAuditEvent,
   ApplicationAuditPhase,
   ApplicationDbTable,
+  applicationAuditEndppoint,
   applicationAuditPhase,
+  applicationAuditService,
   generateId,
 } from "pagopa-interop-kpi-models";
 import { match } from "ts-pattern";
@@ -41,6 +43,8 @@ await retryConnection(
     await setupDbServiceBuilder(db.conn, config).setupStagingTables([
       ApplicationDbTable.begin_request,
       ApplicationDbTable.end_request,
+      ApplicationDbTable.end_request_session_token_exchange,
+      ApplicationDbTable.end_request_auth_server,
     ]);
   },
   genericLogger
@@ -58,14 +62,21 @@ export function mockEventsToKafkaMessages(
 
 export function getMockApplicationAudits<T>(
   beginCount: number,
-  endCount: number
+  endCount: number,
+  endSessionTokenExchangeCount: number,
+  endAuthServcerCount: number
 ): T[] {
-  const createEvent = (phase: ApplicationAuditPhase): T => {
+  const createEvent = (
+    phase: ApplicationAuditPhase,
+    additionalAudit = {},
+    service = "mockService",
+    endpoint = "/mock-endpoint"
+  ): T => {
     const common = {
       correlationId: generateId(),
-      service: "mockService",
+      service,
       serviceVersion: "1.0",
-      endpoint: "/mock-endpoint",
+      endpoint,
       httpMethod: "GET",
       requesterIpAddress: "192.168.1.100",
       nodeIp: "127.0.0.1",
@@ -82,10 +93,10 @@ export function getMockApplicationAudits<T>(
       }))
       .with("END_REQUEST", () => ({
         ...common,
+        ...additionalAudit,
+        phase: applicationAuditPhase.END_REQUEST,
         httpResponseStatus: 200,
         executionTimeMs: 50,
-        selfcareId: generateId(),
-        phase: applicationAuditPhase.END_REQUEST,
       }))
       .exhaustive() as T;
   };
@@ -94,10 +105,38 @@ export function getMockApplicationAudits<T>(
     createEvent(applicationAuditPhase.BEGIN_REQUEST)
   );
   const endEvents = Array.from({ length: endCount }, () =>
-    createEvent(applicationAuditPhase.END_REQUEST)
+    createEvent(applicationAuditPhase.END_REQUEST, {
+      userId: generateId(),
+    })
+  );
+  const endSessionTokenExchangeEvents = Array.from(
+    { length: endSessionTokenExchangeCount },
+    () =>
+      createEvent(
+        applicationAuditPhase.END_REQUEST,
+        {
+          selfcareId: generateId(),
+        },
+        applicationAuditService.BFF,
+        applicationAuditEndppoint.SESSION_TOKENS
+      )
+  );
+  const endAuthServerEvents = Array.from({ length: endAuthServcerCount }, () =>
+    createEvent(
+      applicationAuditPhase.END_REQUEST,
+      {
+        clientId: generateId(),
+      },
+      applicationAuditService.AUDIT_SERVER
+    )
   );
 
-  return [...beginEvents, ...endEvents];
+  return [
+    ...beginEvents,
+    ...endEvents,
+    ...endSessionTokenExchangeEvents,
+    ...endAuthServerEvents,
+  ];
 }
 
 export async function getTablesByName(
