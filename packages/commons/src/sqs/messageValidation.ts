@@ -3,16 +3,16 @@ import { genericLogger } from "../index.js";
 import { Message } from "./sqs.js";
 
 type WhitelistedEvent =
-  | "s3:ObjectCreated"
-  | "s3:ObjectCreated:Put"
-  | "s3:ObjectCreated:Post"
-  | "s3:ObjectCreated:Copy";
+  | "ObjectCreated"
+  | "ObjectCreated:Put"
+  | "ObjectCreated:Post"
+  | "ObjectCreated:Copy";
 
 const validEvents: WhitelistedEvent[] = [
-  "s3:ObjectCreated",
-  "s3:ObjectCreated:Put",
-  "s3:ObjectCreated:Post",
-  "s3:ObjectCreated:Copy",
+  "ObjectCreated",
+  "ObjectCreated:Put",
+  "ObjectCreated:Post",
+  "ObjectCreated:Copy",
 ];
 
 type EventValidation = "ValidEvent" | "InvalidEvent";
