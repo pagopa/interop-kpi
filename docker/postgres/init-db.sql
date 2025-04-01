@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS application.begin_request_audit (
     endpoint VARCHAR(255) NOT NULL,
     http_method VARCHAR(255) NOT NULL,
     phase VARCHAR(255) NOT NULL,
-    requester_ip_address VARCHAR(255) NOT NULL,
+    requester_ip_address VARCHAR(255),
     node_ip VARCHAR(255) NOT NULL,
     pod_name VARCHAR(255) NOT NULL,
     uptime_seconds BIGINT NOT NULL,
