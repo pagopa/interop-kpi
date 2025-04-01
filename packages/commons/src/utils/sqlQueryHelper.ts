@@ -7,7 +7,7 @@ import { z } from "zod";
  * @param schemaName - The target db schema name.
  * @param tableName - The staging and target table name.
  * @param stagingSuffix - A suffix appended to the table name to indicate the staging table.
- * @param keyOn - The keys to be used for the ON condition (e.g., ["correlation_id"]).
+ * @param keysOn - The keys to be used for the ON condition (e.g., ["correlation_id"]).
  * @returns The generated MERGE SQL query as a string.
  */
 export function generateMergeQuery<T extends z.ZodRawShape>(
