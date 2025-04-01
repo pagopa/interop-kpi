@@ -63,7 +63,7 @@ export function endRequestRepository(conn: DBConnection, pgp: IMain) {
           config.dbSchemaName,
           endRequestTable,
           config.mergeTableSuffix,
-          "correlation_id"
+          ["correlation_id", "service"]
         );
         await conn.none(endRequestMergeQuery);
       } catch (error: unknown) {

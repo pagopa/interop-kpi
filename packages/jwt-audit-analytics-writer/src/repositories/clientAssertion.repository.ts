@@ -57,7 +57,7 @@ export function clientAssertionRepository(conn: DBConnection) {
           config.dbSchemaName,
           clientAssertionTable,
           config.mergeTableSuffix,
-          "generated_token_jwt_id"
+          ["generated_token_jwt_id"]
         );
         await t.none(clientAssertionMergeQuery);
       } catch (error: unknown) {
