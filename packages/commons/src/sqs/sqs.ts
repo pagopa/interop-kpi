@@ -201,7 +201,7 @@ const processBatchQueue = async (
     VisibilityTimeout: config.visibilityTimeout,
   });
 
-  while (true) {
+  do {
     const receiveMessagesTime = Date.now();
     const { Messages } = await sqsClient.send(command);
 
@@ -258,7 +258,7 @@ const processBatchQueue = async (
         }
       }
     }
-  }
+  } while (true);
 };
 
 export const deleteBatchMessages = async (
