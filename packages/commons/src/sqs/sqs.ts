@@ -1,5 +1,7 @@
 /* eslint-disable no-constant-condition */
 /* eslint-disable sonarjs/cognitive-complexity */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable functional/immutable-data */
 import {
   SQSClient,
   ReceiveMessageCommand,
@@ -211,7 +213,7 @@ const processBatchQueue = async (
       const invalidMessages: Message[] = [];
       for (const message of Messages) {
         const result = validateSqsMessage(message);
-        match(result)
+        await match(result)
           .with("InvalidEvent", async () => {
             invalidMessages.push(message);
           })
