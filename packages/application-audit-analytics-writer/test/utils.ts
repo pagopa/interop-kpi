@@ -11,6 +11,8 @@ import {
   ApplicationAuditEvent,
   ApplicationAuditPhase,
   ApplicationDbTable,
+  CorrelationId,
+  SpanId,
   applicationAuditEndppoint,
   applicationAuditPhase,
   applicationAuditService,
@@ -73,7 +75,8 @@ export function getMockApplicationAudits<T>(
     endpoint = "/mock-endpoint"
   ): T => {
     const common = {
-      correlationId: generateId(),
+      spanId: generateId<SpanId>(),
+      correlationId: generateId<CorrelationId>(),
       service,
       serviceVersion: "1.0",
       endpoint,
