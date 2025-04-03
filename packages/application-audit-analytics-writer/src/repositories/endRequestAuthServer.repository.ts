@@ -27,6 +27,7 @@ export function endRequestAuthServerRepository(conn: DBConnection, pgp: IMain) {
       try {
         const endRequestAuthServerMapping: ApplicationAuditEndRequestAuthServerMapping =
           {
+            span_id: (event) => event.spanId,
             correlation_id: (event) => event.correlationId,
             service: (event) => event.service,
             service_version: (event) => event.serviceVersion,
@@ -69,7 +70,7 @@ export function endRequestAuthServerRepository(conn: DBConnection, pgp: IMain) {
           config.dbSchemaName,
           endRequestAuthServerTable,
           config.mergeTableSuffix,
-          ["correlation_id", "service"]
+          ["span_id"]
         );
         await conn.none(endRequestAuthServerMergeQuery);
       } catch (error: unknown) {

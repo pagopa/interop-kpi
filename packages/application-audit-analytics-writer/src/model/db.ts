@@ -8,6 +8,7 @@ import { z } from "zod";
 
 export const ApplicationAuditBeginRequestSchema = z.object({
   correlation_id: z.string(),
+  span_id: z.string(),
   service: z.string(),
   service_version: z.string(),
   endpoint: z.string(),

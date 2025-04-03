@@ -3,6 +3,9 @@ import { setupTestContainersVitest } from "pagopa-interop-kpi-commons-test/index
 import {
   ApplicationAuditEvent,
   applicationAuditPhase,
+  CorrelationId,
+  generateId,
+  SpanId,
 } from "pagopa-interop-kpi-models";
 import { inject } from "vitest";
 
@@ -12,7 +15,8 @@ export const { fileManager, postgresDB } = await setupTestContainersVitest(
 );
 
 export const validAuditEvent: ApplicationAuditEvent = {
-  correlationId: "corr-123",
+  spanId: generateId<SpanId>(),
+  correlationId: generateId<CorrelationId>(),
   service: "test-service",
   serviceVersion: "1.0.0",
   endpoint: "/api/test",
@@ -23,7 +27,7 @@ export const validAuditEvent: ApplicationAuditEvent = {
   podName: "pod-1",
   uptimeSeconds: 3600,
   timestamp: new Date("2025-03-18T12:34:56").getTime(),
-  amazonTraceId: "trace-123",
+  amazonTraceId: generateId(),
 };
 
 export const getValidKafkaMessage = (

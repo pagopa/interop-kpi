@@ -24,6 +24,7 @@ export function endRequestRepository(conn: DBConnection, pgp: IMain) {
     async batchInsert(events: ApplicationAuditEndRequest[]): Promise<void> {
       try {
         const endRequestMapping: ApplicationAuditEndRequestMapping = {
+          span_id: (event) => event.spanId,
           correlation_id: (event) => event.correlationId,
           service: (event) => event.service,
           service_version: (event) => event.serviceVersion,
@@ -63,7 +64,7 @@ export function endRequestRepository(conn: DBConnection, pgp: IMain) {
           config.dbSchemaName,
           endRequestTable,
           config.mergeTableSuffix,
-          ["correlation_id", "service"]
+          ["span_id"]
         );
         await conn.none(endRequestMergeQuery);
       } catch (error: unknown) {
