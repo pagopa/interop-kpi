@@ -50,14 +50,14 @@ const processQueue = async (
   });
 
   do {
-    const startTime = Date.now();
+    const receiveMessageStartTime = Date.now();
     const { Messages } = await sqsClient.send(command);
 
     if (Messages?.length) {
-      loggerInstance.debug(`Receive Messages`, startTime);
+      loggerInstance.debug(`Receive Messages`, receiveMessageStartTime);
 
       for (const message of Messages) {
-        const processMessageTime = Date.now();
+        const processMessageStartTime = Date.now();
         loggerInstance.debug(`[START] Consuming Message ${message.MessageId}`);
 
         if (!message.ReceiptHandle) {
@@ -80,21 +80,21 @@ const processQueue = async (
               await deleteMessage(sqsClient, config.queueUrl, receiptHandle);
               loggerInstance.debug(
                 `[END] Delete Invalid Message ${message.MessageId}`,
-                processMessageTime
+                processMessageStartTime
               );
             })
             .with("ValidEvent", async () => {
               await consumerHandler(message);
               loggerInstance.debug(
                 `[END] Process Message ${message.MessageId}`,
-                processMessageTime
+                processMessageStartTime
               );
 
-              const deleteMessageTime = Date.now();
+              const deleteMessageStartTime = Date.now();
               await deleteMessage(sqsClient, config.queueUrl, receiptHandle);
               loggerInstance.debug(
                 `[END] Delete Message ${message.MessageId}`,
-                deleteMessageTime
+                deleteMessageStartTime
               );
             })
             .exhaustive();
@@ -110,7 +110,7 @@ const processQueue = async (
         } finally {
           loggerInstance.debug(
             `[END] Consuming Message ${message.MessageId}`,
-            processMessageTime
+            processMessageStartTime
           );
         }
       }
@@ -202,12 +202,12 @@ const processBatchQueue = async (
   });
 
   do {
-    const receiveMessagesTime = Date.now();
+    const receiveMessagesStartTime = Date.now();
     const { Messages } = await sqsClient.send(command);
 
     if (Messages?.length) {
-      const processMessageTime = Date.now();
-      loggerInstance.debug(`Receive Batch Messages`, receiveMessagesTime);
+      const processMessageStartTime = Date.now();
+      loggerInstance.debug(`Receive Batch Messages`, receiveMessagesStartTime);
 
       const validMessages: Message[] = [];
       const invalidMessages: Message[] = [];
@@ -227,7 +227,7 @@ const processBatchQueue = async (
         await deleteBatchMessages(sqsClient, config.queueUrl, invalidMessages);
         loggerInstance.debug(
           `[END] Delete Batch Invalid Messages`,
-          processMessageTime
+          processMessageStartTime
         );
       }
 
@@ -236,13 +236,13 @@ const processBatchQueue = async (
           await consumerBatchHandler(validMessages);
           loggerInstance.debug(
             `[END] Process Batch Messages`,
-            processMessageTime
+            processMessageStartTime
           );
-          const deleteMessageTime = Date.now();
+          const deleteMessageStartTime = Date.now();
           await deleteBatchMessages(sqsClient, config.queueUrl, validMessages);
           loggerInstance.debug(
             `[END] Delete Batch Messages`,
-            deleteMessageTime
+            deleteMessageStartTime
           );
         } catch (batchError) {
           loggerInstance.error(
@@ -253,7 +253,7 @@ const processBatchQueue = async (
             `[END] Consuming Batch Messages ${JSON.stringify(
               Messages.map(({ MessageId }) => MessageId)
             )}`,
-            processMessageTime
+            processMessageStartTime
           );
         }
       }
