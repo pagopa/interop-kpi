@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-/* eslint-disable-next-line functional/no-let */
-
+/* eslint-disable functional/no-let */
 import { FileManager, Logger, batchItems } from "pagopa-interop-kpi-commons";
 import * as ndjson from "ndjson";
 import { config } from "../config/config.js";
