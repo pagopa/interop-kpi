@@ -11,7 +11,7 @@ import {
 } from "vitest";
 import {
   FileManager,
-  batches,
+  batchItems,
   genericLogger,
 } from "pagopa-interop-kpi-commons";
 import { LoadBalancerLogTable } from "pagopa-interop-kpi-models";
@@ -165,7 +165,7 @@ describe("ALB Logs Audit Service", () => {
 
     const batchesIteration: unknown[][] = [];
 
-    for await (const batch of batches(
+    for await (const batch of batchItems(
       LoadBalancerLogSchema,
       parsedFileStream,
       2,
@@ -192,7 +192,7 @@ describe("ALB Logs Audit Service", () => {
     // eslint-disable-next-line functional/no-let
     let totalRecordsProcessed = 0;
 
-    for await (const batch of batches(
+    for await (const batch of batchItems(
       LoadBalancerLogSchema,
       parsedFileStream,
       2,

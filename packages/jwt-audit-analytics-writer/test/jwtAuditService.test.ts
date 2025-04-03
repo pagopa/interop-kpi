@@ -8,7 +8,7 @@ import {
   beforeAll,
   afterEach,
 } from "vitest";
-import { batches, genericLogger } from "pagopa-interop-kpi-commons";
+import { batchItems, genericLogger } from "pagopa-interop-kpi-commons";
 import { JwtDbTable } from "pagopa-interop-kpi-models";
 import {
   GeneratedTokenAuditDetails,
@@ -58,7 +58,7 @@ describe("JWT Audit Service tests", () => {
         genericLogger
       );
 
-      await jwtAuditService.handleMessage(fullPathName, genericLogger);
+      await jwtAuditService.handleMessages([fullPathName], genericLogger);
 
       const clientAssertionStagingCount = await getStagingTableCount(
         conn,
@@ -96,7 +96,7 @@ describe("JWT Audit Service tests", () => {
       vi.spyOn(dbService, "mergeStagingToTarget");
       vi.spyOn(dbService, "cleanStaging");
 
-      await jwtAuditService.handleMessage(fullPathName, genericLogger);
+      await jwtAuditService.handleMessages([fullPathName], genericLogger);
 
       expect(dbService.insertRecordsToStaging).not.toHaveBeenCalled();
       expect(dbService.mergeStagingToTarget).not.toHaveBeenCalled();
@@ -116,7 +116,7 @@ describe("JWT Audit Service tests", () => {
 
       const batchesIteration: unknown[][] = [];
 
-      for await (const batch of batches(
+      for await (const batch of batchItems(
         tokenAuditSchema,
         source,
         2,
