@@ -12,6 +12,7 @@ import { match } from "ts-pattern";
 import { genericLogger, Logger } from "../logging/index.js";
 import { SQSConsumerConfig } from "../config/consumerConfig.js";
 import { validateSqsMessage } from "./messageValidation.js";
+import { elapsedTime } from "./utils.js";
 
 const serializeError = (error: unknown): string => {
   try {
@@ -47,9 +48,16 @@ const processQueue = async (
   });
 
   do {
+    const startTime = Date.now();
     const { Messages } = await sqsClient.send(command);
+
     if (Messages?.length) {
+      loggerInstance.debug(`${elapsedTime(startTime)} Receive Messages`);
+
       for (const message of Messages) {
+        const processMessageTime = Date.now();
+        loggerInstance.debug(`[START] Consuming Message ${message.MessageId}`);
+
         if (!message.ReceiptHandle) {
           throw new Error(
             `ReceiptHandle not found in Message: ${JSON.stringify(message)}`
@@ -68,10 +76,27 @@ const processQueue = async (
           await match(result)
             .with("InvalidEvent", async () => {
               await deleteMessage(sqsClient, config.queueUrl, receiptHandle);
+              loggerInstance.debug(
+                `${elapsedTime(
+                  processMessageTime
+                )} [END] Delete Invalid Message ${message.MessageId}`
+              );
             })
             .with("ValidEvent", async () => {
               await consumerHandler(message);
+              loggerInstance.debug(
+                `${elapsedTime(processMessageTime)} [END] Process Message ${
+                  message.MessageId
+                }`
+              );
+
+              const deleteMessageTime = Date.now();
               await deleteMessage(sqsClient, config.queueUrl, receiptHandle);
+              loggerInstance.debug(
+                `${elapsedTime(deleteMessageTime)} [END] Delete Message ${
+                  message.MessageId
+                }`
+              );
             })
             .exhaustive();
         } catch (e) {
@@ -83,6 +108,12 @@ const processQueue = async (
           if (!(e instanceof InternalError)) {
             throw e;
           }
+        } finally {
+          loggerInstance.debug(
+            `${elapsedTime(processMessageTime)} [END] Consuming Message ${
+              message.MessageId
+            }`
+          );
         }
       }
     }
