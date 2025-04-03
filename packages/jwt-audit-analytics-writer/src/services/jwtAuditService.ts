@@ -19,9 +19,7 @@ export const jwtAuditServiceBuilder = (
 
     try {
       for (const s3key of s3keys) {
-        const startTime = Date.now();
         currentFile = s3key;
-
         const fileStream = await fileManager.get(
           config.s3Bucket,
           s3key,
@@ -29,7 +27,7 @@ export const jwtAuditServiceBuilder = (
         );
         const parsedFileStream = fileStream.pipe(ndjson.parse());
 
-        logger.info(`Processing records for file: ${s3key}`, startTime);
+        logger.info(`Processing records for file: ${s3key}`);
 
         const batchStartTime = Date.now();
         for await (const batch of batchItems<GeneratedTokenAuditDetails>(
