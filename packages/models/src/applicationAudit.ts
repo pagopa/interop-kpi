@@ -32,6 +32,7 @@ export type ApplicationAuditPhase = z.infer<typeof ApplicationAuditPhase>;
 
 export const ApplicationAuditBeginRequest = z.object({
   correlationId: z.string(),
+  spanId: z.string(),
   service: z.string(),
   serviceVersion: z.string(),
   endpoint: z.string(),

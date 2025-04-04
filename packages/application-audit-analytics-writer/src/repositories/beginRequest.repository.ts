@@ -24,6 +24,7 @@ export function beginRequestRepository(conn: DBConnection, pgp: IMain) {
     async batchInsert(events: ApplicationAuditBeginRequest[]): Promise<void> {
       try {
         const beginRequestMapping: ApplicationAuditBeginRequestMapping = {
+          span_id: (event) => event.spanId,
           correlation_id: (event) => event.correlationId,
           service: (event) => event.service,
           service_version: (event) => event.serviceVersion,
@@ -60,7 +61,7 @@ export function beginRequestRepository(conn: DBConnection, pgp: IMain) {
           config.dbSchemaName,
           beginRequestTable,
           config.mergeTableSuffix,
-          ["correlation_id", "service"]
+          ["span_id"]
         );
         await conn.none(beginRequestMergeQuery);
       } catch (error: unknown) {

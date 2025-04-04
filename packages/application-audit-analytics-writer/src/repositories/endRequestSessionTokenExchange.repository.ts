@@ -31,6 +31,7 @@ export function endRequestSessionTokenExchangeRepository(
       try {
         const endRequestSessionTokenExchangeMapping: ApplicationAuditEndRequestSessionTokenExchangeMapping =
           {
+            span_id: (event) => event.spanId,
             correlation_id: (event) => event.correlationId,
             service: (event) => event.service,
             service_version: (event) => event.serviceVersion,
@@ -73,7 +74,7 @@ export function endRequestSessionTokenExchangeRepository(
           config.dbSchemaName,
           endRequestSessionTokenExchangeTable,
           config.mergeTableSuffix,
-          ["correlation_id", "service"]
+          ["span_id"]
         );
         await conn.none(eendRequestSessionTokenExchangeMergeQuery);
       } catch (error: unknown) {

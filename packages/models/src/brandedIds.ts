@@ -22,11 +22,15 @@ export type TenantId = z.infer<typeof TenantId>;
 export const CorrelationId = z.string().brand("CorrelationId");
 export type CorrelationId = z.infer<typeof CorrelationId>;
 
+export const SpanId = z.string().brand("SpanId");
+export type SpanId = z.infer<typeof CorrelationId>;
+
 export const ClientId = z.string().uuid().brand("ClientId");
 export type ClientId = z.infer<typeof ClientId>;
 
 type IDS =
   | CorrelationId
+  | SpanId
   | EServiceId
   | AgreementId
   | DescriptorId
