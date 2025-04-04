@@ -5,12 +5,12 @@ import {
   decodeSQSEventMessageError,
   InternalError,
 } from "pagopa-interop-kpi-models";
-import { processMessage } from "../src/handlers/messageHandler.js";
+import { processBatch } from "../src/handlers/messagesHandler.js";
 import { sqsMessagesMock } from "./utils.js";
 
 describe("Message Handler tests", () => {
   const mockJwtAuditService = {
-    handleMessage: vi.fn().mockResolvedValue(undefined),
+    handleMessages: vi.fn().mockResolvedValue(undefined),
   };
 
   vi.mock("pagopa-interop-kpi-models", async () => {
@@ -37,17 +37,17 @@ describe("Message Handler tests", () => {
       };
 
       expect(() =>
-        processMessage(mockJwtAuditService)(validMessage)
+        processBatch(mockJwtAuditService)([validMessage])
       ).not.toThrowError();
 
-      expect(mockJwtAuditService.handleMessage).toHaveBeenCalledOnce();
+      expect(mockJwtAuditService.handleMessages).toHaveBeenCalledOnce();
     });
 
     it("given invalid message, method should throw an error", async () => {
       const invalidMessage = {};
 
       try {
-        await processMessage(mockJwtAuditService)(invalidMessage);
+        await processBatch(mockJwtAuditService)([invalidMessage]);
       } catch (error) {
         expect(error).toBeInstanceOf(InternalError);
         expect((error as InternalError<CommonErrorCodes>).code).toBe(
@@ -64,7 +64,7 @@ describe("Message Handler tests", () => {
       };
 
       await expect(
-        processMessage(mockJwtAuditService)(missingBodyMessage)
+        processBatch(mockJwtAuditService)([missingBodyMessage])
       ).rejects.toThrowError(
         decodeSQSEventMessageError(
           missingBodyMessage.MessageId,
@@ -81,7 +81,7 @@ describe("Message Handler tests", () => {
       };
 
       await expect(
-        processMessage(mockJwtAuditService)(emptyS3KeyMessage)
+        processBatch(mockJwtAuditService)([emptyS3KeyMessage])
       ).rejects.toThrowError(
         decodeSQSEventMessageError(
           emptyS3KeyMessage.MessageId,
@@ -98,7 +98,7 @@ describe("Message Handler tests", () => {
       };
 
       await expect(
-        processMessage(mockJwtAuditService)(emptyS3RecordsMessage)
+        processBatch(mockJwtAuditService)([emptyS3RecordsMessage])
       ).rejects.toThrowError(
         decodeSQSEventMessageError(
           emptyS3RecordsMessage.MessageId,

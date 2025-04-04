@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 
 import { createGunzip } from "zlib";
-import { FileManager, Logger, batches } from "pagopa-interop-kpi-commons";
+import { FileManager, Logger, batchItems } from "pagopa-interop-kpi-commons";
 import { config } from "../config/config.js";
 import {
   EXCLUDED_USER_AGENT,
@@ -35,7 +35,7 @@ export const albLogsAuditServiceBuilder = (
       const parsedFileStream = transformFileStream(fileStream);
 
       logger.info(`Processing records for file: ${s3key}`);
-      for await (const batch of batches<LoadBalancerLog>(
+      for await (const batch of batchItems<LoadBalancerLog>(
         LoadBalancerLogSchema,
         parsedFileStream,
         config.batchSize,

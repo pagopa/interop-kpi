@@ -103,6 +103,7 @@ export function initFileManager(
       path: string,
       logger: Logger
     ): Promise<NodeJS.ReadableStream> => {
+      const getFileS3Time = Date.now();
       logger.info(`Getting file ${path} in bucket ${bucket}`);
       try {
         const response = await client.send(
@@ -111,6 +112,11 @@ export function initFileManager(
             Key: path,
           })
         );
+        logger.debug(
+          `[END] Getting file ${path} in bucket ${bucket}`,
+          getFileS3Time
+        );
+
         const body = response.Body;
         if (!body) {
           throw fileManagerGetError(bucket, path, "File is empty");

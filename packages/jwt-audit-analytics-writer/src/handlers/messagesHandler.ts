@@ -4,20 +4,19 @@ import { JwtAuditService } from "../services/jwtAuditService.js";
 import { config } from "../config/config.js";
 import { errorMapper } from "../utilities/errorMapper.js";
 
-export function processMessage(
+export function processBatch(
   jwtAuditService: JwtAuditService
-): (message: SQS.Message) => Promise<void> {
-  return async (message: SQS.Message): Promise<void> => {
-    const decodedMessage = decodeSQSEventMessage(message);
+): (messages: SQS.Message[]) => Promise<void> {
+  return async (messages: SQS.Message[]): Promise<void> => {
+    const s3Keys = messages.map((msg) => decodeSQSEventMessage(msg));
 
     const loggerInstance = logger({
       serviceName: config.serviceName,
       correlationId: generateId<CorrelationId>(),
-      messageId: message.MessageId,
     });
 
     try {
-      await jwtAuditService.handleMessage(decodedMessage, loggerInstance);
+      await jwtAuditService.handleMessages(s3Keys, loggerInstance);
     } catch (error) {
       throw errorMapper(error, loggerInstance);
     }

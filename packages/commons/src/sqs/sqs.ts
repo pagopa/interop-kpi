@@ -1,18 +1,20 @@
 /* eslint-disable no-constant-condition */
 /* eslint-disable sonarjs/cognitive-complexity */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable functional/immutable-data */
 import {
   SQSClient,
   ReceiveMessageCommand,
   DeleteMessageCommand,
   Message,
   SQSClientConfig,
+  DeleteMessageBatchCommand,
 } from "@aws-sdk/client-sqs";
 import { InternalError } from "pagopa-interop-kpi-models";
 import { match } from "ts-pattern";
 import { genericLogger, Logger } from "../logging/index.js";
 import { SQSConsumerConfig } from "../config/consumerConfig.js";
 import { validateSqsMessage } from "./messageValidation.js";
-import { elapsedTime } from "./utils.js";
 
 const serializeError = (error: unknown): string => {
   try {
@@ -48,14 +50,14 @@ const processQueue = async (
   });
 
   do {
-    const startTime = Date.now();
+    const receiveMessageStartTime = Date.now();
     const { Messages } = await sqsClient.send(command);
 
     if (Messages?.length) {
-      loggerInstance.debug(`${elapsedTime(startTime)} Receive Messages`);
+      loggerInstance.debug(`Receive Messages`, receiveMessageStartTime);
 
       for (const message of Messages) {
-        const processMessageTime = Date.now();
+        const processMessageStartTime = Date.now();
         loggerInstance.debug(`[START] Consuming Message ${message.MessageId}`);
 
         if (!message.ReceiptHandle) {
@@ -77,25 +79,22 @@ const processQueue = async (
             .with("InvalidEvent", async () => {
               await deleteMessage(sqsClient, config.queueUrl, receiptHandle);
               loggerInstance.debug(
-                `${elapsedTime(
-                  processMessageTime
-                )} [END] Delete Invalid Message ${message.MessageId}`
+                `[END] Delete Invalid Message ${message.MessageId}`,
+                processMessageStartTime
               );
             })
             .with("ValidEvent", async () => {
               await consumerHandler(message);
               loggerInstance.debug(
-                `${elapsedTime(processMessageTime)} [END] Process Message ${
-                  message.MessageId
-                }`
+                `[END] Process Message ${message.MessageId}`,
+                processMessageStartTime
               );
 
-              const deleteMessageTime = Date.now();
+              const deleteMessageStartTime = Date.now();
               await deleteMessage(sqsClient, config.queueUrl, receiptHandle);
               loggerInstance.debug(
-                `${elapsedTime(deleteMessageTime)} [END] Delete Message ${
-                  message.MessageId
-                }`
+                `[END] Delete Message ${message.MessageId}`,
+                deleteMessageStartTime
               );
             })
             .exhaustive();
@@ -110,9 +109,8 @@ const processQueue = async (
           }
         } finally {
           loggerInstance.debug(
-            `${elapsedTime(processMessageTime)} [END] Consuming Message ${
-              message.MessageId
-            }`
+            `[END] Consuming Message ${message.MessageId}`,
+            processMessageStartTime
           );
         }
       }
@@ -158,6 +156,130 @@ export const deleteMessage = async (
   });
 
   await sqsClient.send(deleteCommand);
+};
+
+export const runBatchConsumer = async (
+  sqsClient: SQSClient,
+  config: { serviceName: string; queueUrl: string } & SQSConsumerConfig,
+  consumerBatchHandler: (messages: Message[]) => Promise<void>,
+  loggerInstance: Logger
+): Promise<void> => {
+  loggerInstance.info(`Batch consumer processing on Queue: ${config.queueUrl}`);
+
+  try {
+    await processBatchQueue(
+      sqsClient,
+      config,
+      consumerBatchHandler,
+      loggerInstance
+    );
+  } catch (e) {
+    loggerInstance.error(
+      `Generic error occurs processing Batch Queue: ${
+        config.queueUrl
+      }. Details: ${serializeError(e)}`
+    );
+    await processExit();
+  }
+
+  loggerInstance.info(
+    `Queue processing Completed for Queue: ${config.queueUrl}`
+  );
+};
+
+const processBatchQueue = async (
+  sqsClient: SQSClient,
+  config: { queueUrl: string } & SQSConsumerConfig,
+  consumerBatchHandler: (messages: Message[]) => Promise<void>,
+  loggerInstance: Logger
+): Promise<void> => {
+  const command = new ReceiveMessageCommand({
+    QueueUrl: config.queueUrl,
+    MaxNumberOfMessages: config.maxNumberOfMessages,
+    MessageAttributeNames: ["All"],
+    WaitTimeSeconds: config.waitTimeSeconds,
+    VisibilityTimeout: config.visibilityTimeout,
+  });
+
+  do {
+    const receiveMessagesStartTime = Date.now();
+    const { Messages } = await sqsClient.send(command);
+
+    if (Messages?.length) {
+      const processMessageStartTime = Date.now();
+      loggerInstance.debug(`Receive Batch Messages`, receiveMessagesStartTime);
+
+      const validMessages: Message[] = [];
+      const invalidMessages: Message[] = [];
+      for (const message of Messages) {
+        const result = validateSqsMessage(message);
+        await match(result)
+          .with("InvalidEvent", async () => {
+            invalidMessages.push(message);
+          })
+          .with("ValidEvent", async () => {
+            validMessages.push(message);
+          })
+          .exhaustive();
+      }
+
+      if (invalidMessages.length) {
+        await deleteBatchMessages(sqsClient, config.queueUrl, invalidMessages);
+        loggerInstance.debug(
+          `[END] Delete Batch Invalid Messages`,
+          processMessageStartTime
+        );
+      }
+
+      if (validMessages.length) {
+        try {
+          await consumerBatchHandler(validMessages);
+          loggerInstance.debug(
+            `[END] Process Batch Messages`,
+            processMessageStartTime
+          );
+          const deleteMessageStartTime = Date.now();
+          await deleteBatchMessages(sqsClient, config.queueUrl, validMessages);
+          loggerInstance.debug(
+            `[END] Delete Batch Messages`,
+            deleteMessageStartTime
+          );
+        } catch (batchError) {
+          loggerInstance.error(
+            `Error processing Batch Messages: ${serializeError(batchError)}`
+          );
+        } finally {
+          loggerInstance.debug(
+            `[END] Consuming Batch Messages ${JSON.stringify(
+              Messages.map(({ MessageId }) => MessageId)
+            )}`,
+            processMessageStartTime
+          );
+        }
+      }
+    }
+  } while (true);
+};
+
+export const deleteBatchMessages = async (
+  sqsClient: SQSClient,
+  queueUrl: string,
+  messages: Message[]
+): Promise<void> => {
+  const entries = messages
+    .filter((msg) => msg.ReceiptHandle && msg.MessageId)
+    .map((msg) => ({
+      Id: msg.MessageId!,
+      ReceiptHandle: msg.ReceiptHandle!,
+    }));
+
+  if (entries.length) {
+    const deleteBatchCommand = new DeleteMessageBatchCommand({
+      QueueUrl: queueUrl,
+      Entries: entries,
+    });
+    await sqsClient.send(deleteBatchCommand);
+  }
 };
 
 export { SQSClient };

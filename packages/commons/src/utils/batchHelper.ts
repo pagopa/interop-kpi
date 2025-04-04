@@ -15,7 +15,7 @@ import { Logger } from "../index.js";
  * @param logger - Logger instance.
  * @returns An async generator yielding batches (arrays) of parsed records of type TSchema.
  */
-export async function* batches<TSchema>(
+export async function* batchItems<TSchema>(
   schema: ZodSchema<TSchema>,
   source: AsyncIterable<unknown>,
   batchSize: number,

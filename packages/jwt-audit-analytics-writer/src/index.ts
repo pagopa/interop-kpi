@@ -9,7 +9,7 @@ import {
 } from "pagopa-interop-kpi-commons";
 import { JwtDbTable } from "pagopa-interop-kpi-models";
 import { config } from "./config/config.js";
-import { processMessage } from "./handlers/messageHandler.js";
+import { processBatch } from "./handlers/messagesHandler.js";
 import {
   JwtAuditService,
   jwtAuditServiceBuilder,
@@ -58,7 +58,7 @@ const jwtAuditService: JwtAuditService = jwtAuditServiceBuilder(
   initFileManager(config)
 );
 
-await SQS.runConsumer(
+await SQS.runBatchConsumer(
   sqsClient,
   {
     queueUrl: config.sqsNotificationEndpoint,
@@ -67,6 +67,6 @@ await SQS.runConsumer(
     visibilityTimeout: config.visibilityTimeout,
     serviceName: config.serviceName,
   },
-  processMessage(jwtAuditService),
+  processBatch(jwtAuditService),
   logger({ serviceName: config.serviceName })
 );
