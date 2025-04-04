@@ -20,6 +20,7 @@ export async function processBatch<
   let totalMsgsProcessed = 0;
 
   try {
+    const batchInsertionStartTime = Date.now();
     for (const batch of batchMessages<TSchema>(
       messages,
       config.msgsInsertPerBatch
@@ -36,16 +37,23 @@ export async function processBatch<
     }
 
     logger.info(
-      `Staging insertion completed for ${totalMsgsProcessed} of total ${messages.length} messages for ${description} batch.`
+      `Staging insertion completed for ${totalMsgsProcessed} of total ${messages.length} messages for ${description} batch.`,
+      batchInsertionStartTime
     );
 
+    const batchMergeStartTime = Date.now();
     await repository.mergeStagingToTarget();
     logger.info(
-      `Staging data merged into target table for ${description} batch.`
+      `Staging data merged into target table for ${description} batch.`,
+      batchMergeStartTime
     );
 
+    const batchCleanUpStartTime = Date.now();
     await repository.cleanStaging();
-    logger.info(`Staging cleanup completed for ${description} batch.`);
+    logger.info(
+      `Staging cleanup completed for ${description} batch.`,
+      batchCleanUpStartTime
+    );
   } catch (error: unknown) {
     if (totalMsgsProcessed > 0) {
       await repository.cleanStaging();
