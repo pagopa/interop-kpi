@@ -70,7 +70,7 @@ export const jwtAuditServiceBuilder = (
     } catch (error: unknown) {
       if (totalRecordsProcessed > 0) {
         await dbService.cleanStaging();
-        logger.warn(`Performed staging cleanup due batch error.`);
+        logger.warn(`Performed staging cleanup due to a batch error.`);
       }
       logger.warn(
         `Error processing batch. Current file: ${currentFile} - Files: ${JSON.stringify(
