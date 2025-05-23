@@ -7,8 +7,8 @@ import {
 } from "pagopa-interop-kpi-commons";
 import { generateId, genericInternalError } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
-import { compressJson } from "../utilities/compression.js";
 import { groupMessagesByDate } from "../utilities/groupMessagesByDate.js";
+import { compressJson } from "../utilities/compression.js";
 
 export async function handleMessages(
   messages: KafkaMessage[],
@@ -20,11 +20,15 @@ export async function handleMessages(
 
     for (const [dateKey, groupMessages] of groupedMessages.entries()) {
       const [year, month, day] = dateKey.split("-");
-      const jsonString = JSON.stringify(groupMessages);
-      const compressedBuffer = await compressJson(jsonString);
+
+      const ndjsonString = groupMessages
+        .map((msg) => JSON.stringify(msg))
+        .join("\n");
+
+      const compressedBuffer = await compressJson(ndjsonString);
 
       const time = formatTimehhmmss(new Date());
-      const fileName = `${year}${month}${day}_${time}_${generateId()}.json.gz`;
+      const fileName = `${year}${month}${day}_${time}_${generateId()}.ndjson.gz`;
       const filePath = `year=${year}/month=${month}/day=${day}`;
 
       const s3File = {
