@@ -3,7 +3,8 @@ CREATE SCHEMA IF NOT EXISTS jwt;
 CREATE TABLE IF NOT EXISTS jwt.generated_token_audit (
     jwt_id VARCHAR(36) PRIMARY KEY,
     correlation_id VARCHAR(36) NOT NULL,
-    issued_at TIMESTAMPTZ NOT NULL,
+    issued_at BIGINT NOT NULL,
+    issued_at_tz TIMESTAMPTZ NOT NULL,
     client_id VARCHAR(36) NOT NULL,
     organization_id VARCHAR(36) NOT NULL,
     agreement_id VARCHAR(36) NOT NULL,
@@ -15,21 +16,25 @@ CREATE TABLE IF NOT EXISTS jwt.generated_token_audit (
     key_id VARCHAR(255) NOT NULL,
     audience VARCHAR(255) NOT NULL,
     subject VARCHAR(255) NOT NULL,
-    not_before TIMESTAMPTZ NOT NULL,
-    expiration_time TIMESTAMPTZ NOT NULL,
+    not_before BIGINT NOT NULL,
+    not_before_tz TIMESTAMPTZ NOT NULL,
+    expiration_time BIGINT NOT NULL,
+    expiration_time_tz TIMESTAMPTZ NOT NULL,
     issuer VARCHAR(255) NOT NULL,
     client_assertion_jwt_id VARCHAR(36) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS jwt.client_assertion_audit (
     jwt_id VARCHAR(36),
-    issued_at TIMESTAMPTZ NOT NULL,
+    issued_at BIGINT NOT NULL,
+    issued_at_tz TIMESTAMPTZ NOT NULL,
     algorithm VARCHAR(50) NOT NULL,
     key_id VARCHAR(255) NOT NULL,
     issuer VARCHAR(255) NOT NULL,
     subject VARCHAR(36) NOT NULL,
     audience VARCHAR(255) NOT NULL,
-    expiration_time TIMESTAMPTZ NOT NULL,
+    expiration_time BIGINT NOT NULL,
+    expiration_time_tz TIMESTAMPTZ NOT NULL,
     generated_token_jwt_id VARCHAR(36) PRIMARY KEY,
     CONSTRAINT fk_generated_token FOREIGN KEY (generated_token_jwt_id) REFERENCES jwt.generated_token_audit(jwt_id)
 );
@@ -83,7 +88,8 @@ CREATE TABLE IF NOT EXISTS application.begin_request_audit (
     node_ip VARCHAR(255) NOT NULL,
     pod_name VARCHAR(255) NOT NULL,
     uptime_seconds BIGINT NOT NULL,
-    timestamp TIMESTAMPTZ NOT NULL,
+    timestamp BIGINT NOT NULL,
+    timestamp_tz TIMESTAMPTZ NOT NULL,
     amazon_trace_id VARCHAR(255)
 );
 
@@ -99,7 +105,8 @@ CREATE TABLE IF NOT EXISTS application.end_request_audit (
     node_ip VARCHAR(255) NOT NULL,
     pod_name VARCHAR(255) NOT NULL,
     uptime_seconds BIGINT NOT NULL,
-    timestamp TIMESTAMPTZ NOT NULL,
+    timestamp BIGINT NOT NULL,
+    timestamp_tz TIMESTAMPTZ NOT NULL,
     amazon_trace_id VARCHAR(255),
     organization_id VARCHAR(36),
     http_response_status INTEGER NOT NULL,
@@ -119,7 +126,8 @@ CREATE TABLE IF NOT EXISTS application.end_request_session_token_exchange_audit 
     node_ip VARCHAR(255) NOT NULL,
     pod_name VARCHAR(255) NOT NULL,
     uptime_seconds BIGINT NOT NULL,
-    timestamp TIMESTAMPTZ NOT NULL,
+    timestamp BIGINT NOT NULL,
+    timestamp_tz TIMESTAMPTZ NOT NULL,
     amazon_trace_id VARCHAR(255),
     organization_id VARCHAR(36),
     http_response_status INTEGER NOT NULL,
@@ -139,7 +147,8 @@ CREATE TABLE IF NOT EXISTS application.end_request_auth_server_audit (
     node_ip VARCHAR(255) NOT NULL,
     pod_name VARCHAR(255) NOT NULL,
     uptime_seconds BIGINT NOT NULL,
-    timestamp TIMESTAMPTZ NOT NULL,
+    timestamp BIGINT NOT NULL,
+    timestamp_tz TIMESTAMPTZ NOT NULL,
     amazon_trace_id VARCHAR(255),
     organization_id VARCHAR(36),
     http_response_status INTEGER NOT NULL,

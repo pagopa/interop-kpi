@@ -24,13 +24,15 @@ export function clientAssertionRepository(conn: DBConnection) {
       try {
         const clientAssertionMapping: ClientAssertionMapping = {
           jwt_id: (record) => record.clientAssertion.jwtId,
-          issued_at: (record) => new Date(record.clientAssertion.issuedAt),
+          issued_at: (record) => record.clientAssertion.issuedAt,
+          issued_at_tz: (record) => new Date(record.clientAssertion.issuedAt),
           algorithm: (record) => record.clientAssertion.algorithm,
           key_id: (record) => record.clientAssertion.keyId,
           issuer: (record) => record.clientAssertion.issuer,
           subject: (record) => record.clientAssertion.subject,
           audience: (record) => record.clientAssertion.audience,
-          expiration_time: (record) =>
+          expiration_time: (record) => record.clientAssertion.expirationTime,
+          expiration_time_tz: (record) =>
             new Date(record.clientAssertion.expirationTime),
           generated_token_jwt_id: (record) => record.jwtId,
         };
