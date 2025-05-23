@@ -18,19 +18,24 @@ import {
 const pipelineAsync = promisify(pipeline);
 
 describe("handleMessages", () => {
-  it("should compress successfully a valid JSON string", async () => {
-    const jsonString = JSON.stringify(validAuditEvent);
-    const compressedBuffer = await compressJson(jsonString);
+  it("should compress and decompress a valid NDJSON string", async () => {
+    const ndjsonString = [
+      JSON.stringify(validAuditEvent),
+      JSON.stringify(validAuditEvent),
+    ].join("\n");
+
+    const compressedBuffer = await compressJson(ndjsonString);
     expect(Buffer.isBuffer(compressedBuffer)).toBe(true);
 
     const gunzip = createGunzip();
     let decompressed = "";
     gunzip.on("data", (chunk) => (decompressed += chunk.toString()));
     await pipelineAsync(Readable.from(compressedBuffer), gunzip);
-    expect(decompressed).toBe(jsonString);
+
+    expect(decompressed).toBe(ndjsonString);
   });
 
-  it("should process a single valid message and store on s3bucket with valid name", async () => {
+  it("should process a single valid message and store on s3bucket with valid name and NDJSON content", async () => {
     const mockStoreBytes = vi.fn().mockResolvedValue("mocked-s3-key");
     fileManager.storeBytes = mockStoreBytes;
 
@@ -52,7 +57,17 @@ describe("handleMessages", () => {
 
     expect(s3File.path).toBe(`year=${year}/month=${month}/day=${day}`);
     expect(s3File.name).toContain(`${year}${month}${day}_${time}_`);
+    expect(s3File.name).toMatch(/\.ndjson\.gz$/);
     expect(mockStoreBytes).toHaveBeenCalledWith(s3File, genericLogger);
+
+    const gunzip = createGunzip();
+    let decompressed = "";
+    gunzip.on("data", (chunk) => (decompressed += chunk.toString()));
+    await pipelineAsync(Readable.from(s3File.content), gunzip);
+
+    const line = decompressed.trim();
+    const parsed = JSON.parse(line);
+    expect(parsed).toEqual(validAuditEvent);
   });
 
   it("should process an empty messages array", async () => {
@@ -85,15 +100,19 @@ describe("handleMessages", () => {
       genericLogger
     );
 
+    expect(mockStoreBytes).toHaveBeenCalledTimes(1);
     const s3File = mockStoreBytes.mock.calls[0][0];
+
     const gunzip = createGunzip();
     let decompressed = "";
     gunzip.on("data", (chunk) => (decompressed += chunk.toString()));
     await pipelineAsync(Readable.from(s3File.content), gunzip);
-    const parsed = JSON.parse(decompressed);
+
+    const lines = decompressed.split("\n").filter(Boolean);
+    const parsed = lines.map((line) => JSON.parse(line));
+
     expect(Array.isArray(parsed)).toBe(true);
     expect(parsed.length).toBe(2);
-    expect(mockStoreBytes).toHaveBeenCalledTimes(1);
   });
 
   it("should process multiple messages with different dates and store each group correctly", async () => {
