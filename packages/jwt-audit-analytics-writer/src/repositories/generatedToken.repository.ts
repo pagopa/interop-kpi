@@ -25,7 +25,8 @@ export function generatedTokenRepository(conn: DBConnection) {
         const generatedTokenMapping: GeneratedTokenMapping = {
           jwt_id: (record) => record.jwtId,
           correlation_id: (record) => record.correlationId,
-          issued_at: (record) => new Date(record.issuedAt),
+          issued_at: (record) => record.issuedAt,
+          issued_at_tz: (record) => new Date(record.issuedAt),
           client_id: (record) => record.clientId,
           organization_id: (record) => record.organizationId,
           agreement_id: (record) => record.agreementId,
@@ -37,8 +38,10 @@ export function generatedTokenRepository(conn: DBConnection) {
           key_id: (record) => record.keyId,
           audience: (record) => record.audience,
           subject: (record) => record.subject,
-          not_before: (record) => new Date(record.notBefore),
-          expiration_time: (record) => new Date(record.expirationTime),
+          not_before: (record) => record.notBefore,
+          not_before_tz: (record) => new Date(record.notBefore),
+          expiration_time: (record) => record.expirationTime,
+          expiration_time_tz: (record) => new Date(record.expirationTime),
           issuer: (record) => record.issuer,
           client_assertion_jwt_id: (record) => record.clientAssertion.jwtId,
         };

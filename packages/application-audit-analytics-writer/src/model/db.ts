@@ -18,7 +18,8 @@ export const ApplicationAuditBeginRequestSchema = z.object({
   node_ip: z.string(),
   pod_name: z.string(),
   uptime_seconds: z.number(),
-  timestamp: z.date(),
+  timestamp: z.number().int(),
+  timestamp_tz: z.date(),
   amazon_trace_id: z.string().optional(),
 });
 export type ApplicationAuditBeginRequestSchema = z.infer<

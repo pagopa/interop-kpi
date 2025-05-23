@@ -3,13 +3,15 @@ import { GeneratedTokenAuditDetails } from "./domain/models.js";
 
 export const ClientAssertionSchema = z.object({
   jwt_id: z.string(),
-  issued_at: z.date(),
+  issued_at: z.number().int(),
+  issued_at_tz: z.date(),
   algorithm: z.string(),
   key_id: z.string(),
   issuer: z.string(),
   subject: z.string(),
   audience: z.string(),
-  expiration_time: z.date(),
+  expiration_time: z.number().int(),
+  expiration_time_tz: z.date(),
   generated_token_jwt_id: z.string(),
 });
 export type ClientAssertionSchema = z.infer<typeof ClientAssertionSchema>;
@@ -17,7 +19,8 @@ export type ClientAssertionSchema = z.infer<typeof ClientAssertionSchema>;
 export const GeneratedTokenSchema = z.object({
   jwt_id: z.string(),
   correlation_id: z.string(),
-  issued_at: z.date(),
+  issued_at: z.number().int(),
+  issued_at_tz: z.date(),
   client_id: z.string(),
   organization_id: z.string(),
   agreement_id: z.string(),
@@ -29,8 +32,10 @@ export const GeneratedTokenSchema = z.object({
   key_id: z.string(),
   audience: z.string(),
   subject: z.string(),
-  not_before: z.date(),
-  expiration_time: z.date(),
+  not_before: z.number().int(),
+  not_before_tz: z.date(),
+  expiration_time: z.number().int(),
+  expiration_time_tz: z.date(),
   issuer: z.string(),
   client_assertion_jwt_id: z.string(),
 });
