@@ -12,7 +12,7 @@ export const ApplicationAuditPhase = z.enum([
 
 export const applicationAuditService = {
   BFF: "backend-for-frontend",
-  AUTH_SERVER: "auth-server",
+  AUTH_SERVER: "authorization-server",
 } as const;
 
 export const ApplicationAuditService = z.enum([
