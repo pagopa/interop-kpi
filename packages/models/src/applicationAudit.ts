@@ -12,12 +12,12 @@ export const ApplicationAuditPhase = z.enum([
 
 export const applicationAuditService = {
   BFF: "backend-for-frontend",
-  AUDIT_SERVER: "auth-server",
+  AUTH_SERVER: "authorization-server",
 } as const;
 
 export const ApplicationAuditService = z.enum([
   applicationAuditService.BFF,
-  applicationAuditService.AUDIT_SERVER,
+  applicationAuditService.AUTH_SERVER,
 ]);
 
 export const applicationAuditEndppoint = {
@@ -62,7 +62,7 @@ export type ApplicationAuditEndRequest = z.infer<
 
 export const ApplicationAuditEndRequestAuthServer =
   ApplicationAuditEndRequest.omit({ userId: true }).extend({
-    service: z.literal(applicationAuditService.AUDIT_SERVER),
+    service: z.literal(applicationAuditService.AUTH_SERVER),
     clientId: z.string().optional(),
   });
 export type ApplicationAuditEndRequestAuthServer = z.infer<
@@ -107,6 +107,6 @@ export function isEndRequestAuthServer(
 ): data is ApplicationAuditEndRequestAuthServer {
   return (
     data.phase === applicationAuditPhase.END_REQUEST &&
-    data.service === applicationAuditService.AUDIT_SERVER
+    data.service === applicationAuditService.AUTH_SERVER
   );
 }

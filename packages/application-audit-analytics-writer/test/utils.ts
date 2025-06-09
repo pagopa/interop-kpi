@@ -130,7 +130,7 @@ export function getMockApplicationAudits<T>(
       {
         clientId: generateId(),
       },
-      applicationAuditService.AUDIT_SERVER
+      applicationAuditService.AUTH_SERVER
     )
   );
 
