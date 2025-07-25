@@ -153,5 +153,6 @@ CREATE TABLE IF NOT EXISTS application.end_request_auth_server_audit (
     organization_id VARCHAR(36),
     http_response_status INTEGER NOT NULL,
     execution_time_ms BIGINT NOT NULL,
-    client_id VARCHAR(36)
+    client_id VARCHAR(36),
+    client_kind VARCHAR(255)
 );

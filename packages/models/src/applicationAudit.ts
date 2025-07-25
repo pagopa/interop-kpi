@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ClientKind } from "./authorization.js";
 
 export const applicationAuditPhase = {
   BEGIN_REQUEST: "BEGIN_REQUEST",
@@ -64,6 +65,7 @@ export const ApplicationAuditEndRequestAuthServer =
   ApplicationAuditEndRequest.omit({ userId: true }).extend({
     service: z.literal(applicationAuditService.AUTH_SERVER),
     clientId: z.string().optional(),
+    clientKind: ClientKind.optional(),
   });
 export type ApplicationAuditEndRequestAuthServer = z.infer<
   typeof ApplicationAuditEndRequestAuthServer

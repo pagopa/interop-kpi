@@ -45,6 +45,7 @@ export function endRequestAuthServerRepository(conn: DBConnection, pgp: IMain) {
             http_response_status: (event) => event.httpResponseStatus,
             execution_time_ms: (event) => event.executionTimeMs,
             client_id: (event) => event.clientId,
+            client_kind: (event) => event.clientKind,
           };
 
         const endRequestAuthServerColumnSet =
