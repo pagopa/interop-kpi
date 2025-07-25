@@ -55,6 +55,7 @@ export const ApplicationAuditEndRequestAuthServerSchema =
     user_id: true,
   }).extend({
     client_id: z.string().optional(),
+    client_kind: z.string().optional(),
   });
 export type ApplicationAuditEndRequestAuthServerSchema = z.infer<
   typeof ApplicationAuditEndRequestAuthServerSchema
