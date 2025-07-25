@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { ClientKind } from "./authorization.js";
 
 export const applicationAuditPhase = {
   BEGIN_REQUEST: "BEGIN_REQUEST",
@@ -28,6 +27,18 @@ export const applicationAuditEndppoint = {
 export const ApplicationAuditEndppoint = z.enum([
   applicationAuditEndppoint.SESSION_TOKENS,
 ]);
+
+export const applicationAuditClientKind = {
+  consumer: "CONSUMER",
+  api: "API",
+} as const;
+export const ApplicationAuditClientKind = z.enum([
+  Object.values(applicationAuditClientKind)[0],
+  ...Object.values(applicationAuditClientKind).slice(1),
+]);
+export type ApplicationAuditClientKind = z.infer<
+  typeof ApplicationAuditClientKind
+>;
 
 export type ApplicationAuditPhase = z.infer<typeof ApplicationAuditPhase>;
 
@@ -65,7 +76,7 @@ export const ApplicationAuditEndRequestAuthServer =
   ApplicationAuditEndRequest.omit({ userId: true }).extend({
     service: z.literal(applicationAuditService.AUTH_SERVER),
     clientId: z.string().optional(),
-    clientKind: ClientKind.optional(),
+    clientKind: ApplicationAuditClientKind.optional(),
   });
 export type ApplicationAuditEndRequestAuthServer = z.infer<
   typeof ApplicationAuditEndRequestAuthServer
