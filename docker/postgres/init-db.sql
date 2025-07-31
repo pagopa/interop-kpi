@@ -2,7 +2,7 @@ CREATE SCHEMA IF NOT EXISTS jwt;
 
 CREATE TABLE IF NOT EXISTS jwt.generated_token_audit (
     jwt_id VARCHAR(36) PRIMARY KEY,
-    correlation_id VARCHAR(36) NOT NULL,
+    correlation_id VARCHAR(36),
     issued_at BIGINT NOT NULL,
     issued_at_tz TIMESTAMPTZ NOT NULL,
     client_id VARCHAR(36) NOT NULL,

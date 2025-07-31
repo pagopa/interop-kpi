@@ -25,7 +25,7 @@ export type ClientAssertionAuditDetails = z.infer<
 
 export const GeneratedTokenAuditDetails = z.object({
   jwtId: z.string(),
-  correlationId: z.string(),
+  correlationId: z.string().optional(),
   issuedAt: z.number(),
   clientId: ClientId,
   organizationId: TenantId,
