@@ -18,7 +18,7 @@ export type ClientAssertionSchema = z.infer<typeof ClientAssertionSchema>;
 
 export const GeneratedTokenSchema = z.object({
   jwt_id: z.string(),
-  correlation_id: z.string(),
+  correlation_id: z.string().optional(),
   issued_at: z.number().int(),
   issued_at_tz: z.date(),
   client_id: z.string(),
