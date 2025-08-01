@@ -67,7 +67,7 @@ export function getMockJwtAudits(n: number): GeneratedTokenAuditDetails[] {
 }
 
 export const getMockJwtAudit = (): GeneratedTokenAuditDetails => {
-  const correlationId = undefined;
+  const correlationId = generateId();
   const eserviceId = generateId<EServiceId>();
   const descriptorId = generateId<DescriptorId>();
   const agreementId = generateId<AgreementId>();
