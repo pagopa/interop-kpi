@@ -34,8 +34,7 @@ export const jwtAuditServiceBuilder = (
           tokenAuditSchema,
           parsedFileStream,
           config.batchSize,
-          s3key,
-          logger
+          s3key
         )) {
           await dbService.insertRecordsToStaging(batch);
           totalRecordsProcessed += batch.length;

@@ -103,34 +103,30 @@ describe("JWT Audit Service tests", () => {
       expect(dbService.cleanStaging).not.toHaveBeenCalled();
     });
 
-    it("should call the logger for each invalid record, return the correct number of batches executed, and process the correct total number of valid records", async () => {
+    it("should throw an error when invalid records are encountered", async () => {
       const validRecords = getMockJwtAudits(5);
       const invalidRecords = Array.from({ length: 3 }, () => ({}));
       const allRecords: unknown[] = [...validRecords, ...invalidRecords];
       const source: AsyncIterable<unknown> = Readable.from(allRecords);
 
-      const parsingRecordErrorSpy = vi.spyOn(genericLogger, "warn");
+      // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+      const process = async () => {
+        // eslint-disable-next-line functional/no-let
+        let totalRecordsProcessed = 0;
 
-      // eslint-disable-next-line functional/no-let
-      let totalRecordsProcessed = 0;
+        for await (const batch of batchItems(
+          tokenAuditSchema,
+          source,
+          2,
+          "s3key"
+        )) {
+          totalRecordsProcessed += batch.length;
+        }
 
-      const batchesIteration: unknown[][] = [];
+        expect(totalRecordsProcessed).toBe(0);
+      };
 
-      for await (const batch of batchItems(
-        tokenAuditSchema,
-        source,
-        2,
-        "s3key",
-        genericLogger
-      )) {
-        // eslint-disable-next-line functional/immutable-data
-        batchesIteration.push(batch);
-        totalRecordsProcessed += batch.length;
-      }
-
-      expect(totalRecordsProcessed).toBe(5);
-      expect(batchesIteration.length).toBe(3);
-      expect(parsingRecordErrorSpy).toHaveBeenCalledTimes(3);
+      await expect(process()).rejects.toThrow("Invalid record for file");
     });
   });
 });

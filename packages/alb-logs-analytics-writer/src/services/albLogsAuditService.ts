@@ -39,8 +39,7 @@ export const albLogsAuditServiceBuilder = (
         LoadBalancerLogSchema,
         parsedFileStream,
         config.batchSize,
-        s3key,
-        logger
+        s3key
       )) {
         const filteredBatch = batch.filter(
           (record) => record.user_agent !== EXCLUDED_USER_AGENT

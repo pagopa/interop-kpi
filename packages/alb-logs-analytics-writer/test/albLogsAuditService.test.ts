@@ -137,20 +137,21 @@ describe("ALB Logs Audit Service", () => {
       LoadBalancerLogArraySchema.safeParse(transformedLogs);
     expect(loadBalancerParsed.success).toBeTruthy();
   });
-  it("should skip invalid records but continue processing valid ones", async () => {
+  it("should throw an error when invalid records are present in the file", async () => {
     const s3Key = "logs/invalid.gz";
 
     vi.spyOn(fileManager, "get").mockResolvedValue(
       createValidGzipStream(invalidEntries)
     );
 
-    await expect(
-      service.handleMessage(s3Key, genericLogger)
-    ).resolves.not.toThrow();
+    await expect(service.handleMessage(s3Key, genericLogger)).rejects.toThrow(
+      "Invalid record for file"
+    );
 
-    expect(dbService.insertRecordsToStaging).toHaveBeenCalledTimes(1);
-    expect(dbService.mergeStagingToTarget).toHaveBeenCalled();
+    expect(dbService.insertRecordsToStaging).not.toHaveBeenCalled();
+    expect(dbService.mergeStagingToTarget).not.toHaveBeenCalled();
   });
+
   it("should process all the records if all the file is well formed", async () => {
     vi.spyOn(fileManager, "get").mockResolvedValue(
       createValidGzipStream(validLogEntries)
@@ -169,8 +170,7 @@ describe("ALB Logs Audit Service", () => {
       LoadBalancerLogSchema,
       parsedFileStream,
       2,
-      "s3key",
-      genericLogger
+      "s3key"
     )) {
       // eslint-disable-next-line functional/immutable-data
       batchesIteration.push(batch);
@@ -180,29 +180,33 @@ describe("ALB Logs Audit Service", () => {
     expect(totalRecordsProcessed).toBe(5);
     expect(batchesIteration.length).toBe(3); // with batch 2, it takes 3 iterations;
   });
-  it("should process only the correct entries", async () => {
+  it("should throw an error when invalid entries are encountered in the stream", async () => {
     vi.spyOn(fileManager, "get").mockResolvedValue(
-      createValidGzipStream(invalidEntries)
+      createValidGzipStream(invalidEntries) // Contains both valid and invalid records
     );
+
     const fileStream = (
       await fileManager.get(config.s3Bucket, "s3Key", genericLogger)
     ).pipe(createGunzip());
+
     const parsedFileStream = transformFileStream(fileStream);
 
-    // eslint-disable-next-line functional/no-let
-    let totalRecordsProcessed = 0;
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const process = async () => {
+      // eslint-disable-next-line functional/no-let
+      let totalRecordsProcessed = 0;
 
-    for await (const batch of batchItems(
-      LoadBalancerLogSchema,
-      parsedFileStream,
-      2,
-      "s3key",
-      genericLogger
-    )) {
-      // eslint-disable-next-line functional/immutable-data
-      totalRecordsProcessed += batch.length;
-    }
+      for await (const batch of batchItems(
+        LoadBalancerLogSchema,
+        parsedFileStream,
+        2,
+        "s3key"
+      )) {
+        totalRecordsProcessed += batch.length;
+      }
 
-    expect(totalRecordsProcessed).toBe(2); // number of correct line on invalidEntries;
+      expect(totalRecordsProcessed).toBe(0);
+    };
+    await expect(process()).rejects.toThrow("Invalid record for file");
   });
 });
