@@ -1,5 +1,5 @@
+import { genericInternalError } from "pagopa-interop-kpi-models";
 import { ZodSchema } from "zod";
-import { Logger } from "../index.js";
 
 /**
  * Async generator that batches records from an asynchronous iterable.
@@ -19,8 +19,7 @@ export async function* batchItems<TSchema>(
   schema: ZodSchema<TSchema>,
   source: AsyncIterable<unknown>,
   batchSize: number,
-  fileName: string,
-  logger: Logger
+  fileName: string
 ): AsyncGenerator<TSchema[]> {
   // eslint-disable-next-line functional/no-let
   let batch: TSchema[] = [];
@@ -30,7 +29,7 @@ export async function* batchItems<TSchema>(
       // eslint-disable-next-line functional/immutable-data
       batch.push(result.data);
     } else {
-      logger.warn(
+      throw genericInternalError(
         `Invalid record for file: ${fileName}. Data: ${JSON.stringify(
           rawRecord
         )}. Details: ${JSON.stringify(result.error)}`
