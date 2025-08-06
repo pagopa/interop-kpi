@@ -1,3 +1,5 @@
+/* eslint-disable functional/immutable-data */
+
 import { Logger } from "pagopa-interop-kpi-commons";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
 
@@ -14,31 +16,28 @@ export function deduplicateJwtIdRecords(
   batch: GeneratedTokenAuditDetails[],
   logger: Logger
 ): GeneratedTokenAuditDetails[] {
-  const jwtIdCounts = new Map<string, number>();
-  const duplicateJwtIds = new Set<string>();
+  const uniqueJwtIds = new Set<string>();
+  const uniqueRecords: GeneratedTokenAuditDetails[] = [];
+  const removedDuplicates: string[] = [];
 
-  batch.forEach((record) => {
-    const jwtId = record.jwtId;
-    jwtIdCounts.set(jwtId, (jwtIdCounts.get(jwtId) || 0) + 1);
-  });
-
-  const uniqueRecords = batch.filter(
-    (record) => jwtIdCounts.get(record.jwtId) === 1
-  );
-  jwtIdCounts.forEach((count, jwtId) => {
-    if (count > 1) {
-      duplicateJwtIds.add(jwtId);
+  for (const record of batch) {
+    if (!uniqueJwtIds.has(record.jwtId)) {
+      uniqueJwtIds.add(record.jwtId);
+      uniqueRecords.push(record);
+    } else {
+      removedDuplicates.push(record.jwtId);
     }
-  });
+  }
 
-  if (uniqueRecords.length < batch.length) {
+  if (removedDuplicates.length > 0) {
     logger.warn(
       `Detected and removed ${
-        batch.length - uniqueRecords.length
-      } duplicate records in the batch. jwt_id: [${Array.from(
-        duplicateJwtIds
-      ).join(", ")}]`
+        removedDuplicates.length
+      } duplicate records in the batch. jwt_id: [${[
+        ...new Set(removedDuplicates),
+      ].join(", ")}]`
     );
   }
+
   return uniqueRecords;
 }

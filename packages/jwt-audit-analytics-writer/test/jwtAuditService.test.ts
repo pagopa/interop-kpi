@@ -101,7 +101,7 @@ describe("JWT Audit Service tests", () => {
         conn,
         JwtDbTable.generated_token
       );
-      expect(generatedTokenCount).toBe(6);
+      expect(generatedTokenCount).toBe(9);
     });
 
     it("should not call any dbService operations when there are no records", async () => {
