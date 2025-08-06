@@ -1,3 +1,5 @@
+/* eslint-disable functional/immutable-data */
+
 import { setupTestContainersVitest } from "pagopa-interop-kpi-commons-test";
 import {
   AgreementId,
@@ -64,6 +66,39 @@ export const jwtAuditService = jwtAuditServiceBuilder(dbService, fileManager);
 
 export function getMockJwtAudits(n: number): GeneratedTokenAuditDetails[] {
   return Array.from({ length: n }, () => getMockJwtAudit());
+}
+
+export function getMockJwtAuditWithDuplicates(): GeneratedTokenAuditDetails[] {
+  const audits: GeneratedTokenAuditDetails[] = [];
+
+  const baseAudits = getMockJwtAudits(5);
+
+  audits.push(...baseAudits);
+
+  const firstAuditJwtId = baseAudits[0].jwtId;
+  const duplicate1 = getMockJwtAudit();
+  duplicate1.jwtId = firstAuditJwtId;
+  audits.push(duplicate1);
+
+  const secondAuditJwtId = baseAudits[1].jwtId;
+  const duplicate2 = getMockJwtAudit();
+  duplicate2.jwtId = secondAuditJwtId;
+  audits.push(duplicate2);
+
+  const newUniqueAudit = getMockJwtAudit();
+  audits.push(newUniqueAudit);
+
+  const duplicate3 = getMockJwtAudit();
+  duplicate3.jwtId = newUniqueAudit.jwtId;
+  audits.push(duplicate3);
+
+  const duplicate4 = getMockJwtAudit();
+  duplicate4.jwtId = newUniqueAudit.jwtId;
+  audits.push(duplicate4);
+
+  audits.push(...getMockJwtAudits(3));
+
+  return audits;
 }
 
 export const getMockJwtAudit = (): GeneratedTokenAuditDetails => {

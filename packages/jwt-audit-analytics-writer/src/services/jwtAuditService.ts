@@ -7,6 +7,7 @@ import {
   GeneratedTokenAuditDetails,
   tokenAuditSchema,
 } from "../model/domain/models.js";
+import { deduplicateJwtIdRecords } from "../utilities/deduplicateRecords.js";
 import { DBService } from "./dbService.js";
 
 export const jwtAuditServiceBuilder = (
@@ -16,7 +17,6 @@ export const jwtAuditServiceBuilder = (
   async handleMessages(s3keys: string[], logger: Logger): Promise<void> {
     let totalRecordsProcessed: number = 0;
     let currentFile: string = "";
-
     try {
       for (const s3key of s3keys) {
         currentFile = s3key;
@@ -36,8 +36,9 @@ export const jwtAuditServiceBuilder = (
           config.batchSize,
           s3key
         )) {
-          await dbService.insertRecordsToStaging(batch);
-          totalRecordsProcessed += batch.length;
+          const uniqueBatch = deduplicateJwtIdRecords(batch, logger);
+          await dbService.insertRecordsToStaging(uniqueBatch);
+          totalRecordsProcessed += uniqueBatch.length;
         }
 
         logger.debug(
