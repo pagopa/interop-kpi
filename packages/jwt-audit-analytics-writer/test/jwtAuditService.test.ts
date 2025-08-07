@@ -26,6 +26,7 @@ import {
   setupDbService,
   truncateTables,
   writeJwtAuditNdjson,
+  getMockJwtAuditWithDuplicates,
 } from "./utils.js";
 
 describe("JWT Audit Service tests", () => {
@@ -83,6 +84,24 @@ describe("JWT Audit Service tests", () => {
         JwtDbTable.generated_token
       );
       expect(generatedTokenCount).toBe(10);
+    });
+    it("should read the ndjson file from s3 and persist its data with deduplication to the database successfully", async () => {
+      const records: GeneratedTokenAuditDetails[] =
+        getMockJwtAuditWithDuplicates();
+
+      const { fullPathName } = await writeJwtAuditNdjson(
+        records,
+        fileManager,
+        genericLogger
+      );
+
+      await jwtAuditService.handleMessages([fullPathName], genericLogger);
+
+      const generatedTokenCount = await getTargetTableCount(
+        conn,
+        JwtDbTable.generated_token
+      );
+      expect(generatedTokenCount).toBe(9);
     });
 
     it("should not call any dbService operations when there are no records", async () => {
