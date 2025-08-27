@@ -4,6 +4,7 @@ import {
   IMain,
   ITask,
   buildColumnSet,
+  generateDeduplicationQuery,
   generateMergeQuery,
 } from "pagopa-interop-kpi-commons";
 import { genericInternalError, JwtDbTable } from "pagopa-interop-kpi-models";
@@ -65,6 +66,20 @@ export function clientAssertionRepository(conn: DBConnection) {
       } catch (error: unknown) {
         throw genericInternalError(
           `Error merging staging to target ${clientAssertionTable} table: ${error}`
+        );
+      }
+    },
+
+    async deduplicate(t: ITask<unknown>): Promise<void> {
+      try {
+        const deduplicationQuery = generateDeduplicationQuery(
+          clientAssertionStagingTable,
+          "generated_token_jwt_id"
+        );
+        await t.none(deduplicationQuery);
+      } catch (error: unknown) {
+        throw genericInternalError(
+          `Error deduplicating staging ${clientAssertionStagingTable} table: ${error}`
         );
       }
     },
