@@ -76,7 +76,7 @@ export function getMockJwtAuditWithDuplicates(
 
   const baseAudits = getMockJwtAudits(records);
   audits.push(...baseAudits);
-
+  // eslint-disable-next-line functional/no-let
   for (let i = 0; i < duplicates; i++) {
     audits.push(baseAudits[i]);
   }
