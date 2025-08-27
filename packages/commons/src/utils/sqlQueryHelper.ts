@@ -47,16 +47,16 @@ export function generateMergeQuery<T extends z.ZodRawShape>(
 /**
  * Generates a deduplication DELETE query for a given staging table.
  *
- * @param tableName - The staging and target table name.
+ * @param stagingTableName - The staging table name.
  * @param partitionKey - Column name to PARTITION BY
  * @returns The deduplication SQL query as a string.
  */
 export function generateDeduplicationQuery(
-  tableName: string,
+  stagingTableName: string,
   partitionKey: string
 ): string {
   return `
-    DELETE FROM ${tableName}
+    DELETE FROM ${stagingTableName}
     USING (
       SELECT _seq FROM (
         SELECT _seq,
@@ -64,10 +64,10 @@ export function generateDeduplicationQuery(
                 PARTITION BY ${partitionKey}
                 ORDER BY issued_at DESC, _seq
               ) AS rn
-        FROM ${tableName}
+        FROM ${stagingTableName}
       ) sub
       WHERE rn > 1
     ) d
-    WHERE ${tableName}._seq = d._seq;
+    WHERE ${stagingTableName}._seq = d._seq;
   `;
 }
