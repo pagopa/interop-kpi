@@ -4,6 +4,7 @@ import {
   IMain,
   ITask,
   buildColumnSet,
+  generateDeduplicationQuery,
   generateMergeQuery,
 } from "pagopa-interop-kpi-commons";
 import { genericInternalError, JwtDbTable } from "pagopa-interop-kpi-models";
@@ -73,6 +74,20 @@ export function generatedTokenRepository(conn: DBConnection) {
       } catch (error: unknown) {
         throw genericInternalError(
           `Error merging staging to target ${generatedTokenTable} table: ${error}`
+        );
+      }
+    },
+
+    async deduplicate(t: ITask<unknown>): Promise<void> {
+      try {
+        const deduplicationQuery = generateDeduplicationQuery(
+          tokenAuditStagingTable,
+          "jwt_id"
+        );
+        await t.none(deduplicationQuery);
+      } catch (error: unknown) {
+        throw genericInternalError(
+          `Error deduplicating staging ${tokenAuditStagingTable} table: ${error}`
         );
       }
     },

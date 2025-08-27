@@ -26,6 +26,13 @@ export function dbServiceBuilder(
       });
     },
 
+    async deduplicateStaging(): Promise<void> {
+      await db.conn.tx(async (t) => {
+        await generatedTokenRepo(db.conn).deduplicate(t);
+        await clientAssertionRepo(db.conn).deduplicate(t);
+      });
+    },
+
     async cleanStaging(): Promise<void> {
       await generatedTokenRepo(db.conn).clean();
       await clientAssertionRepo(db.conn).clean();

@@ -7,7 +7,6 @@ import {
   GeneratedTokenAuditDetails,
   tokenAuditSchema,
 } from "../model/domain/models.js";
-import { deduplicateJwtIdRecords } from "../utilities/deduplicateRecords.js";
 import { DBService } from "./dbService.js";
 
 export const jwtAuditServiceBuilder = (
@@ -36,9 +35,8 @@ export const jwtAuditServiceBuilder = (
           config.batchSize,
           s3key
         )) {
-          const uniqueBatch = deduplicateJwtIdRecords(batch, logger);
-          await dbService.insertRecordsToStaging(uniqueBatch);
-          totalRecordsProcessed += uniqueBatch.length;
+          await dbService.insertRecordsToStaging(batch);
+          totalRecordsProcessed += batch.length;
         }
 
         logger.debug(
@@ -57,6 +55,11 @@ export const jwtAuditServiceBuilder = (
       logger.info(
         `Staging insertion completed with ${totalRecordsProcessed} records processed.`
       );
+
+      const deduplicateStartTime = Date.now();
+      await dbService.deduplicateStaging();
+
+      logger.info(`Staging data deduplicated`, deduplicateStartTime);
 
       const mergeStartTime = Date.now();
       await dbService.mergeStagingToTarget();

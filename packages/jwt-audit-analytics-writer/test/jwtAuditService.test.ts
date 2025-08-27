@@ -87,7 +87,7 @@ describe("JWT Audit Service tests", () => {
     });
     it("should read the ndjson file from s3 and persist its data with deduplication to the database successfully", async () => {
       const records: GeneratedTokenAuditDetails[] =
-        getMockJwtAuditWithDuplicates();
+        getMockJwtAuditWithDuplicates(900, 100);
 
       const { fullPathName } = await writeJwtAuditNdjson(
         records,
@@ -101,7 +101,7 @@ describe("JWT Audit Service tests", () => {
         conn,
         JwtDbTable.generated_token
       );
-      expect(generatedTokenCount).toBe(9);
+      expect(generatedTokenCount).toBe(900);
     });
 
     it("should not call any dbService operations when there are no records", async () => {
