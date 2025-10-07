@@ -40,3 +40,8 @@ export const secondsToMilliseconds = (timestamp: number): number => {
 
   return timestamp;
 };
+
+export const truncateTimestampDecimals = (value: number): number => {
+  const intPart = value.toString().split(".")[0];
+  return Number(intPart);
+};
