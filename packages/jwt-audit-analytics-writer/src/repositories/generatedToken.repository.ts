@@ -30,6 +30,7 @@ export function generatedTokenRepository(conn: DBConnection) {
           issued_at: (record) => truncateTimestampDecimals(record.issuedAt),
           issued_at_tz: (record) =>
             new Date(truncateTimestampDecimals(record.issuedAt)),
+          issued_at_raw: (record) => String(record.issuedAt),
           client_id: (record) => record.clientId,
           organization_id: (record) => record.organizationId,
           agreement_id: (record) => record.agreementId,
@@ -47,6 +48,7 @@ export function generatedTokenRepository(conn: DBConnection) {
             truncateTimestampDecimals(record.expirationTime),
           expiration_time_tz: (record) =>
             new Date(truncateTimestampDecimals(record.expirationTime)),
+          expiration_time_raw: (record) => String(record.expirationTime),
           issuer: (record) => record.issuer,
           client_assertion_jwt_id: (record) => record.clientAssertion.jwtId,
         };

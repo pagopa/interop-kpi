@@ -32,6 +32,7 @@ export function clientAssertionRepository(conn: DBConnection) {
             new Date(
               truncateTimestampDecimals(record.clientAssertion.issuedAt)
             ),
+          issued_at_raw: (record) => String(record.clientAssertion.issuedAt),
           algorithm: (record) => record.clientAssertion.algorithm,
           key_id: (record) => record.clientAssertion.keyId,
           issuer: (record) => record.clientAssertion.issuer,
@@ -43,6 +44,8 @@ export function clientAssertionRepository(conn: DBConnection) {
             new Date(
               truncateTimestampDecimals(record.clientAssertion.expirationTime)
             ),
+          expiration_time_raw: (record) =>
+            String(record.clientAssertion.expirationTime),
           generated_token_jwt_id: (record) => record.jwtId,
         };
 

@@ -5,6 +5,7 @@ export const ClientAssertionSchema = z.object({
   jwt_id: z.string(),
   issued_at: z.number().int(),
   issued_at_tz: z.date(),
+  issued_at_raw: z.string(),
   algorithm: z.string(),
   key_id: z.string(),
   issuer: z.string(),
@@ -12,6 +13,7 @@ export const ClientAssertionSchema = z.object({
   audience: z.string(),
   expiration_time: z.number().int(),
   expiration_time_tz: z.date(),
+  expiration_time_raw: z.string(),
   generated_token_jwt_id: z.string(),
 });
 export type ClientAssertionSchema = z.infer<typeof ClientAssertionSchema>;
@@ -21,6 +23,7 @@ export const GeneratedTokenSchema = z.object({
   correlation_id: z.string().optional(),
   issued_at: z.number().int(),
   issued_at_tz: z.date(),
+  issued_at_raw: z.string(),
   client_id: z.string(),
   organization_id: z.string(),
   agreement_id: z.string(),
@@ -36,6 +39,7 @@ export const GeneratedTokenSchema = z.object({
   not_before_tz: z.date(),
   expiration_time: z.number().int(),
   expiration_time_tz: z.date(),
+  expiration_time_raw: z.string(),
   issuer: z.string(),
   client_assertion_jwt_id: z.string(),
 });
