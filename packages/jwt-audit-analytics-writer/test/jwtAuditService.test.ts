@@ -210,16 +210,16 @@ describe("JWT Audit Service tests", () => {
           timestampTzValue,
           doublePrecisionValue,
         } of fields) {
-          // BIGINT → returned as string by the pg driver
+          // BIGINT -> returned as string by the pg driver
           // Stored in milliseconds to avoid the "1970" issue when JS interprets seconds as ms.
           expect(typeof bigintValue).toBe("string");
           expect(Number(bigintValue)).toBeGreaterThan(1700000000000);
 
-          // TIMESTAMPTZ → should be a valid UTC Date
+          // TIMESTAMPTZ -> should be a valid UTC Date
           expect(timestampTzValue instanceof Date).toBe(true);
           expect(!isNaN(timestampTzValue.getTime())).toBe(true);
 
-          // DOUBLE PRECISION → should preserve decimal precision
+          // DOUBLE PRECISION -> should preserve decimal precision
           expect(typeof doublePrecisionValue).toBe("number");
           expect(doublePrecisionValue).toBeCloseTo(timestamp, 6);
         }
