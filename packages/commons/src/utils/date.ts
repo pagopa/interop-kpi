@@ -8,9 +8,6 @@ export function formatTimehhmmss(date: Date): string {
   return format(date, "hhmmss");
 }
 
-export const dateToMilliseconds = (date: Date): number =>
-  Math.floor(date.getTime());
-
 export const secondsToMilliseconds = (timestamp: number): number => {
   if (timestamp.toString().length === 10) {
     return timestamp * 1000;
