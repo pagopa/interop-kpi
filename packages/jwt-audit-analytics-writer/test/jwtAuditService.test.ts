@@ -27,6 +27,7 @@ import {
   truncateTables,
   writeJwtAuditNdjson,
   getMockJwtAuditWithDuplicates,
+  getMockJwtAudit,
 } from "./utils.js";
 
 describe("JWT Audit Service tests", () => {
@@ -147,5 +148,82 @@ describe("JWT Audit Service tests", () => {
 
       await expect(process()).rejects.toThrow("Invalid record for file");
     });
+
+    it.each([
+      { label: "integer seconds", timestamp: 1760004701 },
+      { label: "decimal seconds", timestamp: 1760004701.1230933 },
+      { label: "milliseconds", timestamp: 1760004701987 },
+    ])(
+      "should correctly persist issued_at and expiration_time fields as BIGINT, TIMESTAMPTZ, and DOUBLE PRECISION for %s",
+      async ({ timestamp }) => {
+        const jwtAudit = getMockJwtAudit();
+
+        const records: GeneratedTokenAuditDetails[] = [
+          {
+            ...jwtAudit,
+            clientAssertion: {
+              ...jwtAudit.clientAssertion,
+              issuedAt: timestamp,
+              expirationTime: timestamp,
+            },
+          },
+        ];
+
+        const { fullPathName } = await writeJwtAuditNdjson(
+          records,
+          fileManager,
+          genericLogger
+        );
+
+        await jwtAuditService.handleMessages([fullPathName], genericLogger);
+
+        const clientAssertion = await conn.one<{
+          issued_at: string;
+          issued_at_tz: Date;
+          issued_at_raw: number;
+          expiration_time: string;
+          expiration_time_tz: Date;
+          expiration_time_raw: number;
+        }>(
+          `SELECT issued_at, issued_at_tz, issued_at_raw,
+              expiration_time, expiration_time_tz, expiration_time_raw
+            FROM ${config.dbSchemaName}.${JwtDbTable.client_assertion}
+            LIMIT 1;
+          `
+        );
+
+        const fields = [
+          {
+            bigintValue: clientAssertion.issued_at,
+            timestampTzValue: clientAssertion.issued_at_tz,
+            doublePrecisionValue: clientAssertion.issued_at_raw,
+          },
+          {
+            bigintValue: clientAssertion.expiration_time,
+            timestampTzValue: clientAssertion.expiration_time_tz,
+            doublePrecisionValue: clientAssertion.expiration_time_raw,
+          },
+        ];
+
+        for (const {
+          bigintValue,
+          timestampTzValue,
+          doublePrecisionValue,
+        } of fields) {
+          // BIGINT → returned as string by the pg driver
+          // Stored in milliseconds to avoid the "1970" issue when JS interprets seconds as ms.
+          expect(typeof bigintValue).toBe("string");
+          expect(Number(bigintValue)).toBeGreaterThan(1700000000000);
+
+          // TIMESTAMPTZ → should be a valid UTC Date
+          expect(timestampTzValue instanceof Date).toBe(true);
+          expect(!isNaN(timestampTzValue.getTime())).toBe(true);
+
+          // DOUBLE PRECISION → should preserve decimal precision
+          expect(typeof doublePrecisionValue).toBe("number");
+          expect(doublePrecisionValue).toBeCloseTo(timestamp, 6);
+        }
+      }
+    );
   });
 });
