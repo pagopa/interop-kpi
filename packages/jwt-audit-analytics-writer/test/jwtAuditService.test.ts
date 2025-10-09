@@ -152,7 +152,7 @@ describe("JWT Audit Service tests", () => {
 
     it.each([
       {
-        label: "big decimal seconds",
+        label: "large double precision",
         timestamp: 1007199254740991.12345671323299222,
       },
       { label: "decimal seconds", timestamp: 1760004701.1230933 },
