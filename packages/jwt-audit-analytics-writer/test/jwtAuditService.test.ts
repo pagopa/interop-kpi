@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-loss-of-precision */
 import { Readable } from "stream";
 import {
   describe,
@@ -150,7 +151,10 @@ describe("JWT Audit Service tests", () => {
     });
 
     it.each([
-      // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
+      {
+        label: "big decimal seconds",
+        timestamp: 1007199254740991.12345671323299222,
+      },
       { label: "decimal seconds", timestamp: 1760004701.1230933 },
       { label: "integer seconds", timestamp: 1760004701 },
       { label: "milliseconds", timestamp: 1760004701987 },
