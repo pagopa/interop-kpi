@@ -33,6 +33,10 @@ export function dateToSeconds(date: Date): number {
   return Math.floor(date.getTime() / 1000);
 }
 
+export const dateToMilliseconds = (date: Date): number => {
+  return Math.floor(date.getTime());
+};
+
 export const secondsToMilliseconds = (timestamp: number): number => {
   if (timestamp.toString().length === 10) {
     return timestamp * 1000;

@@ -14,7 +14,7 @@ import {
 } from "pagopa-interop-kpi-models";
 import { afterEach, inject } from "vitest";
 import {
-  dateToSeconds,
+  dateToMilliseconds,
   DBConnection,
   DBContext,
   FileManager,
@@ -108,9 +108,9 @@ export const getMockJwtAudit = (): GeneratedTokenAuditDetails => {
     keyId: kid,
     purposeVersionId,
     jwtId: generateId(),
-    issuedAt: dateToSeconds(new Date()),
+    issuedAt: dateToMilliseconds(new Date()),
     issuer: "interop jwt issuer",
-    expirationTime: dateToSeconds(new Date()),
+    expirationTime: dateToMilliseconds(new Date()),
     organizationId: consumerId,
     notBefore: 0,
     clientAssertion: {
@@ -119,9 +119,9 @@ export const getMockJwtAudit = (): GeneratedTokenAuditDetails => {
       algorithm: "RS256",
       keyId: kid,
       jwtId: clientAssertionJti,
-      issuedAt: dateToSeconds(new Date()),
+      issuedAt: dateToMilliseconds(new Date()),
       issuer: consumerId,
-      expirationTime: dateToSeconds(new Date()),
+      expirationTime: dateToMilliseconds(new Date()),
     },
   };
 };
