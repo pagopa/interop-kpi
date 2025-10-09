@@ -150,8 +150,9 @@ describe("JWT Audit Service tests", () => {
     });
 
     it.each([
-      { label: "integer seconds", timestamp: 1760004701 },
+      // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
       { label: "decimal seconds", timestamp: 1760004701.1230933 },
+      { label: "integer seconds", timestamp: 1760004701 },
       { label: "milliseconds", timestamp: 1760004701987 },
     ])(
       "should correctly persist issued_at and expiration_time fields as BIGINT, TIMESTAMPTZ, and DOUBLE PRECISION for %s",
