@@ -5,7 +5,7 @@ export const ClientAssertionSchema = z.object({
   jwt_id: z.string(),
   issued_at: z.number().int(),
   issued_at_tz: z.date(),
-  issued_at_raw: z.string(),
+  issued_at_raw: z.coerce.number(),
   algorithm: z.string(),
   key_id: z.string(),
   issuer: z.string(),
@@ -13,7 +13,7 @@ export const ClientAssertionSchema = z.object({
   audience: z.string(),
   expiration_time: z.number().int(),
   expiration_time_tz: z.date(),
-  expiration_time_raw: z.string(),
+  expiration_time_raw: z.coerce.number(),
   generated_token_jwt_id: z.string(),
 });
 export type ClientAssertionSchema = z.infer<typeof ClientAssertionSchema>;
