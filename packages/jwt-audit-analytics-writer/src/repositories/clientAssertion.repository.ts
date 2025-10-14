@@ -6,7 +6,7 @@ import {
   buildColumnSet,
   generateDeduplicationQuery,
   generateMergeQuery,
-  truncateTimestampDecimals,
+  normalizeTimestampToMilliseconds,
 } from "pagopa-interop-kpi-commons";
 import { genericInternalError, JwtDbTable } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
@@ -27,10 +27,10 @@ export function clientAssertionRepository(conn: DBConnection) {
         const clientAssertionMapping: ClientAssertionMapping = {
           jwt_id: (record) => record.clientAssertion.jwtId,
           issued_at: (record) =>
-            truncateTimestampDecimals(record.clientAssertion.issuedAt),
+            normalizeTimestampToMilliseconds(record.clientAssertion.issuedAt),
           issued_at_tz: (record) =>
             new Date(
-              truncateTimestampDecimals(record.clientAssertion.issuedAt)
+              normalizeTimestampToMilliseconds(record.clientAssertion.issuedAt)
             ),
           issued_at_raw: (record) => record.clientAssertion.issuedAt,
           algorithm: (record) => record.clientAssertion.algorithm,
@@ -39,10 +39,14 @@ export function clientAssertionRepository(conn: DBConnection) {
           subject: (record) => record.clientAssertion.subject,
           audience: (record) => record.clientAssertion.audience,
           expiration_time: (record) =>
-            truncateTimestampDecimals(record.clientAssertion.expirationTime),
+            normalizeTimestampToMilliseconds(
+              record.clientAssertion.expirationTime
+            ),
           expiration_time_tz: (record) =>
             new Date(
-              truncateTimestampDecimals(record.clientAssertion.expirationTime)
+              normalizeTimestampToMilliseconds(
+                record.clientAssertion.expirationTime
+              )
             ),
           expiration_time_raw: (record) =>
             record.clientAssertion.expirationTime,

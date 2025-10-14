@@ -152,14 +152,14 @@ describe("JWT Audit Service tests", () => {
 
     it.each([
       {
-        label: "large double precision",
+        label: "decimal microseconds",
         timestamp: 1007199254740991.12345671323299222,
       },
       { label: "decimal seconds", timestamp: 1760004701.1230933 },
       { label: "integer seconds", timestamp: 1760004701 },
       { label: "milliseconds", timestamp: 1760004701987 },
     ])(
-      "should correctly persist issued_at and expiration_time fields as BIGINT, TIMESTAMPTZ, and DOUBLE PRECISION for %s",
+      "should correctly normalize and persist issued_at and expiration_time fields for %s",
       async ({ timestamp }) => {
         const jwtAudit = getMockJwtAudit();
 
@@ -216,9 +216,12 @@ describe("JWT Audit Service tests", () => {
           doublePrecisionValue,
         } of fields) {
           // BIGINT -> returned as string by the pg driver
-          // Stored in milliseconds to avoid the "1970" issue when JS interprets seconds as ms.
           expect(typeof bigintValue).toBe("string");
-          expect(Number(bigintValue)).toBeGreaterThan(1700000000000);
+
+          // Ensure the persisted value is in millisecond scale
+          const bigintNum = Number(bigintValue);
+          expect(bigintNum.toString().length).toBeGreaterThanOrEqual(12);
+          expect(bigintNum.toString().length).toBeLessThanOrEqual(13);
 
           // TIMESTAMPTZ -> should be a valid UTC Date
           expect(timestampTzValue instanceof Date).toBe(true);
