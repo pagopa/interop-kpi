@@ -218,7 +218,7 @@ describe("JWT Audit Service tests", () => {
           // BIGINT -> returned as string by the pg driver
           expect(typeof bigintValue).toBe("string");
 
-          // Ensure the persisted value is in millisecond scale (not seconds or microseconds)
+          // Ensure the persisted value is in millisecond scale
           const bigintNum = Number(bigintValue);
           expect(bigintNum.toString().length).toBeGreaterThanOrEqual(12);
           expect(bigintNum.toString().length).toBeLessThanOrEqual(13);
