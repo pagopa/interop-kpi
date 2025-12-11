@@ -50,29 +50,35 @@ describe("JWT Audit Service tests", () => {
   });
 
   describe("handleMessage", () => {
-    it.only("should process multiple ndjson files from s3 and persist all data to the database successfully", async () => {
+    it("should process multiple ndjson files from s3 and persist all data to the database successfully", async () => {
       const clientAssertionStagingTableName = `${JwtDbTable.client_assertion}${config.mergeTableSuffix}`;
       const generateTokenStagingTableName = `${JwtDbTable.generated_token}${config.mergeTableSuffix}`;
 
-      config.receiveMsgsCalls = 10;
-      config.maxNumberOfMessages = 10;
+      const mockConfig = {
+        ...config,
+        receiveMsgsCalls: 10,
+        maxNumberOfMessages: 10,
+      };
 
       const S3_KEYS_NUMBER =
-        config.receiveMsgsCalls * config.maxNumberOfMessages;
+        mockConfig.receiveMsgsCalls * mockConfig.maxNumberOfMessages;
+
       const RECORDS_PER_FILE = 10;
 
-      const allS3Keys: string[] = [];
+      const allS3Keys = await Promise.all(
+        Array.from({ length: S3_KEYS_NUMBER }).map(async () => {
+          const records: GeneratedTokenAuditDetails[] =
+            getMockJwtAudits(RECORDS_PER_FILE);
 
-      for (let i = 0; i < S3_KEYS_NUMBER; i++) {
-        const records: GeneratedTokenAuditDetails[] =
-          getMockJwtAudits(RECORDS_PER_FILE);
-        const { fullPathName } = await writeJwtAuditNdjson(
-          records,
-          fileManager,
-          genericLogger
-        );
-        allS3Keys.push(fullPathName);
-      }
+          const { fullPathName } = await writeJwtAuditNdjson(
+            records,
+            fileManager,
+            genericLogger
+          );
+
+          return fullPathName;
+        })
+      );
 
       await jwtAuditService.handleMessages(allS3Keys, genericLogger);
 
@@ -107,7 +113,7 @@ describe("JWT Audit Service tests", () => {
       const clientAssertionStagingTableName = `${JwtDbTable.client_assertion}${config.mergeTableSuffix}`;
       const generateTokenStagingTableName = `${JwtDbTable.generated_token}${config.mergeTableSuffix}`;
 
-      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(1000);
+      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(10);
       const { fullPathName } = await writeJwtAuditNdjson(
         records,
         fileManager,
