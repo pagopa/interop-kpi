@@ -203,11 +203,19 @@ const processBatchQueue = async (
 
   do {
     const receiveMessagesStartTime = Date.now();
-    const { Messages } = await sqsClient.send(command);
+    const receiveMessagesPromises = Array.from(
+      { length: config.receiveMsgsCalls },
+      () => sqsClient.send(command)
+    );
+    const receiveMessagesresults = await Promise.all(receiveMessagesPromises);
 
+    const Messages = receiveMessagesresults.flatMap((r) => r.Messages ?? []);
     if (Messages?.length) {
       const processMessageStartTime = Date.now();
-      loggerInstance.debug(`Receive Batch Messages`, receiveMessagesStartTime);
+      loggerInstance.debug(
+        `Receive Batch Messages with receiveMsgsCalls ${config.receiveMsgsCalls}`,
+        receiveMessagesStartTime
+      );
 
       const validMessages: Message[] = [];
       const invalidMessages: Message[] = [];
@@ -273,13 +281,22 @@ export const deleteBatchMessages = async (
       ReceiptHandle: msg.ReceiptHandle!,
     }));
 
-  if (entries.length) {
-    const deleteBatchCommand = new DeleteMessageBatchCommand({
-      QueueUrl: queueUrl,
-      Entries: entries,
-    });
-    await sqsClient.send(deleteBatchCommand);
-  }
+  if (entries.length === 0) return;
+
+  let index = 0;
+
+  do {
+    const deleteBatch = entries.slice(index, index + 10);
+
+    await sqsClient.send(
+      new DeleteMessageBatchCommand({
+        QueueUrl: queueUrl,
+        Entries: deleteBatch,
+      })
+    );
+
+    index += 10;
+  } while (index < entries.length);
 };
 
 export { SQSClient };

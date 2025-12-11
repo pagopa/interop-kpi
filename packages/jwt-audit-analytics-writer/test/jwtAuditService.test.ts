@@ -50,11 +50,64 @@ describe("JWT Audit Service tests", () => {
   });
 
   describe("handleMessage", () => {
+    it.only("should process multiple ndjson files from s3 and persist all data to the database successfully", async () => {
+      const clientAssertionStagingTableName = `${JwtDbTable.client_assertion}${config.mergeTableSuffix}`;
+      const generateTokenStagingTableName = `${JwtDbTable.generated_token}${config.mergeTableSuffix}`;
+
+      config.receiveMsgsCalls = 10;
+      config.maxNumberOfMessages = 10;
+
+      const S3_KEYS_NUMBER =
+        config.receiveMsgsCalls * config.maxNumberOfMessages;
+      const RECORDS_PER_FILE = 10;
+
+      const allS3Keys: string[] = [];
+
+      for (let i = 0; i < S3_KEYS_NUMBER; i++) {
+        const records: GeneratedTokenAuditDetails[] =
+          getMockJwtAudits(RECORDS_PER_FILE);
+        const { fullPathName } = await writeJwtAuditNdjson(
+          records,
+          fileManager,
+          genericLogger
+        );
+        allS3Keys.push(fullPathName);
+      }
+
+      await jwtAuditService.handleMessages(allS3Keys, genericLogger);
+
+      const clientAssertionStagingCount = await getStagingTableCount(
+        conn,
+        clientAssertionStagingTableName
+      );
+      expect(clientAssertionStagingCount).toBe(0);
+
+      const generatedTokenStagingCount = await getStagingTableCount(
+        conn,
+        generateTokenStagingTableName
+      );
+      expect(generatedTokenStagingCount).toBe(0);
+
+      const expectedTotal = S3_KEYS_NUMBER * RECORDS_PER_FILE;
+
+      const clientAssertionCount = await getTargetTableCount(
+        conn,
+        JwtDbTable.client_assertion
+      );
+      expect(clientAssertionCount).toBe(expectedTotal);
+
+      const generatedTokenCount = await getTargetTableCount(
+        conn,
+        JwtDbTable.generated_token
+      );
+      expect(generatedTokenCount).toBe(expectedTotal);
+    });
+
     it("should read the ndjson file from s3 and persist its data to the database successfully", async () => {
       const clientAssertionStagingTableName = `${JwtDbTable.client_assertion}${config.mergeTableSuffix}`;
       const generateTokenStagingTableName = `${JwtDbTable.generated_token}${config.mergeTableSuffix}`;
 
-      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(10);
+      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(1000);
       const { fullPathName } = await writeJwtAuditNdjson(
         records,
         fileManager,
@@ -87,6 +140,7 @@ describe("JWT Audit Service tests", () => {
       );
       expect(generatedTokenCount).toBe(10);
     });
+
     it("should read the ndjson file from s3 and persist its data with deduplication to the database successfully", async () => {
       const records: GeneratedTokenAuditDetails[] =
         getMockJwtAuditWithDuplicates(900, 100);

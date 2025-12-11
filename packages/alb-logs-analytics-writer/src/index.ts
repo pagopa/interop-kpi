@@ -62,6 +62,7 @@ await SQS.runConsumer(
     maxNumberOfMessages: config.maxNumberOfMessages,
     waitTimeSeconds: config.waitTimeSeconds,
     visibilityTimeout: config.visibilityTimeout,
+    receiveMsgsCalls: config.receiveMsgsCalls,
     serviceName: config.serviceName,
   },
   processMessage(albLogsAuditService),
