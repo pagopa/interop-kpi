@@ -281,8 +281,11 @@ export const deleteBatchMessages = async (
       ReceiptHandle: msg.ReceiptHandle!,
     }));
 
-  if (entries.length === 0) return;
+  if (entries.length === 0) {
+    return;
+  }
 
+  // eslint-disable-next-line functional/no-let
   let index = 0;
 
   do {
