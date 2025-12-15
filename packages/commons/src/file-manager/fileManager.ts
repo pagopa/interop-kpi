@@ -1,5 +1,6 @@
 /* eslint-disable max-params */
 import crypto from "crypto";
+import { Readable } from "stream";
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -8,6 +9,7 @@ import {
   S3Client,
   S3ClientConfig,
 } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 import { FileManagerConfig } from "../config/fileManagerConfig.js";
 import { Logger, LoggerConfig } from "../index.js";
 import {
@@ -15,9 +17,16 @@ import {
   fileManagerGetError,
   fileManagerListFilesError,
   fileManagerStoreBytesError,
+  fileManagerStoreStreamError,
 } from "./fileManagerErrors.js";
 
 export type FileManager = {
+  get: (
+    bucket: string,
+    path: string,
+    logger: Logger
+  ) => Promise<NodeJS.ReadableStream>;
+  listFiles: (bucket: string, logger: Logger) => Promise<string[]>;
   delete: (bucket: string, path: string, logger: Logger) => Promise<void>;
   storeBytes: (
     s3File: {
@@ -29,12 +38,16 @@ export type FileManager = {
     },
     logger: Logger
   ) => Promise<string>;
-  get: (
-    bucket: string,
-    path: string,
+  storeStream: (
+    s3File: {
+      bucket: string;
+      path: string;
+      resourceId?: string;
+      name: string;
+      content: Readable;
+    },
     logger: Logger
-  ) => Promise<NodeJS.ReadableStream>;
-  listFiles: (bucket: string, logger: Logger) => Promise<string[]>;
+  ) => Promise<string>;
 };
 
 export function initFileManager(
@@ -157,6 +170,35 @@ export function initFileManager(
       logger.info(`Storing file ${key} in bucket ${s3File.bucket}`);
 
       return store(s3File.bucket, key, s3File.content);
+    },
+    storeStream: async (
+      s3File: {
+        bucket: string;
+        path: string;
+        resourceId?: string;
+        name: string;
+        content: Readable;
+      },
+      logger: Logger
+    ): Promise<string> => {
+      const key = buildS3Key(s3File.path, s3File.resourceId, s3File.name);
+      logger.info(`Streaming file ${key} in bucket ${s3File.bucket}`);
+
+      try {
+        const upload = new Upload({
+          client,
+          params: {
+            Bucket: s3File.bucket,
+            Key: key,
+            Body: s3File.content,
+          },
+        });
+
+        await upload.done();
+        return key;
+      } catch (error) {
+        throw fileManagerStoreStreamError(key, s3File.bucket, error);
+      }
     },
   };
 }

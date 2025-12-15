@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { DBContext } from "pagopa-interop-kpi-commons";
-import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
 import { clientAssertionRepository } from "../repositories/clientAssertion.repository.js";
 import { generatedTokenRepository } from "../repositories/generatedToken.repository.js";
+import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
 
 export function dbServiceBuilder(
   db: DBContext,
@@ -10,6 +10,18 @@ export function dbServiceBuilder(
   generatedTokenRepo = generatedTokenRepository
 ) {
   return {
+    async copyRecordsToStaging(source: {
+      generatedTokenPath: string;
+      clientAssertionPath: string;
+    }): Promise<void> {
+      await generatedTokenRepo(db.conn).copyFromS3ToStaging(
+        source.generatedTokenPath
+      );
+      await clientAssertionRepo(db.conn).copyFromS3ToStaging(
+        source.clientAssertionPath
+      );
+    },
+
     async insertRecordsToStaging(
       records: GeneratedTokenAuditDetails[]
     ): Promise<void> {
