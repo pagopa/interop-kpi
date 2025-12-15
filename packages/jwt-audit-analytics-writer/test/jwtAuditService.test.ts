@@ -9,7 +9,11 @@ import {
   beforeAll,
   afterEach,
 } from "vitest";
-import { batchItems, genericLogger } from "pagopa-interop-kpi-commons";
+import {
+  batchItems,
+  genericLogger,
+  MAX_SUPPORTED_TIMESTAMP_MS,
+} from "pagopa-interop-kpi-commons";
 import { JwtDbTable } from "pagopa-interop-kpi-models";
 import {
   GeneratedTokenAuditDetails,
@@ -218,6 +222,10 @@ describe("JWT Audit Service tests", () => {
       { label: "decimal seconds", timestamp: 1760004701.1230933 },
       { label: "integer seconds", timestamp: 1760004701 },
       { label: "milliseconds", timestamp: 1760004701987 },
+      {
+        label: "timestamp beyond year 9999",
+        timestamp: 253402300800000000000,
+      },
     ])(
       "should correctly normalize and persist issued_at and expiration_time fields for %s",
       async ({ timestamp }) => {
@@ -278,10 +286,10 @@ describe("JWT Audit Service tests", () => {
           // BIGINT -> returned as string by the pg driver
           expect(typeof bigintValue).toBe("string");
 
-          // Ensure the persisted value is in millisecond scale
+          // Ensure the persisted value is a valid millisecond timestamp within supported range
           const bigintNum = Number(bigintValue);
-          expect(bigintNum.toString().length).toBeGreaterThanOrEqual(12);
-          expect(bigintNum.toString().length).toBeLessThanOrEqual(13);
+          expect(bigintNum).toBeGreaterThan(0);
+          expect(bigintNum).toBeLessThanOrEqual(MAX_SUPPORTED_TIMESTAMP_MS);
 
           // TIMESTAMPTZ -> should be a valid UTC Date
           expect(timestampTzValue instanceof Date).toBe(true);
@@ -290,6 +298,9 @@ describe("JWT Audit Service tests", () => {
           // DOUBLE PRECISION -> should preserve decimal precision
           expect(typeof doublePrecisionValue).toBe("number");
           expect(doublePrecisionValue).toBeCloseTo(timestamp, 6);
+
+          // Ensure ISO serialization does not use extended years (+YYYYY)
+          expect(timestampTzValue.getUTCFullYear()).toBeLessThanOrEqual(9999);
         }
       }
     );
