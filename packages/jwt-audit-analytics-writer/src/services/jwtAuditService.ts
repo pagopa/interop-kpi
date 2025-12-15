@@ -119,8 +119,6 @@ export const jwtAuditServiceBuilder = (
       });
 
       logger.info(`COPY to staging completed`, copyStartTime);
-    } catch (error) {
-      throw error;
     } finally {
       if (config.s3DeleteAfterCopy) {
         await fileManager.delete(
