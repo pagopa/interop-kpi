@@ -1,47 +1,76 @@
+/* eslint-disable max-params */
 import { z } from "zod";
 
 /**
- * Generates a MERGE SQL query
+ * Generates an INSERT query that inserts new records from a staging table
+ * into the target table.
  *
  * @param tableSchema - A Zod object schema refering to the table model from which to extract the list of keys.
  * @param schemaName - The target db schema name.
  * @param tableName - The staging and target table name.
  * @param stagingSuffix - A suffix appended to the table name to indicate the staging table.
  * @param keysOn - The keys to be used for the ON condition (e.g., ["correlation_id"]).
- * @returns The generated MERGE SQL query as a string.
+ * @param deduplicationOptions - Optional configuration to limit the JOIN
+ * against existing target records to a recent time window.
+ *
+ * This is used to avoid scanning the entire target table when checking
+ * for duplicates, by considering only records created or updated
+ * within the last N days.
+ *
+ * @param recentRecordsFilter.joinTimeFilterColumn
+ *   The column used to determine whether a target record is considered "recent".
+ * @param recentRecordsFilter.maxDaysTolerance
+ *   Number of days to look back from the current date when selecting
+ *   existing target records to compare against.
  */
 export function generateMergeQuery<T extends z.ZodRawShape>(
   tableSchema: z.ZodObject<T>,
   schemaName: string,
   tableName: string,
   stagingSuffix: string,
-  keysOn: Array<keyof T>
+  keysOn: Array<keyof T>,
+  deduplicationOptions?: {
+    joinTimeFilterColumn?: keyof T;
+    maxDaysTolerance?: number;
+  }
 ): string {
   const keys = Object.keys(tableSchema.shape);
 
-  const updateSet = keys.map((k) => `${k} = source.${k}`).join(",\n    ");
+  const stagingTable = `${tableName}${stagingSuffix}`;
+  const targetTable = `${schemaName}.${tableName}`;
 
-  const columns = keys.join(", ");
-  const values = keys.map((k) => `source.${k}`).join(", ");
+  const columnList = keys.join(", ");
 
   const onCondition = keysOn
-    .map(
-      (key) =>
-        `${schemaName}.${tableName}.${String(key)} = source.${String(key)}`
-    )
+    .map((k) => `t.${String(k)} = s.${String(k)}`)
     .join(" AND ");
 
+  const nullCondition = keysOn
+    .map((k) => `t.${String(k)} IS NULL`)
+    .join(" AND ");
+
+  const timeFilter =
+    deduplicationOptions?.joinTimeFilterColumn &&
+    deduplicationOptions?.maxDaysTolerance
+      ? `WHERE ${String(
+          deduplicationOptions.joinTimeFilterColumn
+        )} > (CURRENT_DATE - INTERVAL '${
+          deduplicationOptions.maxDaysTolerance
+        } days')`
+      : "";
+
   return `
-      MERGE INTO ${schemaName}.${tableName}
-      USING ${tableName}${stagingSuffix} AS source
+    INSERT INTO ${targetTable} (${columnList})
+    SELECT ${keys.map((k) => `s.${k}`).join(", ")}
+    FROM ${stagingTable} s
+    LEFT JOIN (
+      SELECT ${keysOn.map(String).join(", ")}
+      FROM ${targetTable}
+      ${timeFilter}
+    ) t
       ON ${onCondition}
-      WHEN MATCHED THEN
-        UPDATE SET
-          ${updateSet}
-      WHEN NOT MATCHED THEN
-        INSERT (${columns})
-        VALUES (${values});
-    `;
+    WHERE ${nullCondition};
+`;
 }
 
 /**
