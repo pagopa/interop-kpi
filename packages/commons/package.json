@@ -19,18 +19,19 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-sdk/client-sqs": "3.744.0",
     "@aws-sdk/client-s3": "3.744.0",
-    "pagopa-interop-kpi-models": "workspace:*",
-    "ts-pattern": "5.2.0",
-    "winston": "3.17.0",
-    "zod": "3.23.8",
+    "@aws-sdk/client-sqs": "3.744.0",
+    "connection-string": "4.4.0",
     "date-fns": "4.1.0",
     "date-fns-tz": "3.2.0",
-    "connection-string": "4.4.0",
-    "pg-promise": "11.10.2",
     "kafkajs": "2.2.4",
-    "p-retry": "6.2.1"
+    "p-limit": "7.2.0",
+    "p-retry": "6.2.1",
+    "pagopa-interop-kpi-models": "workspace:*",
+    "pg-promise": "11.10.2",
+    "ts-pattern": "5.2.0",
+    "winston": "3.17.0",
+    "zod": "3.23.8"
   },
   "devDependencies": {
     "@types/node": "20.14.6",

@@ -12,6 +12,7 @@ import {
 } from "@aws-sdk/client-sqs";
 import { InternalError } from "pagopa-interop-kpi-models";
 import { match } from "ts-pattern";
+import pLimit from "p-limit";
 import { genericLogger, Logger } from "../logging/index.js";
 import { SQSConsumerConfig } from "../config/consumerConfig.js";
 import { validateSqsMessage } from "./messageValidation.js";
@@ -200,12 +201,13 @@ const processBatchQueue = async (
     WaitTimeSeconds: config.waitTimeSeconds,
     VisibilityTimeout: config.visibilityTimeout,
   });
+  const concurrencyLimit = pLimit(config.receiveMsgsConcurrency);
 
   do {
     const receiveMessagesStartTime = Date.now();
     const receiveMessagesPromises = Array.from(
       { length: config.receiveMsgsCalls },
-      () => sqsClient.send(command)
+      () => concurrencyLimit(() => sqsClient.send(command))
     );
     const receiveMessagesresults = await Promise.all(receiveMessagesPromises);
 

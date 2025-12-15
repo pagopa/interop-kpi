@@ -66,6 +66,7 @@ await SQS.runBatchConsumer(
     waitTimeSeconds: config.waitTimeSeconds,
     visibilityTimeout: config.visibilityTimeout,
     receiveMsgsCalls: config.receiveMsgsCalls,
+    receiveMsgsConcurrency: config.receiveMsgsConcurrency,
     serviceName: config.serviceName,
   },
   processBatch(jwtAuditService),
