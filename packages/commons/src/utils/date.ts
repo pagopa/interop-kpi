@@ -11,6 +11,7 @@ export function formatTimehhmmss(date: Date): string {
 }
 
 export const normalizeTimestampToMilliseconds = (timestamp: number): number => {
+  // eslint-disable-next-line functional/no-let
   let ms: number;
 
   // ns -> ms
