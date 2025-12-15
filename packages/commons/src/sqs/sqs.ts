@@ -12,10 +12,10 @@ import {
 } from "@aws-sdk/client-sqs";
 import { InternalError } from "pagopa-interop-kpi-models";
 import { match } from "ts-pattern";
+import pLimit from "p-limit";
 import { genericLogger, Logger } from "../logging/index.js";
 import { SQSConsumerConfig } from "../config/consumerConfig.js";
 import { validateSqsMessage } from "./messageValidation.js";
-import pLimit from "p-limit";
 
 const serializeError = (error: unknown): string => {
   try {
