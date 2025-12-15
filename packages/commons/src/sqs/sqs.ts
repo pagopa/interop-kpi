@@ -15,6 +15,7 @@ import { match } from "ts-pattern";
 import { genericLogger, Logger } from "../logging/index.js";
 import { SQSConsumerConfig } from "../config/consumerConfig.js";
 import { validateSqsMessage } from "./messageValidation.js";
+import pLimit from "p-limit";
 
 const serializeError = (error: unknown): string => {
   try {
@@ -200,12 +201,13 @@ const processBatchQueue = async (
     WaitTimeSeconds: config.waitTimeSeconds,
     VisibilityTimeout: config.visibilityTimeout,
   });
+  const concurrencyLimit = pLimit(config.receiveMsgsConcurrency);
 
   do {
     const receiveMessagesStartTime = Date.now();
     const receiveMessagesPromises = Array.from(
       { length: config.receiveMsgsCalls },
-      () => sqsClient.send(command)
+      () => concurrencyLimit(() => sqsClient.send(command))
     );
     const receiveMessagesresults = await Promise.all(receiveMessagesPromises);
 
