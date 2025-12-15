@@ -30,8 +30,8 @@ export const JwtAuditAnalyticsWriterConfig = AWSConfig.and(SQSConsumerConfig)
         S3_DELETE_AFTER_COPY: z
           .enum(["true", "false"])
           .transform((value) => value === "true"),
-        REDSHIFT_COPY_IAM_ROLE_ARN: z.string(),
         GZ_COMPRESSION_LEVEL: z.coerce.number().default(6),
+        REDSHIFT_COPY_IAM_ROLE_ARN: z.string(),
         DB_INGEST_MODE: z.enum(["INSERT", "COPY"]).default("INSERT"),
       })
       .transform((c) => ({
@@ -43,8 +43,8 @@ export const JwtAuditAnalyticsWriterConfig = AWSConfig.and(SQSConsumerConfig)
           c.MAX_DAYS_TOLERANCE_FOR_DUPLICATE_DELAY,
         s3CopyBucket: c.S3_COPY_BUCKET,
         s3DeleteAfterCopy: c.S3_DELETE_AFTER_COPY,
-        redshiftIamRole: c.REDSHIFT_COPY_IAM_ROLE_ARN,
         gzCompressionLevel: c.GZ_COMPRESSION_LEVEL,
+        redshiftIamRole: c.REDSHIFT_COPY_IAM_ROLE_ARN,
         dbIngestMode: c.DB_INGEST_MODE,
       }))
   );
