@@ -17,9 +17,9 @@ import { z } from "zod";
  * for duplicates, by considering only records created or updated
  * within the last N days.
  *
- * @param recentRecordsFilter.joinTimeFilterColumn
+ * @param deduplicationOptions.joinTimeFilterColumn
  *   The column used to determine whether a target record is considered "recent".
- * @param recentRecordsFilter.maxDaysTolerance
+ * @param deduplicationOptions.maxDaysTolerance
  *   Number of days to look back from the current date when selecting
  *   existing target records to compare against.
  */
