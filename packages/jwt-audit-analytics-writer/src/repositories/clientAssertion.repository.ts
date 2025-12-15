@@ -51,7 +51,7 @@ export function clientAssertionRepository(conn: DBConnection) {
     async copyFromS3ToStaging(s3ObjectKey: string): Promise<void> {
       try {
         const copyQuery = `
-          COPY ${config.dbSchemaName}.${clientAssertionStagingTable}
+          COPY ${clientAssertionStagingTable}
           FROM 's3://${config.s3CopyBucket}/${s3ObjectKey}'
           IAM_ROLE '${config.redshiftIamRole}'
           CSV
