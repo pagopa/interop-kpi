@@ -1,5 +1,7 @@
 import { format } from "date-fns";
 
+export const MAX_SUPPORTED_TIMESTAMP_MS = 253402300799999; // 9999-12-31T23:59:59.999Z
+
 export function formatDateyyyyMMdd(date: Date): string {
   return format(date, "yyyyMMdd");
 }
@@ -9,18 +11,25 @@ export function formatTimehhmmss(date: Date): string {
 }
 
 export const normalizeTimestampToMilliseconds = (timestamp: number): number => {
-  const integerPartOfTimestamp = Number(timestamp.toString().split(".")[0]);
-  const integerPartLength = integerPartOfTimestamp.toString().length;
+  // eslint-disable-next-line functional/no-let
+  let ms: number;
 
-  if (integerPartLength === 10) {
-    // Seconds -> milliseconds
-    return integerPartOfTimestamp * 1000;
+  // ns -> ms
+  if (timestamp > 1e17) {
+    ms = Math.trunc(timestamp / 1_000_000);
+  }
+  // µs -> ms
+  else if (timestamp > 1e14) {
+    ms = Math.trunc(timestamp / 1_000);
+  }
+  // ms -> ms
+  else if (timestamp > 1e12) {
+    ms = Math.trunc(timestamp);
+  }
+  // s -> ms
+  else {
+    ms = Math.trunc(timestamp * 1_000);
   }
 
-  if (integerPartLength > 13 && integerPartLength <= 16) {
-    // Microseconds -> milliseconds
-    return Math.floor(integerPartOfTimestamp / 1000);
-  }
-
-  return integerPartOfTimestamp;
+  return Math.min(ms, MAX_SUPPORTED_TIMESTAMP_MS);
 };
