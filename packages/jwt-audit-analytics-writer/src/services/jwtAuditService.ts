@@ -43,89 +43,97 @@ export const jwtAuditServiceBuilder = (
       batchIdentifier
     );
 
-    for (const s3key of s3keys) {
-      ingestionState.currentFile = s3key;
+    try {
+      for (const s3key of s3keys) {
+        ingestionState.currentFile = s3key;
 
-      const fileStream = await fileManager.get(config.s3Bucket, s3key, logger);
-      const parsedFileStream = fileStream.pipe(ndjson.parse());
+        const fileStream = await fileManager.get(
+          config.s3Bucket,
+          s3key,
+          logger
+        );
+        const parsedFileStream = fileStream.pipe(ndjson.parse());
 
-      logger.info(`Processing records for file: ${s3key}`);
-      const batchStartTime = Date.now();
+        logger.info(`Processing records for file: ${s3key}`);
+        const batchStartTime = Date.now();
 
-      for await (const batch of batchItems<GeneratedTokenAuditDetails>(
-        tokenAuditSchema,
-        parsedFileStream,
-        config.batchSize,
-        s3key
-      )) {
-        generatedTokenCsv.writeBatch(batch);
-        clientAssertionCsv.writeBatch(batch);
-        ingestionState.totalRecordsProcessed += batch.length;
+        for await (const batch of batchItems<GeneratedTokenAuditDetails>(
+          tokenAuditSchema,
+          parsedFileStream,
+          config.batchSize,
+          s3key
+        )) {
+          generatedTokenCsv.writeBatch(batch);
+          clientAssertionCsv.writeBatch(batch);
+          ingestionState.totalRecordsProcessed += batch.length;
+        }
+
+        logger.debug(`Processed records for file: ${s3key}`, batchStartTime);
       }
 
-      logger.debug(`Processed records for file: ${s3key}`, batchStartTime);
-    }
+      if (ingestionState.totalRecordsProcessed === 0) {
+        logger.info(
+          `No records processed for current batch. Skipping copy, merge and cleanup.`
+        );
+        return;
+      }
 
-    if (ingestionState.totalRecordsProcessed === 0) {
       logger.info(
-        `No records processed for current batch. Skipping copy, merge and cleanup.`
+        `CSV content production completed with ${ingestionState.totalRecordsProcessed} records processed.`,
+        processFilesStartTime
       );
-      return;
-    }
 
-    logger.info(
-      `CSV content production completed with ${ingestionState.totalRecordsProcessed} records processed.`,
-      processFilesStartTime
-    );
+      const uploadStartTime = Date.now();
 
-    const uploadStartTime = Date.now();
-
-    const uploadGeneratedTokenCsv = fileManager.storeStream(
-      {
-        bucket: config.s3CopyBucket,
-        path: generatedTokenCsv.getPathName(),
-        name: generatedTokenCsv.getFileName(),
-        content: generatedTokenCsv.getStream(),
-      },
-      logger
-    );
-
-    const uploadClientAssertionCsv = fileManager.storeStream(
-      {
-        bucket: config.s3CopyBucket,
-        path: clientAssertionCsv.getPathName(),
-        name: clientAssertionCsv.getFileName(),
-        content: clientAssertionCsv.getStream(),
-      },
-      logger
-    );
-
-    generatedTokenCsv.close();
-    clientAssertionCsv.close();
-
-    await Promise.all([uploadGeneratedTokenCsv, uploadClientAssertionCsv]);
-
-    logger.info(`CSV upload to S3 completed`, uploadStartTime);
-
-    const copyStartTime = Date.now();
-    await dbService.copyRecordsToStaging({
-      generatedTokenPath: generatedTokenCsv.getS3ObjectKey(),
-      clientAssertionPath: clientAssertionCsv.getS3ObjectKey(),
-    });
-
-    logger.info(`COPY to staging completed`, copyStartTime);
-
-    if (config.s3DeleteAfterCopy) {
-      await fileManager.delete(
-        config.s3CopyBucket,
-        generatedTokenCsv.getPathName(),
+      const uploadGeneratedTokenCsv = fileManager.storeStream(
+        {
+          bucket: config.s3CopyBucket,
+          path: generatedTokenCsv.getPathName(),
+          name: generatedTokenCsv.getFileName(),
+          content: generatedTokenCsv.getStream(),
+        },
         logger
       );
-      await fileManager.delete(
-        config.s3CopyBucket,
-        clientAssertionCsv.getPathName(),
+
+      const uploadClientAssertionCsv = fileManager.storeStream(
+        {
+          bucket: config.s3CopyBucket,
+          path: clientAssertionCsv.getPathName(),
+          name: clientAssertionCsv.getFileName(),
+          content: clientAssertionCsv.getStream(),
+        },
         logger
       );
+
+      generatedTokenCsv.close();
+      clientAssertionCsv.close();
+
+      await Promise.all([uploadGeneratedTokenCsv, uploadClientAssertionCsv]);
+
+      logger.info(`CSV upload to S3 completed`, uploadStartTime);
+
+      const copyStartTime = Date.now();
+      await dbService.copyRecordsToStaging({
+        generatedTokenPath: generatedTokenCsv.getS3ObjectKey(),
+        clientAssertionPath: clientAssertionCsv.getS3ObjectKey(),
+      });
+
+      logger.info(`COPY to staging completed`, copyStartTime);
+    } catch (error) {
+      throw error;
+    } finally {
+      if (config.s3DeleteAfterCopy) {
+        await fileManager.delete(
+          config.s3CopyBucket,
+          generatedTokenCsv.getPathName(),
+          logger
+        );
+        await fileManager.delete(
+          config.s3CopyBucket,
+          clientAssertionCsv.getPathName(),
+          logger
+        );
+      }
     }
   }
 
