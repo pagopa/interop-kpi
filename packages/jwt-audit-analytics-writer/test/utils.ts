@@ -232,3 +232,10 @@ export async function truncateTables(
     `TRUNCATE TABLE ${truncateClientAssertion}, ${truncateGeneratedToken};`
   );
 }
+
+export async function cleanBucket(bucket: string): Promise<void> {
+  const files = await fileManager.listFiles(bucket, genericLogger);
+  for (const file of files) {
+    await fileManager.delete(bucket, file, genericLogger);
+  }
+}
