@@ -123,12 +123,12 @@ export const jwtAuditServiceBuilder = (
       if (config.s3DeleteAfterCopy) {
         await fileManager.delete(
           config.s3CopyBucket,
-          generatedTokenCsv.getPathName(),
+          generatedTokenCsv.getS3ObjectKey(),
           logger
         );
         await fileManager.delete(
           config.s3CopyBucket,
-          clientAssertionCsv.getPathName(),
+          clientAssertionCsv.getS3ObjectKey(),
           logger
         );
       }
