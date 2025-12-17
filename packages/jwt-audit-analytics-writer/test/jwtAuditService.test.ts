@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-loss-of-precision */
+/* eslint-disable functional/immutable-data */
 import { Readable } from "stream";
 import {
   describe,
@@ -33,7 +34,10 @@ import {
   writeJwtAuditNdjson,
   getMockJwtAuditWithDuplicates,
   getMockJwtAudit,
+  cleanBucket,
 } from "./utils.js";
+
+const DEFAULT_CONFIG = { ...config };
 
 describe("JWT Audit Service tests", () => {
   const { conn } = dbContext;
@@ -50,6 +54,7 @@ describe("JWT Audit Service tests", () => {
   });
 
   afterEach(async () => {
+    Object.assign(config, DEFAULT_CONFIG);
     await truncateTables(conn, config.dbSchemaName);
   });
 
@@ -304,5 +309,126 @@ describe("JWT Audit Service tests", () => {
         }
       }
     );
+
+    it("should upload CSVs, call copyRecordsToStaging, delete COPY files and cleanup staging", async () => {
+      config.dbIngestMode = "COPY";
+      config.s3DeleteAfterCopy = true;
+      config.s3CopyBucket = "test-bucket-1";
+
+      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(5);
+
+      const { fullPathName } = await writeJwtAuditNdjson(
+        records,
+        fileManager,
+        genericLogger
+      );
+
+      const copySpy = vi
+        .spyOn(dbService, "copyRecordsToStaging")
+        .mockResolvedValue(undefined);
+
+      const deduplicateSpy = vi.spyOn(dbService, "deduplicateStaging");
+      const mergeSpy = vi.spyOn(dbService, "mergeStagingToTarget");
+      const cleanSpy = vi.spyOn(dbService, "cleanStaging");
+
+      await jwtAuditService.handleMessages([fullPathName], genericLogger);
+
+      const filesAfter = await fileManager.listFiles(
+        config.s3CopyBucket,
+        genericLogger
+      );
+
+      expect(filesAfter).toHaveLength(0);
+
+      expect(copySpy).toHaveBeenCalledOnce();
+      expect(copySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          generatedTokenPath: expect.stringContaining("generated_token"),
+          clientAssertionPath: expect.stringContaining("client_assertion"),
+        })
+      );
+
+      expect(deduplicateSpy).toHaveBeenCalledOnce();
+      expect(mergeSpy).toHaveBeenCalledOnce();
+      expect(cleanSpy).toHaveBeenCalledOnce();
+    });
+
+    it("should upload CSVs, call copyRecordsToStaging, preserve COPY files and cleanup staging", async () => {
+      config.dbIngestMode = "COPY";
+      config.s3DeleteAfterCopy = false;
+      config.s3CopyBucket = "test-bucket-1";
+
+      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(5);
+
+      const { fullPathName } = await writeJwtAuditNdjson(
+        records,
+        fileManager,
+        genericLogger
+      );
+
+      const copySpy = vi
+        .spyOn(dbService, "copyRecordsToStaging")
+        .mockResolvedValue(undefined);
+
+      const deduplicateSpy = vi.spyOn(dbService, "deduplicateStaging");
+      const mergeSpy = vi.spyOn(dbService, "mergeStagingToTarget");
+      const cleanSpy = vi.spyOn(dbService, "cleanStaging");
+
+      await jwtAuditService.handleMessages([fullPathName], genericLogger);
+
+      const filesAfter = await fileManager.listFiles(
+        config.s3CopyBucket,
+        genericLogger
+      );
+
+      expect(filesAfter).toHaveLength(2);
+
+      expect(copySpy).toHaveBeenCalledOnce();
+      expect(copySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          generatedTokenPath: expect.stringContaining("generated_token"),
+          clientAssertionPath: expect.stringContaining("client_assertion"),
+        })
+      );
+
+      expect(deduplicateSpy).toHaveBeenCalledOnce();
+      expect(mergeSpy).toHaveBeenCalledOnce();
+      expect(cleanSpy).toHaveBeenCalledOnce();
+
+      await cleanBucket(config.s3CopyBucket);
+    });
+
+    it("should delete COPY files if copyRecordsToStaging fails", async () => {
+      config.dbIngestMode = "COPY";
+      config.s3DeleteAfterCopy = true;
+      config.s3CopyBucket = "test-bucket-1";
+
+      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(5);
+
+      const { fullPathName } = await writeJwtAuditNdjson(
+        records,
+        fileManager,
+        genericLogger
+      );
+
+      const copyError = new Error("COPY failed");
+
+      vi.spyOn(dbService, "copyRecordsToStaging").mockRejectedValue(copyError);
+      const deduplicateSpy = vi.spyOn(dbService, "deduplicateStaging");
+      const mergeSpy = vi.spyOn(dbService, "mergeStagingToTarget");
+
+      await expect(
+        jwtAuditService.handleMessages([fullPathName], genericLogger)
+      ).rejects.toThrow("COPY failed");
+
+      const filesAfter = await fileManager.listFiles(
+        config.s3CopyBucket,
+        genericLogger
+      );
+      expect(filesAfter).toHaveLength(0);
+
+      expect(deduplicateSpy).not.toHaveBeenCalled();
+      expect(mergeSpy).not.toHaveBeenCalled();
+    });
   });
 });

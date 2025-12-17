@@ -27,7 +27,6 @@ export const clientAssertionMapping: ClientAssertionMapping = {
     normalizeTimestampToMilliseconds(record.clientAssertion.issuedAt),
   issued_at_tz: (record) =>
     new Date(normalizeTimestampToMilliseconds(record.clientAssertion.issuedAt)),
-  issued_at_raw: (record) => record.clientAssertion.issuedAt,
   algorithm: (record) => record.clientAssertion.algorithm,
   key_id: (record) => record.clientAssertion.keyId,
   issuer: (record) => record.clientAssertion.issuer,
@@ -39,8 +38,9 @@ export const clientAssertionMapping: ClientAssertionMapping = {
     new Date(
       normalizeTimestampToMilliseconds(record.clientAssertion.expirationTime)
     ),
-  expiration_time_raw: (record) => record.clientAssertion.expirationTime,
   generated_token_jwt_id: (record) => record.jwtId,
+  issued_at_raw: (record) => record.clientAssertion.issuedAt,
+  expiration_time_raw: (record) => record.clientAssertion.expirationTime,
 };
 
 export function clientAssertionRepository(conn: DBConnection) {
