@@ -397,5 +397,38 @@ describe("JWT Audit Service tests", () => {
 
       await cleanBucket(config.s3CopyBucket);
     });
+
+    it("should delete COPY files if copyRecordsToStaging fails", async () => {
+      config.dbIngestMode = "COPY";
+      config.s3DeleteAfterCopy = true;
+      config.s3CopyBucket = "test-bucket-1";
+
+      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(5);
+
+      const { fullPathName } = await writeJwtAuditNdjson(
+        records,
+        fileManager,
+        genericLogger
+      );
+
+      const copyError = new Error("COPY failed");
+
+      vi.spyOn(dbService, "copyRecordsToStaging").mockRejectedValue(copyError);
+      const deduplicateSpy = vi.spyOn(dbService, "deduplicateStaging");
+      const mergeSpy = vi.spyOn(dbService, "mergeStagingToTarget");
+
+      await expect(
+        jwtAuditService.handleMessages([fullPathName], genericLogger)
+      ).rejects.toThrow("COPY failed");
+
+      const filesAfter = await fileManager.listFiles(
+        config.s3CopyBucket,
+        genericLogger
+      );
+      expect(filesAfter).toHaveLength(0);
+
+      expect(deduplicateSpy).not.toHaveBeenCalled();
+      expect(mergeSpy).not.toHaveBeenCalled();
+    });
   });
 });
