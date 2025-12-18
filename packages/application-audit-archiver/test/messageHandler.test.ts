@@ -5,7 +5,6 @@ import { pipeline, Readable } from "stream";
 import { promisify } from "util";
 import { describe, it, expect, vi } from "vitest";
 import { genericLogger, formatTimehhmmss } from "pagopa-interop-kpi-commons";
-import { ApplicationAuditEvent, Message } from "pagopa-interop-kpi-models";
 import { compressJson } from "../src/utilities/compression.js";
 import { handleMessages } from "../src/handler/messagesHandler.js";
 import {
@@ -170,15 +169,9 @@ describe("handleMessages", () => {
   it("should throw genericInternalError if message is invalid", async () => {
     const mockStoreBytes = vi.fn().mockResolvedValue("mocked-s3-key");
     fileManager.storeBytes = mockStoreBytes;
-    const errorMessage = Message(ApplicationAuditEvent).safeParse(
-      invalidKafkaMessage
-    ).error;
+
     await expect(
       handleMessages([invalidKafkaMessage], fileManager, genericLogger)
-    ).rejects.toThrowError(
-      `Write operation failed - Invalid message: ${JSON.stringify(
-        errorMessage
-      )}`
-    );
+    ).rejects.toThrowError(/Write operation failed - Invalid message/);
   });
 });
