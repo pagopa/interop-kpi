@@ -17,7 +17,16 @@ export function decodeKafkaMessage<TEvent extends z.ZodType>(
 ) {
   const parsed = Message(event).safeParse(message);
   if (!parsed.success) {
-    throw new Error("Invalid message: " + JSON.stringify(parsed.error));
+    const errorDetails = {
+      error: parsed.error.format(),
+      value: Buffer.isBuffer(message.value)
+        ? message.value.toString("utf-8")
+        : message.value,
+    };
+
+    throw new Error(
+      `Invalid message: ${JSON.stringify(errorDetails, null, 2)}`
+    );
   }
   // Even if the preprocess returns null, safeParse will fail because the event schema does not accept null values,
   // so using the non-null assertion here is safe.
