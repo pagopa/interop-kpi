@@ -5,7 +5,6 @@ import { pipeline, Readable } from "stream";
 import { promisify } from "util";
 import { describe, it, expect, vi } from "vitest";
 import { genericLogger, formatTimehhmmss } from "pagopa-interop-kpi-commons";
-import { ApplicationAuditEvent, Message } from "pagopa-interop-kpi-models";
 import { compressJson } from "../src/utilities/compression.js";
 import { handleMessages } from "../src/handler/messagesHandler.js";
 import {
