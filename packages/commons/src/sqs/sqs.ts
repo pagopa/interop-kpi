@@ -277,9 +277,9 @@ export const deleteBatchMessages = async (
   messages: Message[]
 ): Promise<void> => {
   const entries = messages
-    .filter((msg) => msg.ReceiptHandle && msg.MessageId)
-    .map((msg) => ({
-      Id: msg.MessageId!,
+    .filter((msg) => msg.ReceiptHandle)
+    .map((msg, index) => ({
+      Id: `${index}`,
       ReceiptHandle: msg.ReceiptHandle!,
     }));
 
