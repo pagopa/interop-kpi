@@ -22,10 +22,7 @@ export const JwtAuditAnalyticsWriterConfig = AWSConfig.and(SQSConsumerConfig)
           .string()
           .transform((val) => val.replace(/-/g, "")),
         BATCH_SIZE: z.coerce.number().min(100).default(500),
-        MAX_DAYS_TOLERANCE_FOR_DUPLICATE_DELAY: z.coerce
-          .number()
-          .min(1)
-          .default(1),
+        MAX_DAYS_TOLERANCE_FOR_DUPLICATE_DELAY: z.coerce.number().optional(),
         S3_COPY_BUCKET: z.string(),
         S3_DELETE_AFTER_COPY: z
           .enum(["true", "false"])
