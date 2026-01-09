@@ -2,7 +2,7 @@ CREATE SCHEMA IF NOT EXISTS jwt;
 
 CREATE TABLE IF NOT EXISTS jwt.generated_token_audit (
     jwt_id VARCHAR(36) PRIMARY KEY,
-    correlation_id VARCHAR(36),
+    correlation_id VARCHAR(255),
     issued_at BIGINT NOT NULL,
     issued_at_tz TIMESTAMPTZ NOT NULL,
     client_id VARCHAR(36) NOT NULL,
@@ -80,7 +80,7 @@ CREATE SCHEMA IF NOT EXISTS application;
 
 CREATE TABLE IF NOT EXISTS application.begin_request_audit (
     span_id VARCHAR(36) NOT NULL PRIMARY KEY,
-    correlation_id VARCHAR(36) NOT NULL,
+    correlation_id VARCHAR(255) NOT NULL,
     service VARCHAR(255) NOT NULL,
     service_version VARCHAR(255) NOT NULL,
     endpoint VARCHAR(255) NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS application.begin_request_audit (
 
 CREATE TABLE IF NOT EXISTS application.end_request_audit (
     span_id VARCHAR(36) NOT NULL PRIMARY KEY,
-    correlation_id VARCHAR(36) NOT NULL,
+    correlation_id VARCHAR(255) NOT NULL,
     service VARCHAR(255) NOT NULL,
     service_version VARCHAR(255) NOT NULL,
     endpoint VARCHAR(255) NOT NULL,
@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS application.end_request_audit (
 
 CREATE TABLE IF NOT EXISTS application.end_request_session_token_exchange_audit (
     span_id VARCHAR(36) NOT NULL PRIMARY KEY,
-    correlation_id VARCHAR(36) NOT NULL,
+    correlation_id VARCHAR(255) NOT NULL,
     service VARCHAR(255) NOT NULL,
     service_version VARCHAR(255) NOT NULL,
     endpoint VARCHAR(255) NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS application.end_request_session_token_exchange_audit 
 
 CREATE TABLE IF NOT EXISTS application.end_request_auth_server_audit (
     span_id VARCHAR(36) NOT NULL PRIMARY KEY,
-    correlation_id VARCHAR(36) NOT NULL,
+    correlation_id VARCHAR(255) NOT NULL,
     service VARCHAR(255) NOT NULL,
     service_version VARCHAR(255) NOT NULL,
     endpoint VARCHAR(255) NOT NULL,
