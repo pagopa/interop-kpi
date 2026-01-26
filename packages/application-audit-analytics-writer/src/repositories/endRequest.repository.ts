@@ -16,34 +16,55 @@ import {
   ApplicationAuditEndRequestSchema,
 } from "../model/db.js";
 
+export const endRequestMapping: ApplicationAuditEndRequestMapping = {
+  span_id: (event) => event.spanId,
+  correlation_id: (event) => event.correlationId,
+  service: (event) => event.service,
+  service_version: (event) => event.serviceVersion,
+  endpoint: (event) => event.endpoint,
+  http_method: (event) => event.httpMethod,
+  phase: (event) => event.phase,
+  requester_ip_address: (event) => event.requesterIpAddress,
+  node_ip: (event) => event.nodeIp,
+  pod_name: (event) => event.podName,
+  uptime_seconds: (event) => event.uptimeSeconds,
+  timestamp: (event) => event.timestamp,
+  timestamp_tz: (event) => new Date(event.timestamp),
+  amazon_trace_id: (event) => event.amazonTraceId,
+  organization_id: (event) => event.organizationId,
+  user_id: (event) => event.userId,
+  http_response_status: (event) => event.httpResponseStatus,
+  execution_time_ms: (event) => event.executionTimeMs,
+};
+
 export function endRequestRepository(conn: DBConnection, pgp: IMain) {
   const endRequestTable = ApplicationDbTable.end_request;
   const endRequestStagingTable = `${endRequestTable}${config.mergeTableSuffix}`;
 
   return {
-    async batchInsert(events: ApplicationAuditEndRequest[]): Promise<void> {
+    async copyFromS3ToStaging(s3ObjectKey: string): Promise<void> {
       try {
-        const endRequestMapping: ApplicationAuditEndRequestMapping = {
-          span_id: (event) => event.spanId,
-          correlation_id: (event) => event.correlationId,
-          service: (event) => event.service,
-          service_version: (event) => event.serviceVersion,
-          endpoint: (event) => event.endpoint,
-          http_method: (event) => event.httpMethod,
-          phase: (event) => event.phase,
-          requester_ip_address: (event) => event.requesterIpAddress,
-          node_ip: (event) => event.nodeIp,
-          pod_name: (event) => event.podName,
-          uptime_seconds: (event) => event.uptimeSeconds,
-          timestamp: (event) => event.timestamp,
-          timestamp_tz: (event) => new Date(event.timestamp),
-          amazon_trace_id: (event) => event.amazonTraceId,
-          organization_id: (event) => event.organizationId,
-          user_id: (event) => event.userId,
-          http_response_status: (event) => event.httpResponseStatus,
-          execution_time_ms: (event) => event.executionTimeMs,
-        };
+        const copyQuery = `
+          COPY ${endRequestTable}
+          FROM 's3://${config.s3CopyBucket}/${s3ObjectKey}'
+          IAM_ROLE '${config.redshiftIamRole}'
+          CSV
+          GZIP
+          TIMEFORMAT 'auto'
+          BLANKSASNULL
+          EMPTYASNULL;
+        `;
 
+        await conn.none(copyQuery);
+      } catch (error: unknown) {
+        throw genericInternalError(
+          `Error copying data from S3 to staging ${endRequestTable}: ${error}`
+        );
+      }
+    },
+
+    async insertToStaging(events: ApplicationAuditEndRequest[]): Promise<void> {
+      try {
         const endRequestColumnSet = buildColumnSet<ApplicationAuditEndRequest>(
           pgp,
           endRequestMapping,

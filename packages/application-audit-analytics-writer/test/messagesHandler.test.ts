@@ -9,6 +9,7 @@ import { handleMessages } from "../src/handlers/messagesHandler.js";
 import { config } from "../src/config/config.js";
 import {
   dbContext,
+  fileManager,
   getMockApplicationAudits,
   getStagingTableCount,
   getTargetTableCount,
@@ -40,7 +41,12 @@ describe("Messages Handler tests", () => {
       const emptyBatchMessages: KafkaMessage[] = [];
 
       await expect(
-        handleMessages(emptyBatchMessages, dbContext, genericLogger)
+        handleMessages(
+          emptyBatchMessages,
+          dbContext,
+          fileManager,
+          genericLogger
+        )
       ).resolves.toBeUndefined();
     });
 
@@ -58,7 +64,7 @@ describe("Messages Handler tests", () => {
       );
       const messages = mockEventsToKafkaMessages(events);
 
-      await handleMessages(messages, dbContext, genericLogger);
+      await handleMessages(messages, dbContext, fileManager, genericLogger);
 
       const beginRequestStagingCount = await getStagingTableCount(
         conn,
@@ -116,6 +122,7 @@ describe("Messages Handler tests", () => {
         await handleMessages(
           [{ value: null } as unknown as KafkaMessage],
           dbContext,
+          fileManager,
           genericLogger
         );
       }).rejects.toThrow();

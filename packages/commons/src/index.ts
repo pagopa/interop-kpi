@@ -6,6 +6,7 @@ export * from "./utils/date.js";
 export * from "./utils/pgHelper.js";
 export * from "./utils/batchHelper.js";
 export * from "./utils/sqlQueryHelper.js";
+export * from "./utils/csvWriter.js";
 export * from "./sqs/index.js";
 export * from "./repositories/db.js";
 export * from "./kafka/kafka.js";

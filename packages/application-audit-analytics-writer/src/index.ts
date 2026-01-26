@@ -2,6 +2,7 @@ import { runBatchConsumer } from "kafka-connector";
 import {
   DBContext,
   initDB,
+  initFileManager,
   logger,
   retryConnection,
   setupDbServiceBuilder,
@@ -53,7 +54,12 @@ async function processMessage({ batch }: EachBatchPayload): Promise<void> {
     correlationId: generateId<CorrelationId>(),
   });
 
-  await handleMessages(batch.messages, dbContext, loggerInstance);
+  await handleMessages(
+    batch.messages,
+    dbContext,
+    initFileManager(config),
+    loggerInstance
+  );
 
   loggerInstance.info(
     `Handling application audit messages. Partition number: ${

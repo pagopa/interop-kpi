@@ -2,14 +2,12 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 import { PassThrough, Readable } from "stream";
 import { createGzip } from "zlib";
-import { ColumnValue, formatTimehhmmss } from "pagopa-interop-kpi-commons";
-import { config } from "../config/config.js";
+import { ColumnValue } from "./pgHelper.js";
+import { formatTimehhmmss } from "./date.js";
 
 export class CsvWriter<T> {
   private readonly csvStream = new PassThrough();
-  private readonly gzipStream = createGzip({
-    level: config.gzCompressionLevel,
-  });
+  private readonly gzipStream: PassThrough;
   private recordsCount = 0;
   private readonly fileName: string;
   private readonly columns: string[];
@@ -17,12 +15,14 @@ export class CsvWriter<T> {
   constructor(
     tableName: string,
     private readonly mapping: Record<string, (r: T) => ColumnValue>,
-    batchIdentifier: string
+    batchIdentifier: string,
+    gzCompressionLevel: number
   ) {
     const time = formatTimehhmmss(new Date());
     this.fileName = `${tableName}_${batchIdentifier}_${time}.csv.gz`;
     this.columns = Object.keys(mapping);
 
+    this.gzipStream = createGzip({ level: gzCompressionLevel });
     this.csvStream.pipe(this.gzipStream);
   }
 

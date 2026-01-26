@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable functional/no-let */
 /* eslint-disable functional/immutable-data */
-import { FileManager, Logger, batchItems } from "pagopa-interop-kpi-commons";
+import {
+  CsvWriter,
+  FileManager,
+  Logger,
+  batchItems,
+} from "pagopa-interop-kpi-commons";
 import * as ndjson from "ndjson";
 import { JwtDbTable } from "pagopa-interop-kpi-models";
 import { match } from "ts-pattern";
@@ -10,7 +15,6 @@ import {
   GeneratedTokenAuditDetails,
   tokenAuditSchema,
 } from "../model/domain/models.js";
-import { CsvWriter } from "../utilities/csvWriter.js";
 import { generatedTokenMapping } from "../repositories/generatedToken.repository.js";
 import { clientAssertionMapping } from "../repositories/clientAssertion.repository.js";
 import { DBService } from "./dbService.js";
@@ -35,12 +39,14 @@ export const jwtAuditServiceBuilder = (
     const generatedTokenCsv = new CsvWriter(
       JwtDbTable.generated_token,
       generatedTokenMapping,
-      batchIdentifier
+      batchIdentifier,
+      config.gzCompressionLevel
     );
     const clientAssertionCsv = new CsvWriter(
       JwtDbTable.client_assertion,
       clientAssertionMapping,
-      batchIdentifier
+      batchIdentifier,
+      config.gzCompressionLevel
     );
 
     try {
