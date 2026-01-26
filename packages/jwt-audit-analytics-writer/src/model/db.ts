@@ -15,7 +15,7 @@ export const ClientAssertionSchema = z.object({
   expiration_time_tz: z.date(),
   expiration_time_raw: z.coerce.number(),
   generated_token_jwt_id: z.string(),
-  origin_file_reference: z.string().optional(),
+  origin_file_reference: z.string().nullish(),
 });
 export type ClientAssertionSchema = z.infer<typeof ClientAssertionSchema>;
 
@@ -41,7 +41,7 @@ export const GeneratedTokenSchema = z.object({
   expiration_time_tz: z.date(),
   issuer: z.string(),
   client_assertion_jwt_id: z.string(),
-  origin_file_reference: z.string().optional(),
+  origin_file_reference: z.string().nullish(),
 });
 export type GeneratedTokenSchema = z.infer<typeof GeneratedTokenSchema>;
 
