@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS jwt.generated_token_audit (
     expiration_time BIGINT NOT NULL,
     expiration_time_tz TIMESTAMPTZ NOT NULL,
     issuer VARCHAR(255) NOT NULL,
-    client_assertion_jwt_id VARCHAR(255) NOT NULL
+    client_assertion_jwt_id VARCHAR(255) NOT NULL,
+    origin_file_reference VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS jwt.client_assertion_audit (
@@ -38,6 +39,7 @@ CREATE TABLE IF NOT EXISTS jwt.client_assertion_audit (
     generated_token_jwt_id VARCHAR(36) PRIMARY KEY,
     issued_at_raw DOUBLE PRECISION NOT NULL,
     expiration_time_raw DOUBLE PRECISION NOT NULL,
+    origin_file_reference VARCHAR(255) NOT NULL,
     CONSTRAINT fk_generated_token FOREIGN KEY (generated_token_jwt_id) REFERENCES jwt.generated_token_audit(jwt_id)
 );
 

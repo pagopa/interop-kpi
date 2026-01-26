@@ -61,7 +61,8 @@ export const jwtAuditServiceBuilder = (
           tokenAuditSchema,
           parsedFileStream,
           config.batchSize,
-          s3key
+          s3key,
+          true
         )) {
           generatedTokenCsv.writeBatch(batch);
           clientAssertionCsv.writeBatch(batch);
@@ -152,7 +153,8 @@ export const jwtAuditServiceBuilder = (
         tokenAuditSchema,
         parsedFileStream,
         config.batchSize,
-        s3key
+        s3key,
+        true
       )) {
         await dbService.insertRecordsToStaging(batch);
         ingestionState.totalRecordsProcessed += batch.length;

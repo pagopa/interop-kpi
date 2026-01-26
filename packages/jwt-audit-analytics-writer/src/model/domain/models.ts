@@ -23,26 +23,30 @@ export type ClientAssertionAuditDetails = z.infer<
   typeof ClientAssertionAuditDetails
 >;
 
-export const GeneratedTokenAuditDetails = z.object({
-  jwtId: z.string(),
-  correlationId: z.string().optional(),
-  issuedAt: z.number(),
-  clientId: ClientId,
-  organizationId: TenantId,
-  agreementId: AgreementId,
-  eserviceId: EServiceId,
-  descriptorId: DescriptorId,
-  purposeId: PurposeId,
-  purposeVersionId: PurposeVersionId,
-  algorithm: z.string(),
-  keyId: z.string(),
-  audience: z.string(),
-  subject: z.string(),
-  notBefore: z.number(),
-  expirationTime: z.number(),
-  issuer: z.string(),
-  clientAssertion: ClientAssertionAuditDetails,
-});
+export const GeneratedTokenAuditDetails = z
+  .object({
+    jwtId: z.string(),
+    correlationId: z.string().optional(),
+    issuedAt: z.number(),
+    clientId: ClientId,
+    organizationId: TenantId,
+    agreementId: AgreementId,
+    eserviceId: EServiceId,
+    descriptorId: DescriptorId,
+    purposeId: PurposeId,
+    purposeVersionId: PurposeVersionId,
+    algorithm: z.string(),
+    keyId: z.string(),
+    audience: z.string(),
+    subject: z.string(),
+    notBefore: z.number(),
+    expirationTime: z.number(),
+    issuer: z.string(),
+    clientAssertion: ClientAssertionAuditDetails,
+  })
+  .extend({
+    originFileReference: z.string().nullish(),
+  });
 export type GeneratedTokenAuditDetails = z.infer<
   typeof GeneratedTokenAuditDetails
 >;

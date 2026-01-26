@@ -122,6 +122,7 @@ export const getMockJwtAudit = (): GeneratedTokenAuditDetails => {
       issuer: consumerId,
       expirationTime: new Date().getMilliseconds(),
     },
+    originFileReference: "token-details/date/timestamp_uuid.ndjson",
   };
 };
 

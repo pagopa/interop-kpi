@@ -76,8 +76,9 @@ describe("JWT Audit Service tests", () => {
 
       const allS3Keys = await Promise.all(
         Array.from({ length: S3_KEYS_NUMBER }).map(async () => {
-          const records: GeneratedTokenAuditDetails[] =
-            getMockJwtAudits(RECORDS_PER_FILE);
+          const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(
+            RECORDS_PER_FILE
+          ).map((record) => ({ ...record, originFileReference: null }));
 
           const { fullPathName } = await writeJwtAuditNdjson(
             records,
@@ -158,7 +159,10 @@ describe("JWT Audit Service tests", () => {
 
     it("should read the ndjson file from s3 and persist its data with deduplication to the database successfully", async () => {
       const records: GeneratedTokenAuditDetails[] =
-        getMockJwtAuditWithDuplicates(900, 100);
+        getMockJwtAuditWithDuplicates(900, 100).map((record) => ({
+          ...record,
+          originFileReference: null,
+        }));
 
       const { fullPathName } = await writeJwtAuditNdjson(
         records,
@@ -194,7 +198,10 @@ describe("JWT Audit Service tests", () => {
     });
 
     it("should throw an error when invalid records are encountered", async () => {
-      const validRecords = getMockJwtAudits(5);
+      const validRecords = getMockJwtAudits(5).map((record) => ({
+        ...record,
+        originFileReference: null,
+      }));
       const invalidRecords = Array.from({ length: 3 }, () => ({}));
       const allRecords: unknown[] = [...validRecords, ...invalidRecords];
       const source: AsyncIterable<unknown> = Readable.from(allRecords);
@@ -208,7 +215,8 @@ describe("JWT Audit Service tests", () => {
           tokenAuditSchema,
           source,
           2,
-          "s3key"
+          "s3key",
+          true
         )) {
           totalRecordsProcessed += batch.length;
         }
@@ -315,7 +323,9 @@ describe("JWT Audit Service tests", () => {
       config.s3DeleteAfterCopy = true;
       config.s3CopyBucket = "test-bucket-1";
 
-      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(5);
+      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(5).map(
+        (record) => ({ ...record, originFileReference: null })
+      );
 
       const { fullPathName } = await writeJwtAuditNdjson(
         records,
@@ -358,7 +368,9 @@ describe("JWT Audit Service tests", () => {
       config.s3DeleteAfterCopy = false;
       config.s3CopyBucket = "test-bucket-1";
 
-      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(5);
+      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(5).map(
+        (record) => ({ ...record, originFileReference: null })
+      );
 
       const { fullPathName } = await writeJwtAuditNdjson(
         records,
@@ -403,7 +415,9 @@ describe("JWT Audit Service tests", () => {
       config.s3DeleteAfterCopy = true;
       config.s3CopyBucket = "test-bucket-1";
 
-      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(5);
+      const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(5).map(
+        (record) => ({ ...record, originFileReference: null })
+      );
 
       const { fullPathName } = await writeJwtAuditNdjson(
         records,
