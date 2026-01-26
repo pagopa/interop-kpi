@@ -39,7 +39,7 @@ describe("Begin request batch handler tests", () => {
   });
 
   describe("processBatch", () => {
-    it.only("should trigger staging table cleanup if an error occurs and at least one message is processed", async () => {
+    it("should trigger staging table cleanup if an error occurs and at least one message is processed", async () => {
       const mockQueryError = new Error("Generic merge error");
       const mockError = genericInternalError(
         `Error merging staging to target ${beginRequestStagingTable} table: ${mockQueryError}`
