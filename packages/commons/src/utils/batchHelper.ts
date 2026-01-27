@@ -19,15 +19,20 @@ export async function* batchItems<TSchema>(
   schema: ZodSchema<TSchema>,
   source: AsyncIterable<unknown>,
   batchSize: number,
-  fileName: string
+  fileName: string,
+  addFileReference?: boolean
 ): AsyncGenerator<TSchema[]> {
   // eslint-disable-next-line functional/no-let
   let batch: TSchema[] = [];
   for await (const rawRecord of source) {
     const result = schema.safeParse(rawRecord);
     if (result.success) {
+      const record = addFileReference
+        ? { ...result.data, originFileReference: fileName }
+        : result.data;
+
       // eslint-disable-next-line functional/immutable-data
-      batch.push(result.data);
+      batch.push(record);
     } else {
       throw genericInternalError(
         `Invalid record for file: ${fileName}. Data: ${JSON.stringify(

@@ -42,6 +42,7 @@ export const generatedTokenMapping: GeneratedTokenMapping = {
   expiration_time_tz: (record) => new Date(record.expirationTime),
   issuer: (record) => record.issuer,
   client_assertion_jwt_id: (record) => record.clientAssertion.jwtId,
+  origin_file_reference: (record) => record.originFileReference,
 };
 
 export function generatedTokenRepository(conn: DBConnection) {

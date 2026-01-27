@@ -41,6 +41,7 @@ export const clientAssertionMapping: ClientAssertionMapping = {
   generated_token_jwt_id: (record) => record.jwtId,
   issued_at_raw: (record) => record.clientAssertion.issuedAt,
   expiration_time_raw: (record) => record.clientAssertion.expirationTime,
+  origin_file_reference: (record) => record.originFileReference,
 };
 
 export function clientAssertionRepository(conn: DBConnection) {
