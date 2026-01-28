@@ -25,10 +25,7 @@ const applicationAuditAnalyticsWriterConfig = LoggerConfig.and(
         MERGE_TABLE_SUFFIX: z
           .string()
           .transform((val) => val.replace(/-/g, "")),
-        MAX_DAYS_TOLERANCE_FOR_DUPLICATE_DELAY: z.coerce
-          .number()
-          .min(1)
-          .default(1),
+        MAX_DAYS_TOLERANCE_FOR_DUPLICATE_DELAY: z.coerce.number().optional(),
         S3_COPY_BUCKET: z.string(),
         S3_DELETE_AFTER_COPY: z
           .enum(["true", "false"])
