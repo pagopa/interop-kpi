@@ -76,16 +76,18 @@ async function processAccumulator(logger: Logger): Promise<void> {
     `Process ${accumulator.messages.length} accumulated messages. Offset: ${accumulator.firstOffset} -> ${accumulator.lastOffset}`
   );
 
-  await handleMessages(
-    accumulator.messages,
-    dbContext,
-    initFileManager(config),
-    logger
-  );
-
-  accumulator.messages = [];
-  accumulator.correlationId = generateId<CorrelationId>();
-  accumulator.lastFlushTime = Date.now();
+  try {
+    await handleMessages(
+      accumulator.messages,
+      dbContext,
+      initFileManager(config),
+      logger
+    );
+  } finally {
+    accumulator.messages = [];
+    accumulator.correlationId = generateId<CorrelationId>();
+    accumulator.lastFlushTime = Date.now();
+  }
 }
 
 async function processMessage({ batch }: EachBatchPayload): Promise<void> {
