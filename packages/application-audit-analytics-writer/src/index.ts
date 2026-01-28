@@ -1,8 +1,10 @@
+/* eslint-disable functional/immutable-data */
 import { runBatchConsumer } from "kafka-connector";
 import {
   DBContext,
   initDB,
   initFileManager,
+  Logger,
   logger,
   retryConnection,
   setupDbServiceBuilder,
@@ -13,6 +15,7 @@ import {
   CorrelationId,
   generateId,
 } from "pagopa-interop-kpi-models";
+import { KafkaMessage } from "kafkajs";
 import { batchConsumerConfig, config } from "./config/config.js";
 import { handleMessages } from "./handlers/messagesHandler.js";
 
@@ -48,24 +51,65 @@ await retryConnection(
   logger({ serviceName: config.serviceName })
 );
 
+const accumulator: {
+  messages: KafkaMessage[];
+  correlationId: CorrelationId;
+  firstOffset?: string;
+  lastOffset?: string;
+  lastFlushTime: number;
+} = {
+  messages: [],
+  correlationId: generateId<CorrelationId>(),
+  lastFlushTime: Date.now(),
+};
+
+async function processAccumulator(logger: Logger): Promise<void> {
+  if (accumulator.messages.length === 0) {
+    return;
+  }
+
+  accumulator.firstOffset = accumulator.messages[0].offset;
+  accumulator.lastOffset =
+    accumulator.messages[accumulator.messages.length - 1].offset;
+
+  logger.info(
+    `Process ${accumulator.messages.length} accumulated messages. Offset: ${accumulator.firstOffset} -> ${accumulator.lastOffset}`
+  );
+
+  await handleMessages(
+    accumulator.messages,
+    dbContext,
+    initFileManager(config),
+    logger
+  );
+
+  accumulator.messages = [];
+  accumulator.correlationId = generateId<CorrelationId>();
+  accumulator.lastFlushTime = Date.now();
+}
+
 async function processMessage({ batch }: EachBatchPayload): Promise<void> {
   const loggerInstance = logger({
     serviceName: config.serviceName,
-    correlationId: generateId<CorrelationId>(),
+    correlationId: accumulator.correlationId,
   });
 
-  await handleMessages(
-    batch.messages,
-    dbContext,
-    initFileManager(config),
-    loggerInstance
-  );
+  accumulator.messages.push(...batch.messages);
+
+  const now = Date.now();
+  const shouldProcessAccumulator =
+    accumulator.messages.length >= config.accumulatorMaxMessages ||
+    now - accumulator.lastFlushTime >= config.accumulatorFlushTimeoutMs;
 
   loggerInstance.info(
-    `Handling application audit messages. Partition number: ${
+    `Batch handled. Partition ${
       batch.partition
-    }. Offset: ${batch.firstOffset()} -> ${batch.lastOffset()}`
+    }. Offset: ${batch.firstOffset()} -> ${batch.lastOffset()}.`
   );
+
+  if (shouldProcessAccumulator) {
+    await processAccumulator(loggerInstance);
+  }
 }
 
 await runBatchConsumer(

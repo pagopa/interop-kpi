@@ -36,6 +36,11 @@ const applicationAuditAnalyticsWriterConfig = LoggerConfig.and(
         GZ_COMPRESSION_LEVEL: z.coerce.number().default(6),
         REDSHIFT_COPY_IAM_ROLE_ARN: z.string(),
         DB_INGEST_MODE: z.enum(["INSERT", "COPY"]).default("INSERT"),
+        ACCUMULATOR_MAX_MESSAGES: z.coerce.number().min(100000).default(500000),
+        ACCUMULATOR_FLUSH_TIMEOUT_MS: z.coerce
+          .number()
+          .min(30000)
+          .default(60000),
       })
       .transform((c) => ({
         serviceName: c.SERVICE_NAME,
@@ -48,6 +53,8 @@ const applicationAuditAnalyticsWriterConfig = LoggerConfig.and(
         gzCompressionLevel: c.GZ_COMPRESSION_LEVEL,
         redshiftIamRole: c.REDSHIFT_COPY_IAM_ROLE_ARN,
         dbIngestMode: c.DB_INGEST_MODE,
+        accumulatorMaxMessages: c.ACCUMULATOR_MAX_MESSAGES,
+        accumulatorFlushTimeoutMs: c.ACCUMULATOR_FLUSH_TIMEOUT_MS,
       }))
   );
 
