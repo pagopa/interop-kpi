@@ -16,30 +16,53 @@ import {
   ApplicationAuditBeginRequestSchema,
 } from "../model/db.js";
 
+export const beginRequestMapping: ApplicationAuditBeginRequestMapping = {
+  span_id: (event) => event.spanId,
+  correlation_id: (event) => event.correlationId,
+  service: (event) => event.service,
+  service_version: (event) => event.serviceVersion,
+  endpoint: (event) => event.endpoint,
+  http_method: (event) => event.httpMethod,
+  phase: (event) => event.phase,
+  requester_ip_address: (event) => event.requesterIpAddress,
+  node_ip: (event) => event.nodeIp,
+  pod_name: (event) => event.podName,
+  uptime_seconds: (event) => event.uptimeSeconds,
+  timestamp: (event) => event.timestamp,
+  timestamp_tz: (event) => new Date(event.timestamp),
+  amazon_trace_id: (event) => event.amazonTraceId,
+};
+
 export function beginRequestRepository(conn: DBConnection, pgp: IMain) {
   const beginRequestTable = ApplicationDbTable.begin_request;
   const beginRequestStagingTable = `${beginRequestTable}${config.mergeTableSuffix}`;
 
   return {
-    async batchInsert(events: ApplicationAuditBeginRequest[]): Promise<void> {
+    async copyFromS3ToStaging(s3ObjectKey: string): Promise<void> {
       try {
-        const beginRequestMapping: ApplicationAuditBeginRequestMapping = {
-          span_id: (event) => event.spanId,
-          correlation_id: (event) => event.correlationId,
-          service: (event) => event.service,
-          service_version: (event) => event.serviceVersion,
-          endpoint: (event) => event.endpoint,
-          http_method: (event) => event.httpMethod,
-          phase: (event) => event.phase,
-          requester_ip_address: (event) => event.requesterIpAddress,
-          node_ip: (event) => event.nodeIp,
-          pod_name: (event) => event.podName,
-          uptime_seconds: (event) => event.uptimeSeconds,
-          timestamp: (event) => event.timestamp,
-          timestamp_tz: (event) => new Date(event.timestamp),
-          amazon_trace_id: (event) => event.amazonTraceId,
-        };
+        const copyQuery = `
+          COPY ${beginRequestTable}
+          FROM 's3://${config.s3CopyBucket}/${s3ObjectKey}'
+          IAM_ROLE '${config.redshiftIamRole}'
+          CSV
+          GZIP
+          TIMEFORMAT 'auto'
+          BLANKSASNULL
+          EMPTYASNULL;
+        `;
 
+        await conn.none(copyQuery);
+      } catch (error: unknown) {
+        throw genericInternalError(
+          `Error copying data from S3 to staging ${beginRequestTable}: ${error}`
+        );
+      }
+    },
+
+    async insertToStaging(
+      events: ApplicationAuditBeginRequest[]
+    ): Promise<void> {
+      try {
         const beginRequestColumnSet =
           buildColumnSet<ApplicationAuditBeginRequest>(
             pgp,

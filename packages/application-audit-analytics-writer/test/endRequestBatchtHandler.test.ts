@@ -7,12 +7,14 @@ import {
 import { genericLogger } from "pagopa-interop-kpi-commons";
 import { config } from "../src/config/config.js";
 import {
+  endRequestMapping,
   EndRequestRepository,
   endRequestRepository,
 } from "../src/repositories/endRequest.repository.js";
 import { processBatch } from "../src/handlers/batchHandler.js";
 import {
   dbContext,
+  fileManager,
   getMockApplicationAudits,
   getStagingTableCount,
   getTargetTableCount,
@@ -57,7 +59,9 @@ describe("End request batch handler tests", () => {
         processBatch<ApplicationAuditEndRequest, EndRequestRepository>(
           endRequestMsgs,
           endRequestRepo,
-          "EndRequest",
+          ApplicationDbTable.end_request,
+          endRequestMapping,
+          fileManager,
           genericLogger
         )
       ).rejects.toThrowError();
@@ -73,12 +77,12 @@ describe("End request batch handler tests", () => {
     });
   });
 
-  describe("batchInsert", () => {
+  describe("insertToStaging", () => {
     it("should insert application audit events successfully", async () => {
       const endRequestMsgs =
         getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10, 0, 0);
 
-      await endRequestRepo.batchInsert(endRequestMsgs);
+      await endRequestRepo.insertToStaging(endRequestMsgs);
 
       const endRequestStagingCount = await getStagingTableCount(
         conn,
@@ -95,7 +99,7 @@ describe("End request batch handler tests", () => {
         `Error inserting into ${endRequestStagingTable} staging table: ${mockQueryError}`
       );
 
-      await expect(endRequestRepo.batchInsert([])).rejects.toThrowError(
+      await expect(endRequestRepo.insertToStaging([])).rejects.toThrowError(
         mockError
       );
     });
@@ -106,7 +110,7 @@ describe("End request batch handler tests", () => {
       const endRequestMsgs =
         getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10, 0, 0);
 
-      await endRequestRepo.batchInsert(endRequestMsgs);
+      await endRequestRepo.insertToStaging(endRequestMsgs);
       await endRequestRepo.mergeStagingToTarget();
 
       const endRequestTargetCount = await getTargetTableCount(
@@ -126,7 +130,7 @@ describe("End request batch handler tests", () => {
       const endRequestMsgs =
         getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10, 0, 0);
 
-      await endRequestRepo.batchInsert(endRequestMsgs);
+      await endRequestRepo.insertToStaging(endRequestMsgs);
 
       vi.spyOn(conn, "none").mockRejectedValue(mockQueryError);
 
@@ -141,7 +145,7 @@ describe("End request batch handler tests", () => {
       const endRequestMsgs =
         getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10, 0, 0);
 
-      await endRequestRepo.batchInsert(endRequestMsgs);
+      await endRequestRepo.insertToStaging(endRequestMsgs);
       await endRequestRepo.mergeStagingToTarget();
       await endRequestRepo.cleanStaging();
 

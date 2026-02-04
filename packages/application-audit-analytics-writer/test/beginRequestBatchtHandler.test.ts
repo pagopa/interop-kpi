@@ -7,12 +7,14 @@ import {
 import { genericLogger } from "pagopa-interop-kpi-commons";
 import { config } from "../src/config/config.js";
 import {
+  beginRequestMapping,
   BeginRequestRepository,
   beginRequestRepository,
 } from "../src/repositories/beginRequest.repository.js";
 import { processBatch } from "../src/handlers/batchHandler.js";
 import {
   dbContext,
+  fileManager,
   getMockApplicationAudits,
   getStagingTableCount,
   getTargetTableCount,
@@ -44,7 +46,7 @@ describe("Begin request batch handler tests", () => {
       );
 
       const beginRequestMsgs =
-        getMockApplicationAudits<ApplicationAuditBeginRequest>(10, 0, 0, 0);
+        getMockApplicationAudits<ApplicationAuditBeginRequest>(40000, 0, 0, 0);
 
       vi.spyOn(genericLogger, "warn");
       vi.spyOn(beginRequestRepo, "cleanStaging");
@@ -56,7 +58,9 @@ describe("Begin request batch handler tests", () => {
         processBatch<ApplicationAuditBeginRequest, BeginRequestRepository>(
           beginRequestMsgs,
           beginRequestRepo,
-          "BeginRequest",
+          ApplicationDbTable.begin_request,
+          beginRequestMapping,
+          fileManager,
           genericLogger
         )
       ).rejects.toThrowError();
@@ -77,7 +81,7 @@ describe("Begin request batch handler tests", () => {
       const beginRequestMsgs =
         getMockApplicationAudits<ApplicationAuditBeginRequest>(10, 0, 0, 0);
 
-      await beginRequestRepo.batchInsert(beginRequestMsgs);
+      await beginRequestRepo.insertToStaging(beginRequestMsgs);
 
       const beginRequestStagingCount = await getStagingTableCount(
         conn,
@@ -94,7 +98,7 @@ describe("Begin request batch handler tests", () => {
         `Error inserting into ${beginRequestStagingTable} staging table: ${mockQueryError}`
       );
 
-      await expect(beginRequestRepo.batchInsert([])).rejects.toThrowError(
+      await expect(beginRequestRepo.insertToStaging([])).rejects.toThrowError(
         mockError
       );
     });
@@ -105,7 +109,7 @@ describe("Begin request batch handler tests", () => {
       const beginRequestMsgs =
         getMockApplicationAudits<ApplicationAuditBeginRequest>(10, 0, 0, 0);
 
-      await beginRequestRepo.batchInsert(beginRequestMsgs);
+      await beginRequestRepo.insertToStaging(beginRequestMsgs);
       await beginRequestRepo.mergeStagingToTarget();
 
       const beginRequestTargetCount = await getTargetTableCount(
@@ -125,7 +129,7 @@ describe("Begin request batch handler tests", () => {
       const beginRequestMsgs =
         getMockApplicationAudits<ApplicationAuditBeginRequest>(5, 0, 0, 0);
 
-      await beginRequestRepo.batchInsert(beginRequestMsgs);
+      await beginRequestRepo.insertToStaging(beginRequestMsgs);
 
       vi.spyOn(conn, "none").mockRejectedValue(mockQueryError);
 
@@ -140,7 +144,7 @@ describe("Begin request batch handler tests", () => {
       const beginRequestMsgs =
         getMockApplicationAudits<ApplicationAuditBeginRequest>(10, 0, 0, 0);
 
-      await beginRequestRepo.batchInsert(beginRequestMsgs);
+      await beginRequestRepo.insertToStaging(beginRequestMsgs);
       await beginRequestRepo.mergeStagingToTarget();
       await beginRequestRepo.cleanStaging();
 

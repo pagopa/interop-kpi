@@ -16,6 +16,28 @@ import {
   ApplicationAuditEndRequestSessionTokenExchangeSchema,
 } from "../model/db.js";
 
+export const endRequestSessionTokenExchangeMapping: ApplicationAuditEndRequestSessionTokenExchangeMapping =
+  {
+    span_id: (event) => event.spanId,
+    correlation_id: (event) => event.correlationId,
+    service: (event) => event.service,
+    service_version: (event) => event.serviceVersion,
+    endpoint: (event) => event.endpoint,
+    http_method: (event) => event.httpMethod,
+    phase: (event) => event.phase,
+    requester_ip_address: (event) => event.requesterIpAddress,
+    node_ip: (event) => event.nodeIp,
+    pod_name: (event) => event.podName,
+    uptime_seconds: (event) => event.uptimeSeconds,
+    timestamp: (event) => event.timestamp,
+    timestamp_tz: (event) => new Date(event.timestamp),
+    amazon_trace_id: (event) => event.amazonTraceId,
+    organization_id: (event) => event.organizationId,
+    http_response_status: (event) => event.httpResponseStatus,
+    execution_time_ms: (event) => event.executionTimeMs,
+    self_care_id: (event) => event.selfcareId,
+  };
+
 export function endRequestSessionTokenExchangeRepository(
   conn: DBConnection,
   pgp: IMain
@@ -25,32 +47,31 @@ export function endRequestSessionTokenExchangeRepository(
   const endRequestSessionTokenExchangeStagingTable = `${endRequestSessionTokenExchangeTable}${config.mergeTableSuffix}`;
 
   return {
-    async batchInsert(
+    async copyFromS3ToStaging(s3ObjectKey: string): Promise<void> {
+      try {
+        const copyQuery = `
+          COPY ${endRequestSessionTokenExchangeTable}
+          FROM 's3://${config.s3CopyBucket}/${s3ObjectKey}'
+          IAM_ROLE '${config.redshiftIamRole}'
+          CSV
+          GZIP
+          TIMEFORMAT 'auto'
+          BLANKSASNULL
+          EMPTYASNULL;
+        `;
+
+        await conn.none(copyQuery);
+      } catch (error: unknown) {
+        throw genericInternalError(
+          `Error copying data from S3 to staging ${endRequestSessionTokenExchangeTable}: ${error}`
+        );
+      }
+    },
+
+    async insertToStaging(
       events: ApplicationAuditEndRequestSessionTokenExchange[]
     ): Promise<void> {
       try {
-        const endRequestSessionTokenExchangeMapping: ApplicationAuditEndRequestSessionTokenExchangeMapping =
-          {
-            span_id: (event) => event.spanId,
-            correlation_id: (event) => event.correlationId,
-            service: (event) => event.service,
-            service_version: (event) => event.serviceVersion,
-            endpoint: (event) => event.endpoint,
-            http_method: (event) => event.httpMethod,
-            phase: (event) => event.phase,
-            requester_ip_address: (event) => event.requesterIpAddress,
-            node_ip: (event) => event.nodeIp,
-            pod_name: (event) => event.podName,
-            uptime_seconds: (event) => event.uptimeSeconds,
-            timestamp: (event) => event.timestamp,
-            timestamp_tz: (event) => new Date(event.timestamp),
-            amazon_trace_id: (event) => event.amazonTraceId,
-            organization_id: (event) => event.organizationId,
-            http_response_status: (event) => event.httpResponseStatus,
-            execution_time_ms: (event) => event.executionTimeMs,
-            self_care_id: (event) => event.selfcareId,
-          };
-
         const endRequestSessionTokenExchangeColumnSet =
           buildColumnSet<ApplicationAuditEndRequestSessionTokenExchange>(
             pgp,
