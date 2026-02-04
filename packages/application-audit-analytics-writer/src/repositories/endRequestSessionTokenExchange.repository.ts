@@ -50,7 +50,7 @@ export function endRequestSessionTokenExchangeRepository(
     async copyFromS3ToStaging(s3ObjectKey: string): Promise<void> {
       try {
         const copyQuery = `
-          COPY ${endRequestSessionTokenExchangeTable}
+          COPY ${endRequestSessionTokenExchangeStagingTable}
           FROM 's3://${config.s3CopyBucket}/${s3ObjectKey}'
           IAM_ROLE '${config.redshiftIamRole}'
           CSV
@@ -63,7 +63,7 @@ export function endRequestSessionTokenExchangeRepository(
         await conn.none(copyQuery);
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error copying data from S3 to staging ${endRequestSessionTokenExchangeTable}: ${error}`
+          `Error copying data from S3 to staging ${endRequestSessionTokenExchangeStagingTable}: ${error}`
         );
       }
     },
