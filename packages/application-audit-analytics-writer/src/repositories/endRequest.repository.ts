@@ -45,7 +45,7 @@ export function endRequestRepository(conn: DBConnection, pgp: IMain) {
     async copyFromS3ToStaging(s3ObjectKey: string): Promise<void> {
       try {
         const copyQuery = `
-          COPY ${endRequestTable}
+          COPY ${endRequestStagingTable}
           FROM 's3://${config.s3CopyBucket}/${s3ObjectKey}'
           IAM_ROLE '${config.redshiftIamRole}'
           CSV
@@ -58,7 +58,7 @@ export function endRequestRepository(conn: DBConnection, pgp: IMain) {
         await conn.none(copyQuery);
       } catch (error: unknown) {
         throw genericInternalError(
-          `Error copying data from S3 to staging ${endRequestTable}: ${error}`
+          `Error copying data from S3 to staging ${endRequestStagingTable}: ${error}`
         );
       }
     },
