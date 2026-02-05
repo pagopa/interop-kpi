@@ -17,8 +17,8 @@ import {
 } from "../model/db.js";
 
 export const endRequestMapping: ApplicationAuditEndRequestMapping = {
-  span_id: (event) => event.spanId,
   correlation_id: (event) => event.correlationId,
+  span_id: (event) => event.spanId,
   service: (event) => event.service,
   service_version: (event) => event.serviceVersion,
   endpoint: (event) => event.endpoint,
@@ -32,9 +32,9 @@ export const endRequestMapping: ApplicationAuditEndRequestMapping = {
   timestamp_tz: (event) => new Date(event.timestamp),
   amazon_trace_id: (event) => event.amazonTraceId,
   organization_id: (event) => event.organizationId,
-  user_id: (event) => event.userId,
   http_response_status: (event) => event.httpResponseStatus,
   execution_time_ms: (event) => event.executionTimeMs,
+  user_id: (event) => event.userId,
 };
 
 export function endRequestRepository(conn: DBConnection, pgp: IMain) {
