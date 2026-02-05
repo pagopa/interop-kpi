@@ -17,8 +17,8 @@ import {
 } from "../model/db.js";
 
 export const beginRequestMapping: ApplicationAuditBeginRequestMapping = {
-  span_id: (event) => event.spanId,
   correlation_id: (event) => event.correlationId,
+  span_id: (event) => event.spanId,
   service: (event) => event.service,
   service_version: (event) => event.serviceVersion,
   endpoint: (event) => event.endpoint,
