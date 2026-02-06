@@ -9,7 +9,7 @@ import {
   retryConnection,
   setupDbServiceBuilder,
 } from "pagopa-interop-kpi-commons";
-import { EachBatchPayload } from "kafkajs";
+import { Consumer, EachBatchPayload } from "kafkajs";
 import {
   ApplicationDbTable,
   CorrelationId,
@@ -36,6 +36,8 @@ const dbContext: DBContext = {
   pgp: dbInstance.$config.pgp,
 };
 
+const fileManager = initFileManager(config);
+
 await retryConnection(
   dbInstance,
   dbContext,
@@ -56,14 +58,19 @@ const accumulator: {
   correlationId: CorrelationId;
   firstOffset?: string;
   lastOffset?: string;
+  partitionOffsets: Record<number, string>;
   lastFlushTime: number;
 } = {
   messages: [],
   correlationId: generateId<CorrelationId>(),
+  partitionOffsets: {},
   lastFlushTime: Date.now(),
 };
 
-async function processAccumulator(logger: Logger): Promise<void> {
+async function processAccumulator(
+  consumer: Consumer,
+  logger: Logger
+): Promise<void> {
   if (accumulator.messages.length === 0) {
     return;
   }
@@ -77,26 +84,36 @@ async function processAccumulator(logger: Logger): Promise<void> {
   );
 
   try {
-    await handleMessages(
-      accumulator.messages,
-      dbContext,
-      initFileManager(config),
-      logger
+    await handleMessages(accumulator.messages, dbContext, fileManager, logger);
+
+    await consumer.commitOffsets(
+      Object.entries(accumulator.partitionOffsets).map(
+        ([partition, lastOffset]) => ({
+          topic: config.kafkaTopic,
+          partition: Number(partition),
+          offset: (Number(lastOffset) + 1).toString(),
+        })
+      )
     );
   } finally {
     accumulator.messages = [];
     accumulator.correlationId = generateId<CorrelationId>();
     accumulator.lastFlushTime = Date.now();
+    accumulator.partitionOffsets = {};
   }
 }
 
-async function processMessage({ batch }: EachBatchPayload): Promise<void> {
+async function processMessage(
+  { batch }: EachBatchPayload,
+  consumer?: Consumer
+): Promise<void> {
   const loggerInstance = logger({
     serviceName: config.serviceName,
     correlationId: accumulator.correlationId,
   });
 
   accumulator.messages.push(...batch.messages);
+  accumulator.partitionOffsets[batch.partition] = batch.lastOffset();
 
   const now = Date.now();
   const shouldProcessAccumulator =
@@ -110,7 +127,11 @@ async function processMessage({ batch }: EachBatchPayload): Promise<void> {
   );
 
   if (shouldProcessAccumulator) {
-    await processAccumulator(loggerInstance);
+    if (!consumer) {
+      throw new Error("Consumer is required for manual offset commit");
+    }
+
+    await processAccumulator(consumer, loggerInstance);
   }
 }
 

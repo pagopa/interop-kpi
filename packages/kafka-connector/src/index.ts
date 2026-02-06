@@ -468,13 +468,17 @@ export const runBatchConsumer = async (
   baseConsumerConfig: KafkaConsumerConfig,
   batchConsumerConfig: KafkaBatchConsumerConfig,
   topics: string[],
-  consumerHandlerBatch: (messagePayload: EachBatchPayload) => Promise<void>
+  consumerHandlerBatch: (
+    payload: EachBatchPayload,
+    consumer?: Consumer
+  ) => Promise<void>
 ): Promise<void> => {
   try {
-    const consumerRunConfig = (): ConsumerRunConfig => ({
+    const consumerRunConfig = (consumer: Consumer): ConsumerRunConfig => ({
+      autoCommit: baseConsumerConfig.enableAutoCommit,
       eachBatch: async (payload: EachBatchPayload): Promise<void> => {
         try {
-          await consumerHandlerBatch(payload);
+          await consumerHandlerBatch(payload, consumer);
         } catch (e) {
           throw kafkaMessageProcessError(
             payload.batch.topic,

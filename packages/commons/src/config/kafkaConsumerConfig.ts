@@ -10,12 +10,14 @@ export const KafkaConsumerConfig = KafkaConfig.and(AWSConfig).and(
         .union([z.literal("earliest"), z.literal("latest")])
         .default("latest"),
       KAFKA_RESET_CONSUMER_OFFSETS: z.string().default("false"),
+      KAFKA_ENABLE_AUTOCOMMIT: z.string().default("true"),
     })
     .transform((c) => ({
       kafkaGroupId: c.KAFKA_GROUP_ID,
       topicStartingOffset: c.KAFKA_TOPIC_STARTING_OFFSET,
       resetConsumerOffsets:
         c.KAFKA_RESET_CONSUMER_OFFSETS.toLowerCase() === "true",
+      enableAutoCommit: c.KAFKA_ENABLE_AUTOCOMMIT.toLowerCase() === "true",
     }))
 );
 export type KafkaConsumerConfig = z.infer<typeof KafkaConsumerConfig>;
