@@ -11,6 +11,7 @@ export const KafkaConsumerConfig = KafkaConfig.and(AWSConfig).and(
         .default("latest"),
       KAFKA_RESET_CONSUMER_OFFSETS: z.string().default("false"),
       KAFKA_ENABLE_AUTOCOMMIT: z.string().default("true"),
+      KAFKA_REQUEST_TIMEOUT_MILLIS: z.coerce.number(),
     })
     .transform((c) => ({
       kafkaGroupId: c.KAFKA_GROUP_ID,
@@ -18,6 +19,7 @@ export const KafkaConsumerConfig = KafkaConfig.and(AWSConfig).and(
       resetConsumerOffsets:
         c.KAFKA_RESET_CONSUMER_OFFSETS.toLowerCase() === "true",
       enableAutoCommit: c.KAFKA_ENABLE_AUTOCOMMIT.toLowerCase() === "true",
+      requestTimeoutMillis: c.KAFKA_REQUEST_TIMEOUT_MILLIS,
     }))
 );
 export type KafkaConsumerConfig = z.infer<typeof KafkaConsumerConfig>;
@@ -27,6 +29,7 @@ export const KafkaBatchConsumerConfig = z
     KAFKA_AVERAGE_MESSAGE_SIZE_IN_BYTES: z.coerce.number(),
     KAFKA_MESSAGES_TO_READ_PER_BATCH: z.coerce.number(),
     KAFKA_MAX_WAIT_BATCH_MILLIS: z.coerce.number(),
+    KAFKA_SESSION_TIMEOUT_MILLIS: z.coerce.number(),
   })
   .transform((c) => {
     const minBytes =
@@ -35,7 +38,7 @@ export const KafkaBatchConsumerConfig = z
     return {
       minBytes,
       maxWaitKafkaBatchMillis: c.KAFKA_MAX_WAIT_BATCH_MILLIS,
-      sessionTimeoutMillis: Math.round(c.KAFKA_MAX_WAIT_BATCH_MILLIS * 1.5),
+      sessionTimeoutMillis: c.KAFKA_SESSION_TIMEOUT_MILLIS,
       maxBytes: Math.round(minBytes * 1.25),
     };
   });

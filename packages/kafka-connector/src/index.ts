@@ -103,6 +103,7 @@ const initKafka = (config: KafkaConsumerConfig): Kafka => {
     clientId: config.kafkaClientId,
     brokers: config.kafkaBrokers,
     logLevel: config.kafkaLogLevel,
+    requestTimeout: config.requestTimeoutMillis,
   };
 
   const connectionStringKafkaConfig: KafkaConfig | undefined =
