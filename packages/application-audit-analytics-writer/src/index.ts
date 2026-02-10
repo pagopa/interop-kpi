@@ -69,6 +69,7 @@ const accumulator: {
 
 async function processAccumulator(
   consumer: Consumer,
+  heartbeat: () => Promise<void>,
   logger: Logger
 ): Promise<void> {
   if (accumulator.messages.length === 0) {
@@ -83,6 +84,12 @@ async function processAccumulator(
     `Process ${accumulator.messages.length} accumulated messages. Offset: ${accumulator.firstOffset} -> ${accumulator.lastOffset}`
   );
 
+  const heartbeatInterval = setInterval(() => {
+    heartbeat().catch((err) =>
+      logger.error(`Heartbeat failed: ${err.message}`)
+    );
+  }, 5000);
+
   try {
     await handleMessages(accumulator.messages, dbContext, fileManager, logger);
 
@@ -96,6 +103,8 @@ async function processAccumulator(
       )
     );
   } finally {
+    clearInterval(heartbeatInterval);
+
     accumulator.messages = [];
     accumulator.correlationId = generateId<CorrelationId>();
     accumulator.lastFlushTime = Date.now();
@@ -104,7 +113,7 @@ async function processAccumulator(
 }
 
 async function processMessage(
-  { batch }: EachBatchPayload,
+  { batch, heartbeat }: EachBatchPayload,
   consumer?: Consumer
 ): Promise<void> {
   const loggerInstance = logger({
@@ -131,7 +140,7 @@ async function processMessage(
       throw new Error("Consumer is required for manual offset commit");
     }
 
-    await processAccumulator(consumer, loggerInstance);
+    await processAccumulator(consumer, heartbeat, loggerInstance);
   }
 }
 
