@@ -42,10 +42,8 @@ export const clientAssertionMapping: ClientAssertionMapping = {
   issued_at_raw: (record) => record.clientAssertion.issuedAt,
   expiration_time_raw: (record) => record.clientAssertion.expirationTime,
   origin_file_reference: (record) => record.originFileReference,
-  generated_token_issued_at: (record) =>
-    normalizeTimestampToMilliseconds(record.issuedAt),
-  generated_token_issued_at_tz: (record) =>
-    new Date(normalizeTimestampToMilliseconds(record.issuedAt)),
+  generated_token_issued_at: (record) => record.issuedAt,
+  generated_token_issued_at_tz: (record) => new Date(record.issuedAt),
 };
 
 export function clientAssertionRepository(conn: DBConnection) {
