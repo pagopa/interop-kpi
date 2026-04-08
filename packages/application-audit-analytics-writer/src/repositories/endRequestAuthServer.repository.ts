@@ -93,7 +93,11 @@ export function endRequestAuthServerRepository(conn: DBConnection, pgp: IMain) {
           config.dbSchemaName,
           endRequestAuthServerTable,
           config.mergeTableSuffix,
-          ["span_id"]
+          ["span_id"],
+          {
+            joinTimeFilterColumn: "timestamp_tz",
+            maxDaysTolerance: config.maxDaysToleranceForDuplicateDelay,
+          }
         );
         await conn.none(endRequestAuthServerMergeQuery);
       } catch (error: unknown) {

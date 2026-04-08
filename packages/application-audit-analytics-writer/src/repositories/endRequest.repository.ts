@@ -86,7 +86,11 @@ export function endRequestRepository(conn: DBConnection, pgp: IMain) {
           config.dbSchemaName,
           endRequestTable,
           config.mergeTableSuffix,
-          ["span_id"]
+          ["span_id"],
+          {
+            joinTimeFilterColumn: "timestamp_tz",
+            maxDaysTolerance: config.maxDaysToleranceForDuplicateDelay,
+          }
         );
         await conn.none(endRequestMergeQuery);
       } catch (error: unknown) {
