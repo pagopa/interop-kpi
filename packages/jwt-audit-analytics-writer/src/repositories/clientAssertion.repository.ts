@@ -42,6 +42,10 @@ export const clientAssertionMapping: ClientAssertionMapping = {
   issued_at_raw: (record) => record.clientAssertion.issuedAt,
   expiration_time_raw: (record) => record.clientAssertion.expirationTime,
   origin_file_reference: (record) => record.originFileReference,
+  generated_token_issued_at: (record) =>
+    normalizeTimestampToMilliseconds(record.issuedAt),
+  generated_token_issued_at_tz: (record) =>
+    new Date(normalizeTimestampToMilliseconds(record.issuedAt)),
 };
 
 export function clientAssertionRepository(conn: DBConnection) {
@@ -100,7 +104,7 @@ export function clientAssertionRepository(conn: DBConnection) {
           config.mergeTableSuffix,
           ["generated_token_jwt_id"],
           {
-            joinTimeFilterColumn: "issued_at_tz",
+            joinTimeFilterColumn: "generated_token_issued_at_tz",
             maxDaysTolerance: config.maxDaysToleranceForDuplicateDelay,
           }
         );
