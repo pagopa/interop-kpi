@@ -82,7 +82,8 @@ export function generateMergeQuery<T extends z.ZodRawShape>(
  */
 export function generateDeduplicationQuery(
   stagingTableName: string,
-  partitionKey: string
+  partitionKey: string,
+  orderByColumn: string
 ): string {
   return `
     DELETE FROM ${stagingTableName}
@@ -91,7 +92,7 @@ export function generateDeduplicationQuery(
         SELECT _seq,
               ROW_NUMBER() OVER (
                 PARTITION BY ${partitionKey}
-                ORDER BY issued_at DESC, _seq
+                ORDER BY ${orderByColumn} DESC, _seq
               ) AS rn
         FROM ${stagingTableName}
       ) sub
