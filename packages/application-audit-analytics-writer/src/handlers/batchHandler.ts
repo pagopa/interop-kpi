@@ -22,6 +22,7 @@ export async function processBatch<
   TRepository extends {
     insertToStaging: (messages: TSchema[]) => Promise<void>;
     copyFromS3ToStaging: (s3ObjectKey: string) => Promise<void>;
+    deduplicateStaging: () => Promise<void>;
     mergeStagingToTarget: () => Promise<void>;
     cleanStaging: () => Promise<void>;
   }
@@ -56,6 +57,13 @@ export async function processBatch<
     if (ingestionState.totalRecordsProcessed === 0) {
       return;
     }
+
+    const batchDeduplicateStartTime = Date.now();
+    await repository.deduplicateStaging();
+    logger.info(
+      `Staging data deduplicated for ${ingestionState.currentTable} batch.`,
+      batchDeduplicateStartTime
+    );
 
     const batchMergeStartTime = Date.now();
     await repository.mergeStagingToTarget();
