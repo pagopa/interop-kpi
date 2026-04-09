@@ -118,7 +118,8 @@ export function clientAssertionRepository(conn: DBConnection) {
       try {
         const deduplicationQuery = generateDeduplicationQuery(
           clientAssertionStagingTable,
-          "generated_token_jwt_id"
+          "generated_token_jwt_id",
+          "issued_at"
         );
         await t.none(deduplicationQuery);
       } catch (error: unknown) {
