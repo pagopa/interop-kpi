@@ -117,7 +117,8 @@ export function generatedTokenRepository(conn: DBConnection) {
       try {
         const deduplicationQuery = generateDeduplicationQuery(
           tokenAuditStagingTable,
-          "jwt_id"
+          "jwt_id",
+          "issued_at"
         );
         await t.none(deduplicationQuery);
       } catch (error: unknown) {

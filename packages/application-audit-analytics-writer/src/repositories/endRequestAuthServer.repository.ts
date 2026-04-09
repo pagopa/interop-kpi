@@ -3,6 +3,7 @@ import {
   DBConnection,
   IMain,
   buildColumnSet,
+  generateDeduplicationQuery,
   generateMergeQuery,
 } from "pagopa-interop-kpi-commons";
 import {
@@ -103,6 +104,21 @@ export function endRequestAuthServerRepository(conn: DBConnection, pgp: IMain) {
       } catch (error: unknown) {
         throw genericInternalError(
           `Error merging staging to target ${endRequestAuthServerTable} table: ${error}`
+        );
+      }
+    },
+
+    async deduplicateStaging(): Promise<void> {
+      try {
+        const deduplicationQuery = generateDeduplicationQuery(
+          endRequestAuthServerStagingTable,
+          "span_id",
+          "timestamp"
+        );
+        await conn.none(deduplicationQuery);
+      } catch (error: unknown) {
+        throw genericInternalError(
+          `Error deduplicating staging ${endRequestAuthServerStagingTable} table: ${error}`
         );
       }
     },
