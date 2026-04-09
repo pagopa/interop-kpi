@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS jwt.client_assertion_audit (
     issued_at_raw DOUBLE PRECISION NOT NULL,
     expiration_time_raw DOUBLE PRECISION NOT NULL,
     origin_file_reference VARCHAR(255) NOT NULL,
+    generated_token_issued_at BIGINT NOT NULL,
+    generated_token_issued_at_tz TIMESTAMPTZ NOT NULL,
     CONSTRAINT fk_generated_token FOREIGN KEY (generated_token_jwt_id) REFERENCES jwt.generated_token_audit(jwt_id)
 );
 
