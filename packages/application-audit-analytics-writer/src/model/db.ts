@@ -21,6 +21,7 @@ export const ApplicationAuditBeginRequestSchema = z.object({
   timestamp: z.number().int(),
   timestamp_tz: z.date(),
   amazon_trace_id: z.string().optional(),
+  jwt_id: z.string().optional(),
 });
 export type ApplicationAuditBeginRequestSchema = z.infer<
   typeof ApplicationAuditBeginRequestSchema
@@ -43,8 +44,11 @@ export type ApplicationAuditEndRequestSchema = z.infer<
 export const ApplicationAuditEndRequestSessionTokenExchangeSchema =
   ApplicationAuditEndRequestSchema.omit({
     user_id: true,
+    jwt_id: true,
   }).extend({
     self_care_id: z.string().optional(),
+    request_jwt_id: z.string().optional(),
+    produced_jwt_id: z.string().optional(),
   });
 export type ApplicationAuditEndRequestSessionTokenExchangeSchema = z.infer<
   typeof ApplicationAuditEndRequestSessionTokenExchangeSchema

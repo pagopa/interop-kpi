@@ -36,6 +36,7 @@ export const endRequestMapping: ApplicationAuditEndRequestMapping = {
   http_response_status: (event) => event.httpResponseStatus,
   execution_time_ms: (event) => event.executionTimeMs,
   user_id: (event) => event.userId,
+  jwt_id: (event) => event.jwtId,
 };
 
 export function endRequestRepository(conn: DBConnection, pgp: IMain) {
