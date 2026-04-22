@@ -57,6 +57,7 @@ export type ApplicationAuditEndRequestSessionTokenExchangeSchema = z.infer<
 export const ApplicationAuditEndRequestAuthServerSchema =
   ApplicationAuditEndRequestSchema.omit({
     user_id: true,
+    jwt_id: true,
   }).extend({
     client_id: z.string().optional(),
     client_kind: z.string().optional(),

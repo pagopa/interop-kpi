@@ -75,7 +75,7 @@ export type ApplicationAuditEndRequest = z.infer<
 >;
 
 export const ApplicationAuditEndRequestAuthServer =
-  ApplicationAuditEndRequest.omit({ userId: true }).extend({
+  ApplicationAuditEndRequest.omit({ userId: true, jwtId: true }).extend({
     service: z.literal(applicationAuditService.AUTH_SERVER),
     clientId: z.string().optional(),
     clientKind: ApplicationAuditClientKind.optional(),
