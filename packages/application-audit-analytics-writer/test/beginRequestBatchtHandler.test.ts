@@ -12,12 +12,14 @@ import {
   beginRequestRepository,
 } from "../src/repositories/beginRequest.repository.js";
 import { processBatch } from "../src/handlers/batchHandler.js";
+import { ApplicationAuditBeginRequestSchema } from "../src/model/db.js";
 import {
   dbContext,
   fileManager,
   getMockApplicationAudits,
   getStagingTableCount,
   getTargetTableCount,
+  getTargetTableRows,
   truncateTables,
 } from "./utils.js";
 
@@ -118,6 +120,24 @@ describe("Begin request batch handler tests", () => {
       );
 
       expect(beginRequestTargetCount).toBe(10);
+    });
+
+    it("should persist jwtId data correctly", async () => {
+      const beginRequestMsgs =
+        getMockApplicationAudits<ApplicationAuditBeginRequest>(10, 0, 0, 0);
+
+      await beginRequestRepo.insertToStaging(beginRequestMsgs);
+      await beginRequestRepo.mergeStagingToTarget();
+
+      const rows = await getTargetTableRows<ApplicationAuditBeginRequestSchema>(
+        conn,
+        ApplicationDbTable.begin_request
+      );
+
+      rows.forEach((row) => {
+        expect(row).toHaveProperty("jwt_id");
+        expect(row.jwt_id).toBeTruthy();
+      });
     });
 
     it("should throw an error if database query fails", async () => {
