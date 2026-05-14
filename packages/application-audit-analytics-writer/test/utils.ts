@@ -93,7 +93,6 @@ export function getMockApplicationAudits<T>(
       .with("BEGIN_REQUEST", () => ({
         ...common,
         phase: applicationAuditPhase.BEGIN_REQUEST,
-        jwtId: generateId(),
       }))
       .with("END_REQUEST", () => ({
         ...common,

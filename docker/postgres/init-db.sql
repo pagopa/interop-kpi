@@ -96,8 +96,7 @@ CREATE TABLE IF NOT EXISTS application.begin_request_audit (
     uptime_seconds BIGINT NOT NULL,
     timestamp BIGINT NOT NULL,
     timestamp_tz TIMESTAMPTZ NOT NULL,
-    amazon_trace_id VARCHAR(255),
-    jwt_id VARCHAR(255)
+    amazon_trace_id VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS application.end_request_audit (

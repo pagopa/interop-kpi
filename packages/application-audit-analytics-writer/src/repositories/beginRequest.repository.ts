@@ -32,7 +32,6 @@ export const beginRequestMapping: ApplicationAuditBeginRequestMapping = {
   timestamp: (event) => event.timestamp,
   timestamp_tz: (event) => new Date(event.timestamp),
   amazon_trace_id: (event) => event.amazonTraceId,
-  jwt_id: (event) => event.jwtId,
 };
 
 export function beginRequestRepository(conn: DBConnection, pgp: IMain) {
