@@ -12,7 +12,6 @@ import {
   beginRequestRepository,
 } from "../src/repositories/beginRequest.repository.js";
 import { processBatch } from "../src/handlers/batchHandler.js";
-import { ApplicationAuditBeginRequestSchema } from "../src/model/db.js";
 import {
   dbContext,
   fileManager,
