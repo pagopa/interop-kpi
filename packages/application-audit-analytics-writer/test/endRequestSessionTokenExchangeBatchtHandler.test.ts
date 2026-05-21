@@ -15,8 +15,9 @@ import {
 
 describe("End request session token exchange tests", () => {
   const { conn, pgp } = dbContext;
-  const endRequestTable = ApplicationDbTable.end_request_session_token_exchange;
-  const endRequestStagingTable = `${endRequestTable}${config.mergeTableSuffix}`;
+  const endRequestSessionTokenTable =
+    ApplicationDbTable.end_request_session_token_exchange;
+  const stagingTable = `${endRequestSessionTokenTable}${config.mergeTableSuffix}`;
   const temporaryDbSchemaName = "pg_temp";
 
   const sessionTokenExchangeRepository =
@@ -25,10 +26,10 @@ describe("End request session token exchange tests", () => {
   afterEach(async () => {
     vi.restoreAllMocks();
 
-    const stagingTables = [endRequestStagingTable];
+    const stagingTables = [stagingTable];
     await truncateTables(conn, temporaryDbSchemaName, stagingTables);
 
-    const targetTables = [endRequestTable];
+    const targetTables = [endRequestSessionTokenTable];
     await truncateTables(conn, config.dbSchemaName, targetTables);
   });
 
@@ -36,8 +37,8 @@ describe("End request session token exchange tests", () => {
     const endRequestMsgs =
       getMockApplicationAudits<ApplicationAuditEndRequestSessionTokenExchange>(
         0,
-        10,
         0,
+        10,
         0
       );
 
@@ -47,7 +48,7 @@ describe("End request session token exchange tests", () => {
     const rows =
       await getTargetTableRows<ApplicationAuditEndRequestSessionTokenExchangeSchema>(
         conn,
-        ApplicationDbTable.end_request
+        ApplicationDbTable.end_request_session_token_exchange
       );
 
     rows.forEach((row) => {
