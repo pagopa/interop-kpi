@@ -9,6 +9,19 @@ import {
 } from "pagopa-interop-kpi-models";
 import { z, ZodSchema } from "zod";
 
+export const ClientAssertionDigest = z
+  .object({
+    alg: z.string(),
+    value: z.string(),
+  })
+  .strict();
+export type ClientAssertionDigest = z.infer<typeof ClientAssertionDigest>;
+
+export const CNFAuditDetails = z.object({
+  jkt: z.string(),
+});
+export type CNFAuditDetails = z.infer<typeof CNFAuditDetails>;
+
 export const ClientAssertionAuditDetails = z.object({
   jwtId: z.string(),
   issuedAt: z.number(),
@@ -18,6 +31,7 @@ export const ClientAssertionAuditDetails = z.object({
   subject: ClientId,
   audience: z.string(),
   expirationTime: z.number(),
+  digest: ClientAssertionDigest.optional(),
 });
 export type ClientAssertionAuditDetails = z.infer<
   typeof ClientAssertionAuditDetails
@@ -37,11 +51,14 @@ export const GeneratedTokenAuditDetails = z
     purposeVersionId: PurposeVersionId,
     algorithm: z.string(),
     keyId: z.string(),
+    typ: z.string(),
     audience: z.string(),
     subject: z.string(),
     notBefore: z.number(),
     expirationTime: z.number(),
     issuer: z.string(),
+    cnf: CNFAuditDetails.optional(),
+    digest: ClientAssertionDigest.optional(),
     clientAssertion: ClientAssertionAuditDetails,
   })
   .extend({

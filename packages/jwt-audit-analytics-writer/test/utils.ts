@@ -90,6 +90,7 @@ export const getMockJwtAudit = (): GeneratedTokenAuditDetails => {
   const clientId = generateId<ClientId>();
   const purposeId = generateId<PurposeId>();
   const kid = "kid";
+  const typ = "at+jwt";
   const purposeVersionId = generateId<PurposeVersionId>();
   const consumerId = generateId<TenantId>();
   const clientAssertionJti = generateId();
@@ -105,6 +106,7 @@ export const getMockJwtAudit = (): GeneratedTokenAuditDetails => {
     algorithm: "RS256",
     clientId,
     keyId: kid,
+    typ,
     purposeVersionId,
     jwtId: generateId(),
     issuedAt: new Date().getMilliseconds(),
