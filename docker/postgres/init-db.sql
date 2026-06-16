@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS jwt.generated_token_audit (
     purpose_version_id VARCHAR(36) NOT NULL,
     algorithm VARCHAR(50) NOT NULL,
     key_id VARCHAR(255) NOT NULL,
+    typ VARCHAR(50),
     audience VARCHAR(255) NOT NULL,
     subject VARCHAR(255) NOT NULL,
     not_before BIGINT NOT NULL,
@@ -21,7 +22,11 @@ CREATE TABLE IF NOT EXISTS jwt.generated_token_audit (
     expiration_time BIGINT NOT NULL,
     expiration_time_tz TIMESTAMPTZ NOT NULL,
     issuer VARCHAR(255) NOT NULL,
+    cnf_jkt VARCHAR(255),
+    digest_alg VARCHAR(50),
+    digest_val VARCHAR(255),
     client_assertion_jwt_id VARCHAR(255) NOT NULL,
+    dpop_jwt_id VARCHAR(255),
     origin_file_reference VARCHAR(255) NOT NULL
 );
 
@@ -40,6 +45,26 @@ CREATE TABLE IF NOT EXISTS jwt.client_assertion_audit (
     issued_at_raw DOUBLE PRECISION NOT NULL,
     expiration_time_raw DOUBLE PRECISION NOT NULL,
     origin_file_reference VARCHAR(255) NOT NULL,
+    generated_token_issued_at BIGINT NOT NULL,
+    generated_token_issued_at_tz TIMESTAMPTZ NOT NULL,
+    CONSTRAINT fk_generated_token FOREIGN KEY (generated_token_jwt_id) REFERENCES jwt.generated_token_audit(jwt_id)
+);
+
+CREATE TABLE IF NOT EXISTS jwt.dpop_audit (
+    typ VARCHAR(50) NOT NULL,
+    alg VARCHAR(50) NOT NULL,
+    jwk_kty VARCHAR(10) NOT NULL,
+    jwk_n TEXT,
+    jwk_e TEXT,
+    jwk_crv VARCHAR(10),
+    jwk_x TEXT,
+    jwk_y TEXT,
+    htm VARCHAR(16) NOT NULL,
+    htu TEXT NOT NULL,
+    iat DOUBLE PRECISION NOT NULL,
+    jti VARCHAR(255) NOT NULL,
+    generated_token_jwt_id VARCHAR(36) PRIMARY KEY,
+    origin_file_reference VARCHAR(255) NULL,
     generated_token_issued_at BIGINT NOT NULL,
     generated_token_issued_at_tz TIMESTAMPTZ NOT NULL,
     CONSTRAINT fk_generated_token FOREIGN KEY (generated_token_jwt_id) REFERENCES jwt.generated_token_audit(jwt_id)

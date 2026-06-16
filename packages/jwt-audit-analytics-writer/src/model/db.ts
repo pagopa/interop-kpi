@@ -42,10 +42,40 @@ export const GeneratedTokenSchema = z.object({
   expiration_time: z.number().int(),
   expiration_time_tz: z.date(),
   issuer: z.string(),
+  cnf_jkt: z.string().optional(),
+  digest_alg: z.string().optional(),
+  digest_val: z.string().optional(),
   client_assertion_jwt_id: z.string(),
+  dpop_jwt_id: z.string().optional(),
   origin_file_reference: z.string().nullish(),
 });
 export type GeneratedTokenSchema = z.infer<typeof GeneratedTokenSchema>;
+
+export const DPoPSchema = z.object({
+  typ: z.string(),
+  alg: z.string(),
+  jwk_kty: z.string(),
+  jwk_n: z.string().optional(),
+  jwk_e: z.string().optional(),
+  jwk_crv: z.string().optional(),
+  jwk_x: z.string().optional(),
+  jwk_y: z.string().optional(),
+  htm: z.string(),
+  htu: z.string(),
+  iat: z.coerce.number(),
+  jti: z.string(),
+  generated_token_jwt_id: z.string(),
+  origin_file_reference: z.string().nullish(),
+  generated_token_issued_at: z.number().int(),
+  generated_token_issued_at_tz: z.date(),
+});
+export type DPoPSchema = z.infer<typeof DPoPSchema>;
+
+export type DPoPMapping = {
+  [K in keyof DPoPSchema]: (
+    record: GeneratedTokenAuditDetails
+  ) => DPoPSchema[K];
+};
 
 /**
  * ClientAssertionMapping is a type alias that defines a mapping interface to convert

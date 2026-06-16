@@ -41,7 +41,11 @@ export const generatedTokenMapping: GeneratedTokenMapping = {
   expiration_time: (record) => record.expirationTime,
   expiration_time_tz: (record) => new Date(record.expirationTime),
   issuer: (record) => record.issuer,
+  cnf_jkt: (record) => record.cnf?.jkt,
+  digest_alg: (record) => record.digest?.alg,
+  digest_val: (record) => record.digest?.value,
   client_assertion_jwt_id: (record) => record.clientAssertion.jwtId,
+  dpop_jwt_id: (record) => record.dpop?.jti,
   origin_file_reference: (record) => record.originFileReference,
 };
 
