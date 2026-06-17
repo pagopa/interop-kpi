@@ -83,7 +83,13 @@ export function dpopRepository(conn: DBConnection) {
           dpopStagingTable
         );
 
-        await t.none(pgp.helpers.insert(records, dpopColumnSet));
+        const recordsWithDpop = records.filter((record) => record.dpop);
+
+        if (recordsWithDpop.length === 0) {
+          return;
+        }
+
+        await t.none(pgp.helpers.insert(recordsWithDpop, dpopColumnSet));
       } catch (error: unknown) {
         throw genericInternalError(
           `Error inserting into ${dpopStagingTable} staging table: ${error}`
@@ -117,7 +123,7 @@ export function dpopRepository(conn: DBConnection) {
         const deduplicationQuery = generateDeduplicationQuery(
           dpopStagingTable,
           "generated_token_jwt_id",
-          "issued_at"
+          "iat"
         );
         await t.none(deduplicationQuery);
       } catch (error: unknown) {

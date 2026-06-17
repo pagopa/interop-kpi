@@ -46,6 +46,7 @@ describe("JWT Audit Service tests", () => {
     await setupDbService.setupStagingTables([
       JwtDbTable.generated_token,
       JwtDbTable.client_assertion,
+      JwtDbTable.dpop,
     ]);
   });
 
@@ -122,6 +123,7 @@ describe("JWT Audit Service tests", () => {
     it("should read the ndjson file from s3 and persist its data to the database successfully", async () => {
       const clientAssertionStagingTableName = `${JwtDbTable.client_assertion}${config.mergeTableSuffix}`;
       const generateTokenStagingTableName = `${JwtDbTable.generated_token}${config.mergeTableSuffix}`;
+      const dpopStagingTableName = `${JwtDbTable.dpop}${config.mergeTableSuffix}`;
 
       const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(10);
       const { fullPathName } = await writeJwtAuditNdjson(
@@ -131,6 +133,12 @@ describe("JWT Audit Service tests", () => {
       );
 
       await jwtAuditService.handleMessages([fullPathName], genericLogger);
+
+      const dpopStagingCount = await getStagingTableCount(
+        conn,
+        dpopStagingTableName
+      );
+      expect(dpopStagingCount).toBe(0);
 
       const clientAssertionStagingCount = await getStagingTableCount(
         conn,
@@ -143,6 +151,9 @@ describe("JWT Audit Service tests", () => {
         generateTokenStagingTableName
       );
       expect(generatedTokenStagingCount).toBe(0);
+
+      const dpopCount = await getTargetTableCount(conn, JwtDbTable.dpop);
+      expect(dpopCount).toBe(10);
 
       const clientAssertionCount = await getTargetTableCount(
         conn,
@@ -355,6 +366,7 @@ describe("JWT Audit Service tests", () => {
         expect.objectContaining({
           generatedTokenPath: expect.stringContaining("generated_token"),
           clientAssertionPath: expect.stringContaining("client_assertion"),
+          dpopPath: expect.stringContaining("dpop"),
         })
       );
 
@@ -393,13 +405,14 @@ describe("JWT Audit Service tests", () => {
         genericLogger
       );
 
-      expect(filesAfter).toHaveLength(2);
+      expect(filesAfter).toHaveLength(3);
 
       expect(copySpy).toHaveBeenCalledOnce();
       expect(copySpy).toHaveBeenCalledWith(
         expect.objectContaining({
           generatedTokenPath: expect.stringContaining("generated_token"),
           clientAssertionPath: expect.stringContaining("client_assertion"),
+          dpopPath: expect.stringContaining("dpop"),
         })
       );
 

@@ -79,7 +79,10 @@ export const jwtAuditServiceBuilder = (
         )) {
           generatedTokenCsv.writeBatch(batch);
           clientAssertionCsv.writeBatch(batch);
-          dpopCsv.writeBatch(batch);
+          const batchWithDpop = batch.filter((msg) => msg.dpop);
+          if (batchWithDpop.length > 0) {
+            dpopCsv.writeBatch(batchWithDpop);
+          }
           ingestionState.totalRecordsProcessed += batch.length;
         }
 
