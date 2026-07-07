@@ -12,6 +12,8 @@ export const ClientAssertionSchema = z.object({
   audience: z.string(),
   expiration_time: z.number().int(),
   expiration_time_tz: z.date(),
+  digest_alg: z.string().optional(),
+  digest_val: z.string().optional(),
   generated_token_jwt_id: z.string(),
   issued_at_raw: z.coerce.number(),
   expiration_time_raw: z.coerce.number(),
