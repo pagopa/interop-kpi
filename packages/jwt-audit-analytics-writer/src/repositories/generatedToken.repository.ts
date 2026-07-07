@@ -34,6 +34,7 @@ export const generatedTokenMapping: GeneratedTokenMapping = {
   purpose_version_id: (record) => record.purposeVersionId,
   algorithm: (record) => record.algorithm,
   key_id: (record) => record.keyId,
+  typ: (record) => record.typ,
   audience: (record) => record.audience,
   subject: (record) => record.subject,
   not_before: (record) => record.notBefore,
