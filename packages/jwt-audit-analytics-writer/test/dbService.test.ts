@@ -15,6 +15,7 @@ import { clientAssertionRepository } from "../src/repositories/clientAssertion.r
 import { generatedTokenRepository } from "../src/repositories/generatedToken.repository.js";
 import { GeneratedTokenAuditDetails } from "../src/model/domain/models.js";
 import { dpopRepository } from "../src/repositories/dpop.repository.js";
+import { ClientAssertionSchema } from "../src/model/db.js";
 import {
   getMockJwtAudits,
   getStagingTableCount,
@@ -70,6 +71,16 @@ describe("DB Service tests", () => {
       );
 
       expect(clientAssertionStagingCount).toBe(10);
+
+      const clientAssertionTable = await conn.query<ClientAssertionSchema[]>(
+        `SELECT * FROM $1:name;`,
+        [clientAssertionStagingTable]
+      );
+
+      for (const row of clientAssertionTable) {
+        expect(row.digest_alg).toBeDefined();
+        expect(row.digest_val).toBeDefined();
+      }
 
       const dpopStagingCount = await getStagingTableCount(
         conn,

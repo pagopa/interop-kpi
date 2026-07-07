@@ -126,6 +126,9 @@ describe("JWT Audit Service tests", () => {
       const dpopStagingTableName = `${JwtDbTable.dpop}${config.mergeTableSuffix}`;
 
       const records: GeneratedTokenAuditDetails[] = getMockJwtAudits(10);
+      // eslint-disable-next-line fp/no-delete
+      delete records[0].dpop; // allows us to test dpop msg filter
+
       const { fullPathName } = await writeJwtAuditNdjson(
         records,
         fileManager,
@@ -153,7 +156,7 @@ describe("JWT Audit Service tests", () => {
       expect(generatedTokenStagingCount).toBe(0);
 
       const dpopCount = await getTargetTableCount(conn, JwtDbTable.dpop);
-      expect(dpopCount).toBe(10);
+      expect(dpopCount).toBe(9);
 
       const clientAssertionCount = await getTargetTableCount(
         conn,
