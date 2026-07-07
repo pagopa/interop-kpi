@@ -15,7 +15,10 @@ import { clientAssertionRepository } from "../src/repositories/clientAssertion.r
 import { generatedTokenRepository } from "../src/repositories/generatedToken.repository.js";
 import { GeneratedTokenAuditDetails } from "../src/model/domain/models.js";
 import { dpopRepository } from "../src/repositories/dpop.repository.js";
-import { ClientAssertionSchema } from "../src/model/db.js";
+import {
+  ClientAssertionSchema,
+  GeneratedTokenSchema,
+} from "../src/model/db.js";
 import {
   getMockJwtAudits,
   getStagingTableCount,
@@ -78,6 +81,16 @@ describe("DB Service tests", () => {
       );
 
       for (const row of clientAssertionTable) {
+        expect(row.digest_alg).toBeDefined();
+        expect(row.digest_val).toBeDefined();
+      }
+
+      const generatedTokenTable = await conn.query<GeneratedTokenSchema[]>(
+        `SELECT * FROM $1:name;`,
+        [generatedTokenStagingTable]
+      );
+
+      for (const row of generatedTokenTable) {
         expect(row.digest_alg).toBeDefined();
         expect(row.digest_val).toBeDefined();
       }
