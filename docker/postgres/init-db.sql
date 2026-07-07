@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS jwt.generated_token_audit (
     purpose_version_id VARCHAR(36) NOT NULL,
     algorithm VARCHAR(50) NOT NULL,
     key_id VARCHAR(255) NOT NULL,
-    typ VARCHAR(50),
     audience VARCHAR(255) NOT NULL,
     subject VARCHAR(255) NOT NULL,
     not_before BIGINT NOT NULL,
@@ -22,12 +21,13 @@ CREATE TABLE IF NOT EXISTS jwt.generated_token_audit (
     expiration_time BIGINT NOT NULL,
     expiration_time_tz TIMESTAMPTZ NOT NULL,
     issuer VARCHAR(255) NOT NULL,
+    client_assertion_jwt_id VARCHAR(255) NOT NULL,
+    origin_file_reference VARCHAR(255) NOT NULL,
+    typ VARCHAR(50),
     cnf_jkt VARCHAR(255),
     digest_alg VARCHAR(50),
     digest_val VARCHAR(255),
-    client_assertion_jwt_id VARCHAR(255) NOT NULL,
-    dpop_jwt_id VARCHAR(255),
-    origin_file_reference VARCHAR(255) NOT NULL
+    dpop_jwt_id VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS jwt.client_assertion_audit (
@@ -41,14 +41,14 @@ CREATE TABLE IF NOT EXISTS jwt.client_assertion_audit (
     audience VARCHAR(255) NOT NULL,
     expiration_time BIGINT NOT NULL,
     expiration_time_tz TIMESTAMPTZ NOT NULL,
-    digest_alg VARCHAR(50),
-    digest_val VARCHAR(255),
     generated_token_jwt_id VARCHAR(36) PRIMARY KEY,
     issued_at_raw DOUBLE PRECISION NOT NULL,
     expiration_time_raw DOUBLE PRECISION NOT NULL,
     origin_file_reference VARCHAR(255) NOT NULL,
     generated_token_issued_at BIGINT NOT NULL,
     generated_token_issued_at_tz TIMESTAMPTZ NOT NULL,
+    digest_alg VARCHAR(50),
+    digest_val VARCHAR(255),
     CONSTRAINT fk_generated_token FOREIGN KEY (generated_token_jwt_id) REFERENCES jwt.generated_token_audit(jwt_id)
 );
 

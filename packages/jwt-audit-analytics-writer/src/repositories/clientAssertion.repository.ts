@@ -38,14 +38,14 @@ export const clientAssertionMapping: ClientAssertionMapping = {
     new Date(
       normalizeTimestampToMilliseconds(record.clientAssertion.expirationTime)
     ),
-  digest_alg: (record) => record.clientAssertion.digest?.alg,
-  digest_val: (record) => record.clientAssertion.digest?.value,
   generated_token_jwt_id: (record) => record.jwtId,
   issued_at_raw: (record) => record.clientAssertion.issuedAt,
   expiration_time_raw: (record) => record.clientAssertion.expirationTime,
   origin_file_reference: (record) => record.originFileReference,
   generated_token_issued_at: (record) => record.issuedAt,
   generated_token_issued_at_tz: (record) => new Date(record.issuedAt),
+  digest_alg: (record) => record.clientAssertion.digest?.alg,
+  digest_val: (record) => record.clientAssertion.digest?.value,
 };
 
 export function clientAssertionRepository(conn: DBConnection) {

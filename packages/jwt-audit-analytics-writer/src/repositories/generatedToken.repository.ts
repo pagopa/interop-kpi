@@ -34,7 +34,6 @@ export const generatedTokenMapping: GeneratedTokenMapping = {
   purpose_version_id: (record) => record.purposeVersionId,
   algorithm: (record) => record.algorithm,
   key_id: (record) => record.keyId,
-  typ: (record) => record.typ,
   audience: (record) => record.audience,
   subject: (record) => record.subject,
   not_before: (record) => record.notBefore,
@@ -42,12 +41,13 @@ export const generatedTokenMapping: GeneratedTokenMapping = {
   expiration_time: (record) => record.expirationTime,
   expiration_time_tz: (record) => new Date(record.expirationTime),
   issuer: (record) => record.issuer,
+  client_assertion_jwt_id: (record) => record.clientAssertion.jwtId,
+  origin_file_reference: (record) => record.originFileReference,
+  typ: (record) => record.typ,
   cnf_jkt: (record) => record.cnf?.jkt,
   digest_alg: (record) => record.digest?.alg,
   digest_val: (record) => record.digest?.value,
-  client_assertion_jwt_id: (record) => record.clientAssertion.jwtId,
   dpop_jwt_id: (record) => record.dpop?.jti,
-  origin_file_reference: (record) => record.originFileReference,
 };
 
 export function generatedTokenRepository(conn: DBConnection) {

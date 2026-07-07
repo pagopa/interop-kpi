@@ -12,14 +12,14 @@ export const ClientAssertionSchema = z.object({
   audience: z.string(),
   expiration_time: z.number().int(),
   expiration_time_tz: z.date(),
-  digest_alg: z.string().optional(),
-  digest_val: z.string().optional(),
   generated_token_jwt_id: z.string(),
   issued_at_raw: z.coerce.number(),
   expiration_time_raw: z.coerce.number(),
   origin_file_reference: z.string().nullish(),
   generated_token_issued_at: z.number().int(),
   generated_token_issued_at_tz: z.date(),
+  digest_alg: z.string().optional(),
+  digest_val: z.string().optional(),
 });
 export type ClientAssertionSchema = z.infer<typeof ClientAssertionSchema>;
 
@@ -37,7 +37,6 @@ export const GeneratedTokenSchema = z.object({
   purpose_version_id: z.string(),
   algorithm: z.string(),
   key_id: z.string(),
-  typ: z.string(),
   audience: z.string(),
   subject: z.string(),
   not_before: z.number().int(),
@@ -45,12 +44,13 @@ export const GeneratedTokenSchema = z.object({
   expiration_time: z.number().int(),
   expiration_time_tz: z.date(),
   issuer: z.string(),
+  client_assertion_jwt_id: z.string(),
+  origin_file_reference: z.string().nullish(),
+  typ: z.string(),
   cnf_jkt: z.string().optional(),
   digest_alg: z.string().optional(),
   digest_val: z.string().optional(),
-  client_assertion_jwt_id: z.string(),
   dpop_jwt_id: z.string().optional(),
-  origin_file_reference: z.string().nullish(),
 });
 export type GeneratedTokenSchema = z.infer<typeof GeneratedTokenSchema>;
 
