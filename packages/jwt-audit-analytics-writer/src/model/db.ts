@@ -37,6 +37,7 @@ export const GeneratedTokenSchema = z.object({
   purpose_version_id: z.string(),
   algorithm: z.string(),
   key_id: z.string(),
+  typ: z.string(),
   audience: z.string(),
   subject: z.string(),
   not_before: z.number().int(),
