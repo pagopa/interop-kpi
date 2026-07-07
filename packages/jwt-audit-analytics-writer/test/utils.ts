@@ -118,6 +118,10 @@ export const getMockJwtAudit = (): GeneratedTokenAuditDetails => {
     cnf: {
       jkt: "...",
     },
+    digest: {
+      alg: "SHA256",
+      value: "...",
+    },
     clientAssertion: {
       subject: clientId,
       audience: "pagopa.it",
@@ -127,6 +131,10 @@ export const getMockJwtAudit = (): GeneratedTokenAuditDetails => {
       issuedAt: new Date().getMilliseconds(),
       issuer: consumerId,
       expirationTime: new Date().getMilliseconds(),
+      digest: {
+        alg: "SHA256",
+        value: "...",
+      },
     },
     dpop: {
       typ: "dpop+jwt",

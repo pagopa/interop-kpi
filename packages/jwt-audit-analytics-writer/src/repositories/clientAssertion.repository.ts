@@ -38,6 +38,8 @@ export const clientAssertionMapping: ClientAssertionMapping = {
     new Date(
       normalizeTimestampToMilliseconds(record.clientAssertion.expirationTime)
     ),
+  digest_alg: (record) => record.clientAssertion.digest?.alg,
+  digest_val: (record) => record.clientAssertion.digest?.value,
   generated_token_jwt_id: (record) => record.jwtId,
   issued_at_raw: (record) => record.clientAssertion.issuedAt,
   expiration_time_raw: (record) => record.clientAssertion.expirationTime,
