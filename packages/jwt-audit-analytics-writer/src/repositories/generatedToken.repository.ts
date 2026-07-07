@@ -43,6 +43,11 @@ export const generatedTokenMapping: GeneratedTokenMapping = {
   issuer: (record) => record.issuer,
   client_assertion_jwt_id: (record) => record.clientAssertion.jwtId,
   origin_file_reference: (record) => record.originFileReference,
+  typ: (record) => record.typ,
+  cnf_jkt: (record) => record.cnf?.jkt,
+  digest_alg: (record) => record.digest?.alg,
+  digest_val: (record) => record.digest?.value,
+  dpop_jwt_id: (record) => record.dpop?.jti,
 };
 
 export function generatedTokenRepository(conn: DBConnection) {

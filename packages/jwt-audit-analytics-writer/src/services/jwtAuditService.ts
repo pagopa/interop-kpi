@@ -17,6 +17,7 @@ import {
 } from "../model/domain/models.js";
 import { generatedTokenMapping } from "../repositories/generatedToken.repository.js";
 import { clientAssertionMapping } from "../repositories/clientAssertion.repository.js";
+import { dpopMapping } from "../repositories/dpop.repository.js";
 import { DBService } from "./dbService.js";
 
 export const jwtAuditServiceBuilder = (
@@ -48,6 +49,12 @@ export const jwtAuditServiceBuilder = (
       batchIdentifier,
       config.gzCompressionLevel
     );
+    const dpopCsv = new CsvWriter(
+      JwtDbTable.dpop,
+      dpopMapping,
+      batchIdentifier,
+      config.gzCompressionLevel
+    );
 
     try {
       for (const s3key of s3keys) {
@@ -72,6 +79,10 @@ export const jwtAuditServiceBuilder = (
         )) {
           generatedTokenCsv.writeBatch(batch);
           clientAssertionCsv.writeBatch(batch);
+          const batchWithDpop = batch.filter((msg) => msg.dpop);
+          if (batchWithDpop.length > 0) {
+            dpopCsv.writeBatch(batchWithDpop);
+          }
           ingestionState.totalRecordsProcessed += batch.length;
         }
 
@@ -112,10 +123,25 @@ export const jwtAuditServiceBuilder = (
         logger
       );
 
+      const uploadDPoPCsv = fileManager.storeStream(
+        {
+          bucket: config.s3CopyBucket,
+          path: dpopCsv.getPathName(),
+          name: dpopCsv.getFileName(),
+          content: dpopCsv.getStream(),
+        },
+        logger
+      );
+
       generatedTokenCsv.close();
       clientAssertionCsv.close();
+      dpopCsv.close();
 
-      await Promise.all([uploadGeneratedTokenCsv, uploadClientAssertionCsv]);
+      await Promise.all([
+        uploadGeneratedTokenCsv,
+        uploadClientAssertionCsv,
+        uploadDPoPCsv,
+      ]);
 
       logger.info(`CSV upload to S3 completed`, uploadStartTime);
 
@@ -123,6 +149,7 @@ export const jwtAuditServiceBuilder = (
       await dbService.copyRecordsToStaging({
         generatedTokenPath: generatedTokenCsv.getS3ObjectKey(),
         clientAssertionPath: clientAssertionCsv.getS3ObjectKey(),
+        dpopPath: dpopCsv.getS3ObjectKey(),
       });
 
       logger.info(`COPY to staging completed`, copyStartTime);
@@ -136,6 +163,11 @@ export const jwtAuditServiceBuilder = (
         await fileManager.delete(
           config.s3CopyBucket,
           clientAssertionCsv.getS3ObjectKey(),
+          logger
+        );
+        await fileManager.delete(
+          config.s3CopyBucket,
+          dpopCsv.getS3ObjectKey(),
           logger
         );
       }

@@ -52,6 +52,7 @@ await retryConnection(
     await setupDbServiceBuilder(db.conn, config).setupStagingTables([
       JwtDbTable.generated_token,
       JwtDbTable.client_assertion,
+      JwtDbTable.dpop,
     ]);
   },
   genericLogger
@@ -90,6 +91,7 @@ export const getMockJwtAudit = (): GeneratedTokenAuditDetails => {
   const clientId = generateId<ClientId>();
   const purposeId = generateId<PurposeId>();
   const kid = "kid";
+  const typ = "at+jwt";
   const purposeVersionId = generateId<PurposeVersionId>();
   const consumerId = generateId<TenantId>();
   const clientAssertionJti = generateId();
@@ -105,6 +107,7 @@ export const getMockJwtAudit = (): GeneratedTokenAuditDetails => {
     algorithm: "RS256",
     clientId,
     keyId: kid,
+    typ,
     purposeVersionId,
     jwtId: generateId(),
     issuedAt: new Date().getMilliseconds(),
@@ -112,6 +115,13 @@ export const getMockJwtAudit = (): GeneratedTokenAuditDetails => {
     expirationTime: new Date().getMilliseconds(),
     organizationId: consumerId,
     notBefore: 0,
+    cnf: {
+      jkt: "...",
+    },
+    digest: {
+      alg: "SHA256",
+      value: "...",
+    },
     clientAssertion: {
       subject: clientId,
       audience: "pagopa.it",
@@ -121,6 +131,24 @@ export const getMockJwtAudit = (): GeneratedTokenAuditDetails => {
       issuedAt: new Date().getMilliseconds(),
       issuer: consumerId,
       expirationTime: new Date().getMilliseconds(),
+      digest: {
+        alg: "SHA256",
+        value: "...",
+      },
+    },
+    dpop: {
+      typ: "dpop+jwt",
+      alg: "ES256",
+      jwk: {
+        crv: "P-256",
+        kty: "EC",
+        x: "...",
+        y: "...",
+      },
+      htm: "POST",
+      htu: "test/authorization-server/token.oauth2",
+      iat: new Date().getMilliseconds(),
+      jti: "...",
     },
     originFileReference: "token-details/date/timestamp_uuid.ndjson",
   };
@@ -223,6 +251,9 @@ export async function truncateTables(
   schema: string,
   stagingTableSuffix?: string
 ): Promise<void> {
+  const truncateDPoP = `${schema}.${JwtDbTable.dpop}${
+    stagingTableSuffix ?? ""
+  }`;
   const truncateClientAssertion = `${schema}.${JwtDbTable.client_assertion}${
     stagingTableSuffix ?? ""
   }`;
@@ -230,7 +261,7 @@ export async function truncateTables(
     stagingTableSuffix ?? ""
   }`;
   await db.none(
-    `TRUNCATE TABLE ${truncateClientAssertion}, ${truncateGeneratedToken};`
+    `TRUNCATE TABLE ${truncateGeneratedToken},  ${truncateClientAssertion}, ${truncateDPoP};`
   );
 }
 

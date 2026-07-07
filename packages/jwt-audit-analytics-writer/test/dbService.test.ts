@@ -14,6 +14,11 @@ import { config } from "../src/config/config.js";
 import { clientAssertionRepository } from "../src/repositories/clientAssertion.repository.js";
 import { generatedTokenRepository } from "../src/repositories/generatedToken.repository.js";
 import { GeneratedTokenAuditDetails } from "../src/model/domain/models.js";
+import { dpopRepository } from "../src/repositories/dpop.repository.js";
+import {
+  ClientAssertionSchema,
+  GeneratedTokenSchema,
+} from "../src/model/db.js";
 import {
   getMockJwtAudits,
   getStagingTableCount,
@@ -25,8 +30,10 @@ import {
 
 describe("DB Service tests", () => {
   const { conn, pgp } = dbContext;
+  const dpopStagingTable = `${JwtDbTable.dpop}${config.mergeTableSuffix}`;
   const clientAssertionStagingTable = `${JwtDbTable.client_assertion}${config.mergeTableSuffix}`;
   const generatedTokenStagingTable = `${JwtDbTable.generated_token}${config.mergeTableSuffix}`;
+  const dpopTargetTable = `${JwtDbTable.dpop}`;
   const clientAssertionTargetTable = `${JwtDbTable.client_assertion}`;
   const generatedTokenTargetTable = `${JwtDbTable.generated_token}`;
   const temporaryDbSchemaName = "pg_temp";
@@ -35,6 +42,7 @@ describe("DB Service tests", () => {
     await setupDbService.setupStagingTables([
       generatedTokenTargetTable,
       clientAssertionTargetTable,
+      dpopTargetTable,
     ]);
   });
 
@@ -53,6 +61,7 @@ describe("DB Service tests", () => {
 
       const dbService = dbServiceBuilder(
         dbContext,
+        dpopRepository,
         clientAssertionRepository,
         generatedTokenRepository
       );
@@ -65,6 +74,33 @@ describe("DB Service tests", () => {
       );
 
       expect(clientAssertionStagingCount).toBe(10);
+
+      const clientAssertionTable = await conn.query<ClientAssertionSchema[]>(
+        `SELECT * FROM $1:name;`,
+        [clientAssertionStagingTable]
+      );
+
+      for (const row of clientAssertionTable) {
+        expect(row.digest_alg).toBeDefined();
+        expect(row.digest_val).toBeDefined();
+      }
+
+      const generatedTokenTable = await conn.query<GeneratedTokenSchema[]>(
+        `SELECT * FROM $1:name;`,
+        [generatedTokenStagingTable]
+      );
+
+      for (const row of generatedTokenTable) {
+        expect(row.digest_alg).toBeDefined();
+        expect(row.digest_val).toBeDefined();
+      }
+
+      const dpopStagingCount = await getStagingTableCount(
+        conn,
+        dpopStagingTable
+      );
+
+      expect(dpopStagingCount).toBe(10);
     });
 
     it("should throw an error if database query fails on generated_token table", async () => {
@@ -73,6 +109,7 @@ describe("DB Service tests", () => {
 
       const dbService = dbServiceBuilder(
         dbContext,
+        dpopRepository,
         clientAssertionRepository,
         generatedTokenRepository
       );
@@ -101,6 +138,7 @@ describe("DB Service tests", () => {
 
       const dbService = dbServiceBuilder(
         dbContext,
+        dpopRepository,
         clientAssertionRepository,
         mockClientAssertionRepository
       );
@@ -122,12 +160,18 @@ describe("DB Service tests", () => {
 
       const dbService = dbServiceBuilder(
         dbContext,
+        dpopRepository,
         clientAssertionRepository,
         generatedTokenRepository
       );
 
       await dbService.insertRecordsToStaging(records);
       await dbService.mergeStagingToTarget();
+
+      const dpopTargetCountAfterMerge = await getTargetTableCount(
+        conn,
+        dpopTargetTable
+      );
 
       const clientAssertionTargetCountAfterMerge = await getTargetTableCount(
         conn,
@@ -139,6 +183,7 @@ describe("DB Service tests", () => {
         generatedTokenTargetTable
       );
 
+      expect(dpopTargetCountAfterMerge).toBe(10);
       expect(clientAssertionTargetCountAfterMerge).toBe(10);
       expect(generatedTokenTargetCountAfterMerge).toBe(10);
     });
@@ -194,6 +239,7 @@ describe("DB Service tests", () => {
 
       const dbService = dbServiceBuilder(
         dbContext,
+        dpopRepository,
         clientAssertionRepository,
         generatedTokenRepository
       );
@@ -201,6 +247,12 @@ describe("DB Service tests", () => {
       await dbService.insertRecordsToStaging(records);
       await dbService.mergeStagingToTarget();
       await dbService.cleanStaging();
+
+      const dpopCountStagingAfterTruncate = await getStagingTableCount(
+        conn,
+        dpopStagingTable
+      );
+      expect(dpopCountStagingAfterTruncate).toBe(0);
 
       const clientAssertionCountStagingAfterTruncate =
         await getStagingTableCount(conn, clientAssertionStagingTable);

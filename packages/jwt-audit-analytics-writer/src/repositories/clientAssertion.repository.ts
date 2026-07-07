@@ -44,6 +44,8 @@ export const clientAssertionMapping: ClientAssertionMapping = {
   origin_file_reference: (record) => record.originFileReference,
   generated_token_issued_at: (record) => record.issuedAt,
   generated_token_issued_at_tz: (record) => new Date(record.issuedAt),
+  digest_alg: (record) => record.clientAssertion.digest?.alg,
+  digest_val: (record) => record.clientAssertion.digest?.value,
 };
 
 export function clientAssertionRepository(conn: DBConnection) {

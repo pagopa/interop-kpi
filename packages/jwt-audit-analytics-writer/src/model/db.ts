@@ -18,6 +18,8 @@ export const ClientAssertionSchema = z.object({
   origin_file_reference: z.string().nullish(),
   generated_token_issued_at: z.number().int(),
   generated_token_issued_at_tz: z.date(),
+  digest_alg: z.string().optional(),
+  digest_val: z.string().optional(),
 });
 export type ClientAssertionSchema = z.infer<typeof ClientAssertionSchema>;
 
@@ -44,8 +46,39 @@ export const GeneratedTokenSchema = z.object({
   issuer: z.string(),
   client_assertion_jwt_id: z.string(),
   origin_file_reference: z.string().nullish(),
+  typ: z.string(),
+  cnf_jkt: z.string().optional(),
+  digest_alg: z.string().optional(),
+  digest_val: z.string().optional(),
+  dpop_jwt_id: z.string().optional(),
 });
 export type GeneratedTokenSchema = z.infer<typeof GeneratedTokenSchema>;
+
+export const DPoPSchema = z.object({
+  typ: z.string(),
+  alg: z.string(),
+  jwk_kty: z.string(),
+  jwk_n: z.string().optional(),
+  jwk_e: z.string().optional(),
+  jwk_crv: z.string().optional(),
+  jwk_x: z.string().optional(),
+  jwk_y: z.string().optional(),
+  htm: z.string(),
+  htu: z.string(),
+  iat: z.coerce.number(),
+  jti: z.string(),
+  generated_token_jwt_id: z.string(),
+  origin_file_reference: z.string().nullish(),
+  generated_token_issued_at: z.number().int(),
+  generated_token_issued_at_tz: z.date(),
+});
+export type DPoPSchema = z.infer<typeof DPoPSchema>;
+
+export type DPoPMapping = {
+  [K in keyof DPoPSchema]: (
+    record: GeneratedTokenAuditDetails
+  ) => DPoPSchema[K];
+};
 
 /**
  * ClientAssertionMapping is a type alias that defines a mapping interface to convert
