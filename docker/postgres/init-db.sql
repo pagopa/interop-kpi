@@ -41,6 +41,8 @@ CREATE TABLE IF NOT EXISTS jwt.client_assertion_audit (
     audience VARCHAR(255) NOT NULL,
     expiration_time BIGINT NOT NULL,
     expiration_time_tz TIMESTAMPTZ NOT NULL,
+    digest_alg VARCHAR(50),
+    digest_val VARCHAR(255),
     generated_token_jwt_id VARCHAR(36) PRIMARY KEY,
     issued_at_raw DOUBLE PRECISION NOT NULL,
     expiration_time_raw DOUBLE PRECISION NOT NULL,
