@@ -46,7 +46,7 @@ export const GeneratedTokenSchema = z.object({
   issuer: z.string(),
   client_assertion_jwt_id: z.string(),
   origin_file_reference: z.string().nullish(),
-  typ: z.string(),
+  typ: z.string().optional(),
   cnf_jkt: z.string().optional(),
   digest_alg: z.string().optional(),
   digest_val: z.string().optional(),

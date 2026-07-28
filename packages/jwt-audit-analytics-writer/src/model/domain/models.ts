@@ -88,7 +88,7 @@ export const GeneratedTokenAuditDetails = z
     purposeVersionId: PurposeVersionId,
     algorithm: z.string(),
     keyId: z.string(),
-    typ: z.string(),
+    typ: z.string().optional(),
     audience: z.string(),
     subject: z.string(),
     notBefore: z.number(),
