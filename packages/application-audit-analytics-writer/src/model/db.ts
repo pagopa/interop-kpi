@@ -35,6 +35,7 @@ export const ApplicationAuditEndRequestSchema =
     user_id: z.string().optional(),
     http_response_status: z.number(),
     execution_time_ms: z.number(),
+    jwt_id: z.string().optional(),
   });
 export type ApplicationAuditEndRequestSchema = z.infer<
   typeof ApplicationAuditEndRequestSchema
@@ -43,8 +44,11 @@ export type ApplicationAuditEndRequestSchema = z.infer<
 export const ApplicationAuditEndRequestSessionTokenExchangeSchema =
   ApplicationAuditEndRequestSchema.omit({
     user_id: true,
+    jwt_id: true,
   }).extend({
     self_care_id: z.string().optional(),
+    request_jwt_id: z.string().optional(),
+    produced_jwt_id: z.string().optional(),
   });
 export type ApplicationAuditEndRequestSessionTokenExchangeSchema = z.infer<
   typeof ApplicationAuditEndRequestSessionTokenExchangeSchema
@@ -53,6 +57,7 @@ export type ApplicationAuditEndRequestSessionTokenExchangeSchema = z.infer<
 export const ApplicationAuditEndRequestAuthServerSchema =
   ApplicationAuditEndRequestSchema.omit({
     user_id: true,
+    jwt_id: true,
   }).extend({
     client_id: z.string().optional(),
     client_kind: z.string().optional(),

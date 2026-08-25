@@ -12,12 +12,14 @@ import {
   endRequestRepository,
 } from "../src/repositories/endRequest.repository.js";
 import { processBatch } from "../src/handlers/batchHandler.js";
+import { ApplicationAuditEndRequestSchema } from "../src/model/db.js";
 import {
   dbContext,
   fileManager,
   getMockApplicationAudits,
   getStagingTableCount,
   getTargetTableCount,
+  getTargetTableRows,
   truncateTables,
 } from "./utils.js";
 
@@ -119,6 +121,24 @@ describe("End request batch handler tests", () => {
       );
 
       expect(endRequestTargetCount).toBe(10);
+    });
+
+    it("should persist jwtId data correctly", async () => {
+      const endRequestMsgs =
+        getMockApplicationAudits<ApplicationAuditEndRequest>(0, 10, 0, 0);
+
+      await endRequestRepo.insertToStaging(endRequestMsgs);
+      await endRequestRepo.mergeStagingToTarget();
+
+      const rows = await getTargetTableRows<ApplicationAuditEndRequestSchema>(
+        conn,
+        ApplicationDbTable.end_request
+      );
+
+      rows.forEach((row) => {
+        expect(row).toHaveProperty("jwt_id");
+        expect(row.jwt_id).toBeTruthy();
+      });
     });
 
     it("should throw an error if database query fails", async () => {

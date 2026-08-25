@@ -37,6 +37,8 @@ export const endRequestSessionTokenExchangeMapping: ApplicationAuditEndRequestSe
     http_response_status: (event) => event.httpResponseStatus,
     execution_time_ms: (event) => event.executionTimeMs,
     self_care_id: (event) => event.selfcareId,
+    request_jwt_id: (event) => event.requestJwtId,
+    produced_jwt_id: (event) => event.producedJwtId,
   };
 
 export function endRequestSessionTokenExchangeRepository(

@@ -67,13 +67,14 @@ export const ApplicationAuditEndRequest = ApplicationAuditBeginRequest.extend({
   userId: z.string().optional(),
   httpResponseStatus: z.number(),
   executionTimeMs: z.number(),
+  jwtId: z.string().optional(),
 });
 export type ApplicationAuditEndRequest = z.infer<
   typeof ApplicationAuditEndRequest
 >;
 
 export const ApplicationAuditEndRequestAuthServer =
-  ApplicationAuditEndRequest.omit({ userId: true }).extend({
+  ApplicationAuditEndRequest.omit({ userId: true, jwtId: true }).extend({
     service: z.literal(applicationAuditService.AUTH_SERVER),
     clientId: z.string().optional(),
     clientKind: ApplicationAuditClientKind.optional(),
@@ -83,10 +84,12 @@ export type ApplicationAuditEndRequestAuthServer = z.infer<
 >;
 
 export const ApplicationAuditEndRequestSessionTokenExchange =
-  ApplicationAuditEndRequest.omit({ userId: true }).extend({
+  ApplicationAuditEndRequest.omit({ userId: true, jwtId: true }).extend({
     service: z.literal(applicationAuditService.BFF),
     endpoint: z.literal(applicationAuditEndppoint.SESSION_TOKENS),
     selfcareId: z.string().optional(),
+    requestJwtId: z.string().optional(),
+    producedJwtId: z.string().optional(),
   });
 export type ApplicationAuditEndRequestSessionTokenExchange = z.infer<
   typeof ApplicationAuditEndRequestSessionTokenExchange

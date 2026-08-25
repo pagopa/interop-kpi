@@ -110,6 +110,7 @@ export function getMockApplicationAudits<T>(
   const endEvents = Array.from({ length: endCount }, () =>
     createEvent(applicationAuditPhase.END_REQUEST, {
       userId: generateId(),
+      jwtId: generateId(),
     })
   );
   const endSessionTokenExchangeEvents = Array.from(
@@ -119,6 +120,8 @@ export function getMockApplicationAudits<T>(
         applicationAuditPhase.END_REQUEST,
         {
           selfcareId: generateId(),
+          requestJwtId: generateId(),
+          producedJwtId: generateId(),
         },
         applicationAuditService.BFF,
         applicationAuditEndppoint.SESSION_TOKENS
@@ -175,6 +178,14 @@ export async function getTargetTableCount(
     [table],
   ]);
   return Number(result.count);
+}
+
+export async function getTargetTableRows<T>(
+  db: DBConnection,
+  table: string
+): Promise<T[]> {
+  const query = `SELECT * FROM $1:name.$2:name;`;
+  return await db.query(query, [config.dbSchemaName, [table]]);
 }
 
 export async function truncateTables(

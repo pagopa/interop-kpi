@@ -144,7 +144,8 @@ CREATE TABLE IF NOT EXISTS application.end_request_audit (
     organization_id VARCHAR(36),
     http_response_status INTEGER NOT NULL,
     execution_time_ms BIGINT NOT NULL,
-    user_id VARCHAR(36)
+    user_id VARCHAR(36),
+    jwt_id VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS application.end_request_session_token_exchange_audit (
@@ -165,7 +166,9 @@ CREATE TABLE IF NOT EXISTS application.end_request_session_token_exchange_audit 
     organization_id VARCHAR(36),
     http_response_status INTEGER NOT NULL,
     execution_time_ms BIGINT NOT NULL,
-    self_care_id VARCHAR(36)
+    self_care_id VARCHAR(36),
+    request_jwt_id VARCHAR(255),
+    produced_jwt_id VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS application.end_request_auth_server_audit (
