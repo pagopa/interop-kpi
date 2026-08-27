@@ -1,0 +1,79 @@
+version: "3"
+name: pagopa-interop-kpi
+services:
+
+  postgres:
+    container_name: postgres
+    volumes:
+      - ./postgres/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    image: postgres:15
+    ports:
+      - 55000:5432
+    environment:
+      POSTGRES_DB: interop-kpi
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    command: -c 'max_connections=512' -c 'wal_level=logical'
+  
+  # MinIO is a local S3-compatible storage, to replace AWS S3 in local development
+  minio:
+    container_name: minio
+    image: minio/minio:RELEASE.2024-02-06T21-36-22Z
+    entrypoint: >
+      /usr/bin/minio server /data --console-address ':9001'
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ROOT_USER: testawskey # use this as AWS S3 access key ID
+      MINIO_ROOT_PASSWORD: testawssecret # use this as AWS S3 secret access key
+      MINIO_SITE_REGION: eu-south-1
+    volumes:
+      - ./minio-data:/data
+    restart: always
+
+  elasticmq: # ElasticMQ is a local SQS-compatible queue system, to replace AWS SQS in local development
+    container_name: elasticmq 
+    image: softwaremill/elasticmq-native:1.5.7
+    ports:
+      - 9324:9324
+      - 9325:9325
+    volumes:
+      - ./elasticmq/elasticmq.local.conf:/opt/elasticmq.conf
+    restart: always
+
+  zookeeper:
+    image: quay.io/debezium/zookeeper:2.3
+
+  kafka:
+    image: quay.io/debezium/kafka:2.3
+    ports:
+      - 9092:9092
+      - 29092:29092
+    depends_on:
+      - zookeeper
+    environment:
+      ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: LISTENER_DOCKER://kafka:29092,LISTENER_HOST://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER://kafka:29092,LISTENER_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER:PLAINTEXT,LISTENER_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:53a6553765a806eda9905c43bfcfe09da6812035
+    ports:
+      - 8084:8080
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+
+
+networks:
+  develop-network:
+    name: interop-kpi-develop-network
+    driver: bridge
