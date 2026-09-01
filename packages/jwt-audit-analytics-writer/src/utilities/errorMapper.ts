@@ -5,9 +5,8 @@ import {
 } from "pagopa-interop-kpi-models";
 import { P, match } from "ts-pattern";
 import { Logger } from "pagopa-interop-kpi-commons";
-import { ErrorCodes } from "../model/domain/errors.js";
 
-type LocalErrorCodes = ErrorCodes | CommonErrorCodes;
+type LocalErrorCodes = CommonErrorCodes;
 
 export const errorMapper = (
   error: unknown,

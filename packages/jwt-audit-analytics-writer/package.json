@@ -20,7 +20,6 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@pagopa/eslint-config": "3.0.0",
-    "@types/ndjson": "2.0.4",
     "@types/node": "20.14.6",
     "prettier": "2.8.8",
     "tsx": "4.19.1",
@@ -29,7 +28,7 @@
   },
   "dependencies": {
     "dotenv-flow": "4.1.0",
-    "ndjson": "2.0.0",
+    "pagopa-interop-jwt-audit-commons": "workspace:*",
     "pagopa-interop-kpi-commons": "workspace:*",
     "pagopa-interop-kpi-commons-test": "workspace:*",
     "pagopa-interop-kpi-models": "workspace:*",

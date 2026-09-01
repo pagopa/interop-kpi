@@ -1,13 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import {
-  DBConnection,
-  IMain,
-  ITask,
-  buildColumnSet,
-  generateDeduplicationQuery,
-  generateMergeQuery,
-} from "pagopa-interop-kpi-commons";
-import { genericInternalError, JwtDbTable } from "pagopa-interop-kpi-models";
+import { DBConnection } from "pagopa-interop-kpi-commons";
+import { jwtAuditRepositoryBuilder } from "pagopa-interop-jwt-audit-commons";
+import { JwtDbTable } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { GeneratedTokenMapping, GeneratedTokenSchema } from "../model/db.js";
 import { GeneratedTokenAuditDetails } from "../model/domain/models.js";
@@ -51,98 +45,22 @@ export const generatedTokenMapping: GeneratedTokenMapping = {
 };
 
 export function generatedTokenRepository(conn: DBConnection) {
-  const generatedTokenTable = JwtDbTable.generated_token;
-  const tokenAuditStagingTable = `${generatedTokenTable}${config.mergeTableSuffix}`;
-
-  return {
-    async copyFromS3ToStaging(s3ObjectKey: string): Promise<void> {
-      try {
-        const copyQuery = `
-          COPY ${tokenAuditStagingTable}
-          FROM 's3://${config.s3CopyBucket}/${s3ObjectKey}'
-          IAM_ROLE '${config.redshiftIamRole}'
-          CSV
-          GZIP
-          TIMEFORMAT 'auto'
-          BLANKSASNULL
-          EMPTYASNULL;
-        `;
-
-        await conn.none(copyQuery);
-      } catch (error: unknown) {
-        throw genericInternalError(
-          `Error copying data from S3 to staging ${tokenAuditStagingTable}: ${error}`
-        );
-      }
+  return jwtAuditRepositoryBuilder<
+    GeneratedTokenAuditDetails,
+    typeof GeneratedTokenSchema.shape
+  >(conn, config, {
+    tableName: JwtDbTable.generated_token,
+    tableSchema: GeneratedTokenSchema,
+    mapping: generatedTokenMapping,
+    mergeKeys: ["jwt_id"],
+    mergeTimeFilter: {
+      column: "issued_at_tz",
     },
-
-    async insert(
-      t: ITask<unknown>,
-      pgp: IMain,
-      records: GeneratedTokenAuditDetails[]
-    ): Promise<void> {
-      try {
-        const tokenAuditColumnSet = buildColumnSet<GeneratedTokenAuditDetails>(
-          pgp,
-          generatedTokenMapping,
-          tokenAuditStagingTable
-        );
-
-        await t.none(pgp.helpers.insert(records, tokenAuditColumnSet));
-      } catch (error: unknown) {
-        throw genericInternalError(
-          `Error inserting into ${tokenAuditStagingTable} staging table: ${error}`
-        );
-      }
+    deduplication: {
+      partitionKey: "jwt_id",
+      orderBy: "issued_at",
     },
-
-    async merge(t: ITask<unknown>): Promise<void> {
-      try {
-        const generatedTokenMergeQuery = generateMergeQuery(
-          GeneratedTokenSchema,
-          config.dbSchemaName,
-          generatedTokenTable,
-          config.mergeTableSuffix,
-          ["jwt_id"],
-          {
-            joinTimeFilterColumn: "issued_at_tz",
-            maxDaysTolerance: config.maxDaysToleranceForDuplicateDelay,
-          }
-        );
-
-        await t.none(generatedTokenMergeQuery);
-      } catch (error: unknown) {
-        throw genericInternalError(
-          `Error merging staging to target ${generatedTokenTable} table: ${error}`
-        );
-      }
-    },
-
-    async deduplicate(t: ITask<unknown>): Promise<void> {
-      try {
-        const deduplicationQuery = generateDeduplicationQuery(
-          tokenAuditStagingTable,
-          "jwt_id",
-          "issued_at"
-        );
-        await t.none(deduplicationQuery);
-      } catch (error: unknown) {
-        throw genericInternalError(
-          `Error deduplicating staging ${tokenAuditStagingTable} table: ${error}`
-        );
-      }
-    },
-
-    async clean(): Promise<void> {
-      try {
-        await conn.none(`TRUNCATE TABLE ${tokenAuditStagingTable};`);
-      } catch (error: unknown) {
-        throw genericInternalError(
-          `Error cleaning staging ${tokenAuditStagingTable} table: ${error}`
-        );
-      }
-    },
-  };
+  });
 }
 
 export type GeneratedTokenRepository = ReturnType<

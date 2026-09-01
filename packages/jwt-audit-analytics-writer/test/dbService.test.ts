@@ -139,8 +139,8 @@ describe("DB Service tests", () => {
       const dbService = dbServiceBuilder(
         dbContext,
         dpopRepository,
-        clientAssertionRepository,
-        mockClientAssertionRepository
+        mockClientAssertionRepository,
+        generatedTokenRepository
       );
 
       await expect(
@@ -148,7 +148,7 @@ describe("DB Service tests", () => {
       ).rejects.toThrowError(mockError);
 
       const generatedTokenStagingCountAfterRollback =
-        await getStagingTableCount(conn, clientAssertionStagingTable);
+        await getStagingTableCount(conn, generatedTokenStagingTable);
 
       expect(generatedTokenStagingCountAfterRollback).toBe(0);
     });

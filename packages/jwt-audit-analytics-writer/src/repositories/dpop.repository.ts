@@ -1,13 +1,10 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
+import { DBConnection } from "pagopa-interop-kpi-commons";
 import {
-  DBConnection,
-  IMain,
-  ITask,
-  buildColumnSet,
-  generateDeduplicationQuery,
-  generateMergeQuery,
-} from "pagopa-interop-kpi-commons";
-import { genericInternalError, JwtDbTable } from "pagopa-interop-kpi-models";
+  jwtAuditRepositoryBuilder,
+  selectRecordsWithDpop,
+} from "pagopa-interop-jwt-audit-commons";
+import { JwtDbTable } from "pagopa-interop-kpi-models";
 import { config } from "../config/config.js";
 import { DPoPMapping, DPoPSchema } from "../model/db.js";
 import {
@@ -46,103 +43,23 @@ export const dpopMapping: DPoPMapping = {
 };
 
 export function dpopRepository(conn: DBConnection) {
-  const dpopTable = JwtDbTable.dpop;
-  const dpopStagingTable = `${dpopTable}${config.mergeTableSuffix}`;
-
-  return {
-    async copyFromS3ToStaging(s3ObjectKey: string): Promise<void> {
-      try {
-        const copyQuery = `
-          COPY ${dpopStagingTable}
-          FROM 's3://${config.s3CopyBucket}/${s3ObjectKey}'
-          IAM_ROLE '${config.redshiftIamRole}'
-          CSV
-          GZIP
-          TIMEFORMAT 'auto'
-          BLANKSASNULL
-          EMPTYASNULL;
-        `;
-
-        await conn.none(copyQuery);
-      } catch (error: unknown) {
-        throw genericInternalError(
-          `Error copying data from S3 to staging ${dpopStagingTable}: ${error}`
-        );
-      }
+  return jwtAuditRepositoryBuilder<
+    GeneratedTokenAuditDetails,
+    typeof DPoPSchema.shape
+  >(conn, config, {
+    tableName: JwtDbTable.dpop,
+    tableSchema: DPoPSchema,
+    mapping: dpopMapping,
+    mergeKeys: ["generated_token_jwt_id"],
+    mergeTimeFilter: {
+      column: "generated_token_issued_at_tz",
     },
-
-    async insert(
-      t: ITask<unknown>,
-      pgp: IMain,
-      records: GeneratedTokenAuditDetails[]
-    ): Promise<void> {
-      try {
-        const dpopColumnSet = buildColumnSet<GeneratedTokenAuditDetails>(
-          pgp,
-          dpopMapping,
-          dpopStagingTable
-        );
-
-        const recordsWithDpop = records.filter((record) => record.dpop);
-
-        if (recordsWithDpop.length === 0) {
-          return;
-        }
-
-        await t.none(pgp.helpers.insert(recordsWithDpop, dpopColumnSet));
-      } catch (error: unknown) {
-        throw genericInternalError(
-          `Error inserting into ${dpopStagingTable} staging table: ${error}`
-        );
-      }
+    deduplication: {
+      partitionKey: "generated_token_jwt_id",
+      orderBy: "iat",
     },
-
-    async merge(t: ITask<unknown>): Promise<void> {
-      try {
-        const dpopMergeQuery = generateMergeQuery(
-          DPoPSchema,
-          config.dbSchemaName,
-          dpopTable,
-          config.mergeTableSuffix,
-          ["generated_token_jwt_id"],
-          {
-            joinTimeFilterColumn: "generated_token_issued_at_tz",
-            maxDaysTolerance: config.maxDaysToleranceForDuplicateDelay,
-          }
-        );
-        await t.none(dpopMergeQuery);
-      } catch (error: unknown) {
-        throw genericInternalError(
-          `Error merging staging to target ${dpopTable} table: ${error}`
-        );
-      }
-    },
-
-    async deduplicate(t: ITask<unknown>): Promise<void> {
-      try {
-        const deduplicationQuery = generateDeduplicationQuery(
-          dpopStagingTable,
-          "generated_token_jwt_id",
-          "iat"
-        );
-        await t.none(deduplicationQuery);
-      } catch (error: unknown) {
-        throw genericInternalError(
-          `Error deduplicating staging ${dpopStagingTable} table: ${error}`
-        );
-      }
-    },
-
-    async clean(): Promise<void> {
-      try {
-        await conn.none(`TRUNCATE TABLE ${dpopStagingTable};`);
-      } catch (error: unknown) {
-        throw genericInternalError(
-          `Error cleaning staging ${dpopStagingTable} table: ${error}`
-        );
-      }
-    },
-  };
+    selectRecords: selectRecordsWithDpop,
+  });
 }
 
 export type DPoPRepository = ReturnType<typeof dpopRepository>;

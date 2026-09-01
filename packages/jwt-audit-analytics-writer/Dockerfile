@@ -6,6 +6,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc /app/
 
 COPY ./packages/jwt-audit-analytics-writer/package.json /app/packages/jwt-audit-analytics-writer/package.json
+COPY ./packages/jwt-audit-commons/package.json /app/packages/jwt-audit-commons/package.json
 COPY ./packages/commons/package.json /app/packages/commons/package.json
 COPY ./packages/models/package.json /app/packages/models/package.json
 
@@ -13,6 +14,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY tsconfig.json turbo.json /app/
 COPY ./packages/jwt-audit-analytics-writer /app/packages/jwt-audit-analytics-writer
+COPY ./packages/jwt-audit-commons /app/packages/jwt-audit-commons
 COPY ./packages/commons /app/packages/commons
 COPY ./packages/models /app/packages/models
 
@@ -23,6 +25,7 @@ RUN pnpm build && \
   cp -a --parents -t /out \
   node_modules packages/jwt-audit-analytics-writer/node_modules \
   package*.json packages/jwt-audit-analytics-writer/package*.json \
+  packages/jwt-audit-commons \
   packages/commons \
   packages/models \
   packages/jwt-audit-analytics-writer/dist && \
