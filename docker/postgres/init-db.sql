@@ -72,6 +72,70 @@ CREATE TABLE IF NOT EXISTS jwt.dpop_audit (
     CONSTRAINT fk_generated_token FOREIGN KEY (generated_token_jwt_id) REFERENCES jwt.generated_token_audit(jwt_id)
 );
 
+CREATE TABLE IF NOT EXISTS jwt.m2m_generated_token_audit (
+    jwt_id VARCHAR(36) PRIMARY KEY,
+    correlation_id VARCHAR(255),
+    issued_at BIGINT NOT NULL,
+    issued_at_tz TIMESTAMPTZ NOT NULL,
+    client_id VARCHAR(36) NOT NULL,
+    organization_id VARCHAR(36) NOT NULL,
+    admin_id VARCHAR(36),
+    algorithm VARCHAR(50) NOT NULL,
+    key_id VARCHAR(255) NOT NULL,
+    audience VARCHAR(255) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    not_before BIGINT NOT NULL,
+    not_before_tz TIMESTAMPTZ NOT NULL,
+    expiration_time BIGINT NOT NULL,
+    expiration_time_tz TIMESTAMPTZ NOT NULL,
+    issuer VARCHAR(255) NOT NULL,
+    client_assertion_jwt_id VARCHAR(255) NOT NULL,
+    origin_file_reference VARCHAR(255),
+    typ VARCHAR(50),
+    cnf_jkt VARCHAR(255),
+    dpop_jwt_id VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS jwt.m2m_client_assertion_audit (
+    jwt_id VARCHAR(255),
+    issued_at BIGINT NOT NULL,
+    issued_at_tz TIMESTAMPTZ NOT NULL,
+    algorithm VARCHAR(50) NOT NULL,
+    key_id VARCHAR(255) NOT NULL,
+    issuer VARCHAR(255) NOT NULL,
+    subject VARCHAR(36) NOT NULL,
+    audience VARCHAR(255) NOT NULL,
+    expiration_time BIGINT NOT NULL,
+    expiration_time_tz TIMESTAMPTZ NOT NULL,
+    generated_token_jwt_id VARCHAR(36) PRIMARY KEY,
+    issued_at_raw DOUBLE PRECISION NOT NULL,
+    expiration_time_raw DOUBLE PRECISION NOT NULL,
+    origin_file_reference VARCHAR(255),
+    generated_token_issued_at BIGINT NOT NULL,
+    generated_token_issued_at_tz TIMESTAMPTZ NOT NULL,
+    CONSTRAINT fk_m2m_client_assertion_generated_token FOREIGN KEY (generated_token_jwt_id) REFERENCES jwt.m2m_generated_token_audit(jwt_id)
+);
+
+CREATE TABLE IF NOT EXISTS jwt.m2m_dpop_audit (
+    typ VARCHAR(50) NOT NULL,
+    alg VARCHAR(50) NOT NULL,
+    jwk_kty VARCHAR(10) NOT NULL,
+    jwk_n VARCHAR(2048),
+    jwk_e VARCHAR(64),
+    jwk_crv VARCHAR(10),
+    jwk_x VARCHAR(512),
+    jwk_y VARCHAR(512),
+    htm VARCHAR(16) NOT NULL,
+    htu VARCHAR(1024) NOT NULL,
+    iat DOUBLE PRECISION NOT NULL,
+    jti VARCHAR(255) NOT NULL,
+    generated_token_jwt_id VARCHAR(36) PRIMARY KEY,
+    origin_file_reference VARCHAR(255),
+    generated_token_issued_at BIGINT NOT NULL,
+    generated_token_issued_at_tz TIMESTAMPTZ NOT NULL,
+    CONSTRAINT fk_m2m_dpop_generated_token FOREIGN KEY (generated_token_jwt_id) REFERENCES jwt.m2m_generated_token_audit(jwt_id)
+);
+
 CREATE SCHEMA IF NOT EXISTS infra;
 
 CREATE TABLE IF NOT EXISTS infra.alb_logs_audit (

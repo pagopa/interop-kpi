@@ -28,6 +28,9 @@ export type SpanId = z.infer<typeof CorrelationId>;
 export const ClientId = z.string().uuid().brand("ClientId");
 export type ClientId = z.infer<typeof ClientId>;
 
+export const UserId = z.string().uuid().brand("UserId");
+export type UserId = z.infer<typeof UserId>;
+
 type IDS =
   | CorrelationId
   | SpanId
@@ -37,7 +40,8 @@ type IDS =
   | TenantId
   | PurposeId
   | PurposeVersionId
-  | ClientId;
+  | ClientId
+  | UserId;
 
 // This function is used to generate a new ID for a new object
 // it infers the type of the ID based on how is used the result
