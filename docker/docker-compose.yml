@@ -1,7 +1,6 @@
 version: "3"
 name: pagopa-interop-kpi
 services:
-
   postgres:
     container_name: postgres
     volumes:
@@ -14,27 +13,53 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     command: -c 'max_connections=512' -c 'wal_level=logical'
-  
-  # MinIO is a local S3-compatible storage, to replace AWS S3 in local development
-  minio:
-    container_name: minio
-    image: minio/minio:RELEASE.2024-02-06T21-36-22Z@sha256:1f5e263a492659da3b5c165eeabe70fac1c186081d3fca6863fdc48c3e04856c
-    entrypoint: >
-      /usr/bin/minio server /data --console-address ':9001'
+
+  # RustFS is a local S3-compatible storage, to replace AWS S3 in local development
+  rustfs:
+    container_name: rustfs
+    image: rustfs/rustfs:1.0.0
     ports:
       - 9000:9000
       - 9001:9001
     environment:
-      MINIO_ROOT_USER: testawskey # use this as AWS S3 access key ID
-      MINIO_ROOT_PASSWORD: testawssecret # use this as AWS S3 secret access key
-      MINIO_SITE_REGION: eu-south-1
+      RUSTFS_ACCESS_KEY: testawskey # use this as AWS S3 access key ID
+      RUSTFS_SECRET_KEY: testawssecret # use this as AWS S3 secret access key
+      RUSTFS_REGION: eu-south-1
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
     volumes:
-      - ./minio-data:/data
+      - ./rustfs-data:/data
     restart: always
 
+  # Seed the buckets that were created implicitly by MinIO's directory layout.
+  rustfs-seed:
+    image: amazon/aws-cli:2.17.44
+    depends_on:
+      - rustfs
+    environment:
+      AWS_ACCESS_KEY_ID: testawskey
+      AWS_SECRET_ACCESS_KEY: testawssecret
+      AWS_REGION: eu-south-1
+      AWS_DEFAULT_REGION: eu-south-1
+    entrypoint: >
+      /bin/sh -c "
+        until aws --endpoint-url http://rustfs:9000 s3 ls; do
+          echo 'Waiting for RustFS to be ready...';
+          sleep 1;
+        done;
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://interop-local-bucket || true;
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://application-audit-archiver || true;
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://alblogs || true;
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://interop-jwt-audit-analytics-bucket || true;
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://interop-jwt-audit-analytics-copy-bucket || true;
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://interop-application-audit-analytics-copy-bucket || true;
+      "
+
   elasticmq: # ElasticMQ is a local SQS-compatible queue system, to replace AWS SQS in local development
-    container_name: elasticmq 
-    image: softwaremill/elasticmq-native:1.5.7@sha256:0cb5bcc04638c80af1631e8cf5da9b96b9fb6f46a4164462231065dc516c102f
+    container_name: elasticmq
+    image: softwaremill/elasticmq-native:1.5.7
     ports:
       - 9324:9324
       - 9325:9325
@@ -71,7 +96,6 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
-
 
 networks:
   develop-network:
