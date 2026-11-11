@@ -15,10 +15,11 @@ import { StartedTestContainer } from "testcontainers";
 import type {} from "vitest";
 import type { GlobalSetupContext } from "vitest/node";
 import {
-  TEST_MINIO_PORT,
+  TEST_RUSTFS_PORT,
   TEST_POSTGRES_DB_PORT,
-  minioContainer,
+  createS3Buckets,
   postgreSQLContainer,
+  rustfsContainer,
 } from "./containerTestUtils.js";
 
 declare module "vitest" {
@@ -29,7 +30,7 @@ declare module "vitest" {
 }
 
 /**
- * This function is a global setup for vitest that starts and stops the Minio container (FileManager).
+ * This function is a global setup for vitest that starts and stops the RustFS container (FileManager).
  * It provides the `fileManagerConfig` object to the tests.
  *
  * @see https://vitest.dev/config/#globalsetup
@@ -45,7 +46,7 @@ export function setupTestContainersVitestGlobal() {
     provide,
   }: GlobalSetupContext): Promise<() => Promise<void>> {
     let startedPostgreSqlContainer: StartedTestContainer | undefined;
-    let startedMinioContainer: StartedTestContainer | undefined;
+    let startedRustfsContainer: StartedTestContainer | undefined;
 
     if (dbConfig.success) {
       startedPostgreSqlContainer = await postgreSQLContainer(
@@ -75,21 +76,25 @@ export function setupTestContainersVitestGlobal() {
       provide("dbConfig", dbConfig.data);
     }
 
-    // Setting up the Minio container if the config is provided
-    if (fileManagerConfig.success) {
-      startedMinioContainer = await minioContainer(
-        fileManagerConfig.data
-      ).start();
+    // Setting up the RustFS container if the config is provided
+    if (fileManagerConfig.success && fileManagerConfig.data.s3CustomServer) {
+      startedRustfsContainer = await rustfsContainer().start();
 
       fileManagerConfig.data.s3ServerPort =
-        startedMinioContainer.getMappedPort(TEST_MINIO_PORT);
+        startedRustfsContainer.getMappedPort(TEST_RUSTFS_PORT);
+
+      await createS3Buckets(fileManagerConfig.data, [
+        fileManagerConfig.data.s3Bucket,
+        "test-bucket-1",
+        "test-bucket-2",
+      ]);
 
       provide("fileManagerConfig", fileManagerConfig.data);
     }
 
     return async (): Promise<void> => {
       await startedPostgreSqlContainer?.stop();
-      await startedMinioContainer?.stop();
+      await startedRustfsContainer?.stop();
     };
   };
 }
