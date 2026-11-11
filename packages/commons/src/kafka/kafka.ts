@@ -28,7 +28,7 @@ export function decodeKafkaMessage<TEvent extends z.ZodType>(
       `Invalid message: ${JSON.stringify(errorDetails, null, 2)}`
     );
   }
-  // Zod 4 does not retain the generic object's property shape after safeParse.
-  // The successful parse guarantees that the value conforms to the event schema.
+  // Type inference does not retain the `value` property shape for generic schemas,
+  // so narrow the successful parse result to the validated event payload.
   return (parsed.data as { value: z.output<TEvent> }).value;
 }
