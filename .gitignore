@@ -42,5 +42,8 @@ node_modules/
 
 **/dist
 
-# MinIO container data
+# RustFS container data
+docker/rustfs-data
+
+# Legacy MinIO container data
 docker/minio-data
