@@ -28,8 +28,7 @@ export function decodeKafkaMessage<TEvent extends z.ZodType>(
       `Invalid message: ${JSON.stringify(errorDetails, null, 2)}`
     );
   }
-  // Even if the preprocess returns null, safeParse will fail because the event schema does not accept null values,
-  // so using the non-null assertion here is safe.
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
-  return parsed.data.value!;
+  // Zod 4 does not retain the generic object's property shape after safeParse.
+  // The successful parse guarantees that the value conforms to the event schema.
+  return (parsed.data as { value: z.output<TEvent> }).value;
 }
