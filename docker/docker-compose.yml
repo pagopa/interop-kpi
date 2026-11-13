@@ -17,7 +17,7 @@ services:
   # RustFS is a local S3-compatible storage, to replace AWS S3 in local development
   rustfs:
     container_name: rustfs
-    image: rustfs/rustfs:1.0.0
+    image: rustfs/rustfs:1.0.0@sha256:8cc9801755448b71a786705ce76692c77e14936cccd87cf2fc31842e58f4d1ff
     ports:
       - 9000:9000
       - 9001:9001
@@ -35,7 +35,7 @@ services:
 
   # Seed the buckets that were created implicitly by MinIO's directory layout.
   rustfs-seed:
-    image: amazon/aws-cli:2.17.44
+    image: amazon/aws-cli:2.17.44@sha256:f2094b8092475b7dae06fbec228bcd25ad24206f5b4fdce5b81bfe2a4b381892
     depends_on:
       - rustfs
     environment:
@@ -59,7 +59,7 @@ services:
 
   elasticmq: # ElasticMQ is a local SQS-compatible queue system, to replace AWS SQS in local development
     container_name: elasticmq
-    image: softwaremill/elasticmq-native:1.5.7
+    image: softwaremill/elasticmq-native:1.5.7@sha256:0cb5bcc04638c80af1631e8cf5da9b96b9fb6f46a4164462231065dc516c102f
     ports:
       - 9324:9324
       - 9325:9325
